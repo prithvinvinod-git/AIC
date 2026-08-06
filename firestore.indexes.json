@@ -1,0 +1,69 @@
+{
+  "indexes": [
+    { "collectionGroup": "issues", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "sla.resolutionDeadline", "order": "ASCENDING" }
+      ] },
+    { "collectionGroup": "issues", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "reporter.uid", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ] },
+    { "collectionGroup": "issues", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "routing.teamId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ] },
+    { "collectionGroup": "issues", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "routing.teamId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "sla.resolutionDeadline", "order": "ASCENDING" }
+      ] },
+    { "collectionGroup": "issues", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "department", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ] },
+    { "collectionGroup": "issues", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "priority", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ] },
+    { "collectionGroup": "issues", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "department", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ] },
+    { "collectionGroup": "issues", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "reporter.uid", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ] },
+    { "collectionGroup": "issues", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "routing.teamId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ] },
+    { "collectionGroup": "issues", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "routing.teamId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ] },
+    { "collectionGroup": "issues", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "routing.staff", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ] },
+    { "collectionGroup": "teams", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "categoryId", "order": "ASCENDING" },
+        { "fieldPath": "isActive", "order": "ASCENDING" }
+      ] }
+  ],
+  "fieldOverrides": []
+}

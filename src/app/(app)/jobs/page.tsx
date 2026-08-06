@@ -1,0 +1,65 @@
+"use client";
+
+import { useState } from "react";
+import { useIssues } from "@/hooks/useIssues";
+import { Loading, EmptyState } from "@/components/ui/States";
+import { MaintenanceJobCard } from "@/components/issues/MaintenanceJobCard";
+import type { IssueStatus } from "@/lib/types";
+
+const TABS: { key: IssueStatus | "all"; label: string }[] = [
+  { key: "ASSIGNED", label: "To do" },
+  { key: "ONGOING", label: "In progress" },
+  { key: "PENDING", label: "Blocked" },
+  { key: "COMPLETED", label: "Done" },
+];
+
+export default function JobsPage() {
+  const { issues, reload } = useIssues({});
+  const [tab, setTab] = useState<IssueStatus | "all">("ASSIGNED");
+
+  if (!issues) return <Loading label="Loading jobs…" />;
+
+  const count = (s: IssueStatus) => issues.filter((i) => i.status === s).length;
+  const visible = issues.filter((i) => tab === "all" || i.status === tab);
+  const showDone = tab === "COMPLETED";
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div>
+        <h1 className="font-display text-2xl font-semibold text-ink">Jobs</h1>
+        <p className="mt-1 text-sm text-slate">Your team&apos;s assignments across the campus.</p>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {TABS.map((t) => (
+          <button
+            key={t.key}
+            className={`btn btn-sm ${tab === t.key ? "btn-primary" : "btn-ghost"}`}
+            onClick={() => setTab(t.key)}
+          >
+            {t.label} {t.key !== "all" && <span className="opacity-60">({count(t.key)})</span>}
+          </button>
+        ))}
+      </div>
+
+      {visible.length === 0 ? (
+        <EmptyState
+          title={`No ${tab === "all" ? "" : TABS.find((t) => t.key === tab)?.label.toLowerCase() + " "}jobs`}
+          body="New assignments from the maintenance head will appear here."
+        />
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {visible.map((issue) => (
+            <MaintenanceJobCard key={issue.id} issue={issue} onRefresh={() => void reload()} />
+          ))}
+        </div>
+      )}
+
+      {!showDone && (
+        <button onClick={() => void reload()} className="btn btn-ghost btn-sm self-start">
+          Refresh board
+        </button>
+      )}
+    </div>
+  );
+}
