@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { after } from "next/server";
 import type { Query } from "firebase-admin/firestore";
 import { adminDb } from "@/lib/firebaseAdmin";
 import { requireAuth } from "@/lib/auth";
@@ -28,16 +29,20 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const issueNo = await allocateIssueNo(db);
     const ref = db.collection("issues").doc();
     const now = new Date().toISOString();
+    const priority = body.priority && body.priority >= 1 && body.priority <= 5 ? body.priority : 0;
 
     const issueData = {
       issueNo,
       title: body.title,
       description: body.description,
+      college: body.college || "",
       department: body.department,
       location: body.location,
       images: body.images,
       status: "NEW",
-      priority: 0,
+      priority,
+      prioritySetBy: priority ? { uid: user.uid, name: user.name } : null,
+      prioritySetAt: priority ? now : null,
       requirements: [],
       involveTeams: [],
       routing: {
@@ -67,21 +72,22 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       });
     });
 
-    // Background AI pipeline (triage + duplicates) — never blocks submission.
-    void (async () => {
-      const ai = await import("@/lib/ai");
-      await ai.runAiOnCreate(ref.id);
-    })();
-
-    // Notification to dept validators + stats.
-    void notifyRole(["validator"], {
-      type: "issue",
-      title: "New issue to review",
-      body: `${issueNo}: ${body.title}`,
-      link: `/issues/${ref.id}`,
+    // Post-response work (AI triage + duplicates, notifications, stats) is
+    // scheduled with `after()` so the runtime keeps it alive instead of
+    // killing fire-and-forget promises once the response is sent.
+    after(async () => {
+      await Promise.all([
+        import("@/lib/ai").then((ai) => ai.runAiOnCreate(ref.id)),
+        notifyRole(["validator"], {
+          type: "issue",
+          title: "New issue to review",
+          body: `${issueNo}: ${body.title}`,
+          link: `/issues/${ref.id}`,
+        }),
+        incrementStatusCount("NEW"),
+        incrementCategoryCount(cat.name),
+      ]);
     });
-    void incrementStatusCount("NEW");
-    void incrementCategoryCount(cat.name);
 
     return json({ issue: { id: ref.id, ...issueData } }, 201);
   } catch (e) {

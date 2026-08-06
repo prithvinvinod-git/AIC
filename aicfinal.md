@@ -196,6 +196,9 @@ stats/daily/{YYYY-MM-DD}
    - issues: `(routing.teamId ↑, createdAt ↓)`
    - issues: `(routing.teamId ↑, status ↑, createdAt ↓)`
    - issues: `(routing.staff ↑, status ↑)`
+   - issues: `(department ↑, createdAt ↓)`
+   - issues: `(department ↑, status ↑, createdAt ↓)`
+   - issues: `(status ↑, createdAt ↓)`
    - teams: `(categoryId ↑, isActive ↑)`
 3. **No `OR` / `!=` queries.** Every filter combo needs its own composite index.
 4. **Counters with transactions** for pagination-friendly metadata.
@@ -461,6 +464,8 @@ All four dashboards share the same app shell (sidebar, topbar, notification bell
 
 | Screen | Dashboard | Contents |
 |---|---|---|
+| Sign-in / Sign-up | All | Provider chooser first (Google · Email); Google accounts are auto-provisioned as `reporter`. Email + password sign-up asks for college first (Engineering / Dental / Pharmaceutical / Medical / Nursing) and loads departments for that college. |
+| Demo accounts | All | `prithvinvinod@gmail.com` admin · `admin@gmail.com` admin that lands on the Principal portal (sidebar: Principal, HOD, Admin) · `principal@gmail.com` · `hod@gmail.com` · `validator@gmail.com` · `head@gmail.com` · `mainten@gmail.com` maintenance that lands on the Maintenance Head portal (sidebar: Head, Jobs) · `maintenance@gmail.com` — all password `123456`. Every other new sign-up is a reporter. |
 | User Dashboard | D1 | KPI strip, "Report an Issue" hero, open issues, awaiting feedback, recently closed, AI chips |
 | Submit Issue (wizard) | D1 | 4 steps: Category → Location (building/floor/room typeahead) → Description + multi-photo upload (5MB cap, preview) → Review → creates `NEW`. Background: triage + duplicate AI runs |
 | My Issues | D1 | Status chips, SLA badges, filters (status/period), empty-state nudge |

@@ -5,13 +5,13 @@ import { useRouter } from "next/navigation";
 import { ImagePlus, Loader2, X } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { api, ApiError } from "@/lib/clientApi";
-import { BUILDINGS, DEFAULT_FLOORS, DEPARTMENTS } from "@/lib/constants";
+import { BUILDINGS, COLLEGES, DEFAULT_FLOORS, DEPARTMENTS_BY_COLLEGE, PRIORITY_COLOR, PRIORITY_LABEL, type College } from "@/lib/constants";
 import type { Category, ImageRef } from "@/lib/types";
 
 const MAX_IMAGES = 3;
 
-// Downscale + re-encode to JPEG on the client so blobs stay well under the
-// Firestore 1MB document limit (~150-300KB typical output).
+// Downscale + re-encode to JPEG on the client so blobs stay under the
+// Firestore 1MB document limit (~300-600KB typical output at this size).
 function fileToCompressedBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -19,7 +19,7 @@ function fileToCompressedBase64(file: File): Promise<string> {
       const dataUrl = String(reader.result || "");
       const img = new Image();
       img.onload = () => {
-        const maxDim = 1024;
+        const maxDim = 1600;
         let { width, height } = img;
         if (width > maxDim || height > maxDim) {
           const scale = maxDim / Math.max(width, height);
@@ -35,7 +35,7 @@ function fileToCompressedBase64(file: File): Promise<string> {
           return;
         }
         ctx.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL("image/jpeg", 0.72).split(",")[1] || "");
+        resolve(canvas.toDataURL("image/jpeg", 0.8).split(",")[1] || "");
       };
       img.onerror = () => resolve(dataUrl.split(",")[1] || "");
       img.src = dataUrl;
@@ -51,8 +51,18 @@ export default function NewIssuePage() {
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [department, setDepartment] = useState(claims?.department || DEPARTMENTS[0]);
+  const [college, setCollege] = useState<College>(
+    claims?.college && COLLEGES.includes(claims.college as College)
+      ? (claims.college as College)
+      : COLLEGES[0]
+  );
+  const [department, setDepartment] = useState(
+    claims?.department && DEPARTMENTS_BY_COLLEGE[college].includes(claims.department)
+      ? claims.department
+      : DEPARTMENTS_BY_COLLEGE[college][0]
+  );
   const [categoryId, setCategoryId] = useState("");
+  const [priority, setPriority] = useState(3);
   const [building, setBuilding] = useState(BUILDINGS[0]);
   const [floor, setFloor] = useState(DEFAULT_FLOORS[0]);
   const [locationName, setLocationName] = useState("");
@@ -106,8 +116,10 @@ export default function NewIssuePage() {
           body: JSON.stringify({
             title,
             description,
+            college,
             department,
             categoryId,
+            priority,
             location: {
               building,
               floor,
@@ -126,14 +138,14 @@ export default function NewIssuePage() {
         setBusy(false);
       }
     },
-    [title, description, department, categoryId, building, floor, locationName, images, router, claims]
+    [title, description, college, department, categoryId, priority, building, floor, locationName, images, router, claims]
   );
 
   return (
     <div className="mx-auto max-w-[680px]">
       <h1 className="font-display text-2xl font-semibold text-ink">Report an issue</h1>
       <p className="mt-1 text-sm text-slate">
-        Describe what needs attention. AI will suggest category and priority during validation.
+        Describe what needs attention. AI will suggest a category and verify priority during validation.
       </p>
 
       <form onSubmit={submit} className="mt-6 flex flex-col gap-5">
@@ -188,6 +200,27 @@ export default function NewIssuePage() {
             </select>
           </div>
           <div>
+            <label className="label" htmlFor="college">
+              College
+            </label>
+            <select
+              id="college"
+              className="input"
+              value={college}
+              onChange={(e) => {
+                const c = e.target.value as College;
+                setCollege(c);
+                setDepartment(DEPARTMENTS_BY_COLLEGE[c][0]);
+              }}
+            >
+              {COLLEGES.map((c) => (
+                <option key={c} value={c}>
+                  {c} College
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
             <label className="label" htmlFor="department">
               Department
             </label>
@@ -197,13 +230,40 @@ export default function NewIssuePage() {
               value={department}
               onChange={(e) => setDepartment(e.target.value)}
             >
-              {DEPARTMENTS.map((d) => (
+              {DEPARTMENTS_BY_COLLEGE[college].map((d) => (
                 <option key={d} value={d}>
                   {d}
                 </option>
               ))}
             </select>
           </div>
+        </div>
+
+        <div>
+          <label className="label">Priority</label>
+          <div className="flex flex-wrap gap-2">
+            {([1, 2, 3, 4, 5] as const).map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => setPriority(p)}
+                aria-pressed={priority === p}
+                className={`flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm font-medium transition-colors ${
+                  priority === p
+                    ? "border-ink bg-ink text-white"
+                    : "border-silver bg-white text-graphite hover:border-graphite"
+                }`}
+              >
+                <span
+                  className="h-2 w-2 rounded-full"
+                  style={{ backgroundColor: priority === p ? "#fff" : PRIORITY_COLOR[p] }}
+                  aria-hidden
+                />
+                {p} · {PRIORITY_LABEL[p]}
+              </button>
+            ))}
+          </div>
+          <p className="mt-1.5 text-xs text-slate">1 = Critical, 5 = Minor. Validators can adjust this later.</p>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-3">

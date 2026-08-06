@@ -146,6 +146,7 @@ export interface Issue {
   issueNo: string;
   title: string;
   description: string;
+  college?: string;
   department: string;
   location: Location;
   images: ImageRef[];
@@ -237,6 +238,7 @@ export interface AppUser {
   name: string;
   email: string;
   role: Role;
+  college?: string;
   department: string;
   phone?: string;
   isActive: boolean;

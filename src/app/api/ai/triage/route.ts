@@ -8,15 +8,18 @@ import { triageFlow, writeTriage, getActiveCategories } from "@/lib/ai";
 export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
     const user = await requireAuth(req);
-    if (!["validator", "hod", "principal", "head", "admin"].includes(user.role)) {
-      return json({ error: "Not allowed." }, 403);
-    }
     const body = (await req.json().catch(() => ({}))) as { issueId?: string };
     if (!body.issueId) return json({ error: "issueId is required." }, 400);
 
     const snap = await adminDb().doc(`issues/${body.issueId}`).get();
     if (!snap.exists) return json({ error: "Issue not found." }, 404);
     const issue = snap.data()!;
+
+    const staffRole = ["validator", "hod", "principal", "head", "admin"].includes(user.role);
+    const isOwner = user.uid === issue.reporter?.uid;
+    if (!staffRole && !isOwner) {
+      return json({ error: "Not allowed." }, 403);
+    }
     if (issue.aiSuggestion?.aiProcessed) {
       return json({ result: issue.aiSuggestion, cached: true });
     }

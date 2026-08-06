@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { HardHat, LogOut, Menu, X } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { NAV_ITEMS, ROLE_HOME } from "@/lib/nav";
+import { NAV_ITEMS, homeFor, portalRoles } from "@/lib/nav";
 import { ROLE_LABEL } from "@/lib/constants";
 import { initials } from "@/lib/format";
 import { Loading } from "@/components/ui/States";
@@ -32,7 +32,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
   if (!user || !claims) return null;
 
   const role = claims.role;
-  const items = NAV_ITEMS.filter((i) => i.role === role || i.role === "all");
+  const accessRoles = portalRoles(claims);
+  const items = NAV_ITEMS.filter((i) => i.role === "all" || accessRoles.includes(i.role));
 
   const navLinks = () => (
     <>
@@ -42,7 +43,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
           <Link
             key={item.href}
             href={item.href}
-            className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
+            className={`rounded-full px-4 py-2.5 text-sm font-medium transition-colors ${
               active ? "bg-ink text-white" : "text-slate hover:bg-paper hover:text-graphite"
             }`}
           >
@@ -56,38 +57,42 @@ export default function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-full">
       <header className="sticky top-0 z-40 border-b border-silver bg-white/90 backdrop-blur">
-        <div className="mx-auto flex h-16 w-full max-w-[1200px] items-center gap-4 px-4 sm:px-6">
-          <Link href={ROLE_HOME[role]} className="flex shrink-0 items-center gap-2 font-display text-lg font-semibold text-ink">
-            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-ink text-white">
-              <HardHat className="h-4 w-4" aria-hidden />
+        <div className="mx-auto flex h-20 w-full max-w-[1200px] items-center gap-2 px-4 sm:gap-5 sm:px-6">
+          <Link
+            href={homeFor(claims)}
+            className="flex min-w-0 shrink-0 items-center gap-2.5 font-display text-xl font-semibold text-ink"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ink text-white">
+              <HardHat className="h-5 w-5" aria-hidden />
             </span>
-            CampusCare
+            <span className="truncate">CampusCare</span>
           </Link>
 
           <nav className="hidden items-center gap-1 lg:flex">{navLinks()}</nav>
 
-          <div className="ml-auto flex items-center gap-3">
-            <div className="hidden items-center gap-2 sm:flex">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-paper text-xs font-semibold text-graphite">
+          <div className="ml-auto flex items-center gap-2 sm:gap-3">
+            <div className="hidden items-center gap-2.5 lg:flex">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-paper text-sm font-semibold text-graphite">
                 {initials(claims.name)}
               </span>
               <div className="leading-tight">
-                <p className="text-sm font-medium text-graphite">{claims.name}</p>
+                <p className="max-w-[180px] truncate text-[15px] font-medium text-graphite">{claims.name}</p>
                 <p className="text-xs text-slate">{ROLE_LABEL[role]}</p>
               </div>
             </div>
             <button
               onClick={() => void logout()}
-              className="btn btn-ghost btn-sm"
+              className="btn btn-ghost btn-sm hidden lg:inline-flex"
               title="Sign out"
             >
               <LogOut className="h-4 w-4" aria-hidden />
-              <span className="hidden sm:inline">Sign out</span>
+              <span>Sign out</span>
             </button>
             <button
               className="btn btn-ghost btn-sm lg:hidden"
               onClick={() => setMenuOpen((v) => !v)}
               aria-label="Toggle menu"
+              aria-expanded={menuOpen}
             >
               {menuOpen ? <X className="h-4 w-4" aria-hidden /> : <Menu className="h-4 w-4" aria-hidden />}
             </button>
@@ -95,15 +100,47 @@ export default function AppShell({ children }: { children: ReactNode }) {
         </div>
 
         {menuOpen && (
-          <nav className="border-t border-silver bg-white px-4 py-3 lg:hidden">
-            <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-1">
-              {navLinks()}
+          <nav className="border-t border-silver bg-white lg:hidden">
+            <div className="mx-auto flex max-w-[1200px] flex-col gap-1 px-4 py-3 sm:px-6">
+              <div className="mb-1 flex items-center gap-2.5 border-b border-silver pb-3 sm:hidden">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-paper text-sm font-semibold text-graphite">
+                  {initials(claims.name)}
+                </span>
+                <div className="min-w-0 leading-tight">
+                  <p className="truncate text-[15px] font-medium text-graphite">{claims.name}</p>
+                  <p className="text-xs text-slate">{ROLE_LABEL[role]}</p>
+                </div>
+              </div>
+              {items.map((item) => {
+                const active = pathname === item.href || pathname.startsWith(item.href + "/");
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMenuOpen(false)}
+                    className={`flex items-center justify-between rounded-lg px-4 py-3 text-[15px] font-medium transition-colors ${
+                      active ? "bg-ink text-white" : "text-graphite hover:bg-paper"
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+              <div className="mt-1 border-t border-silver pt-2 sm:hidden">
+                <button
+                  onClick={() => void logout()}
+                  className="flex w-full items-center gap-2 rounded-lg px-4 py-3 text-left text-[15px] font-medium text-graphite hover:bg-paper"
+                >
+                  <LogOut className="h-4 w-4" aria-hidden />
+                  Sign out
+                </button>
+              </div>
             </div>
           </nav>
         )}
       </header>
 
-      <main className="mx-auto w-full max-w-[1200px] px-4 py-6 sm:px-6 sm:py-8">{children}</main>
+      <main className="mx-auto w-full max-w-[1200px] px-4 py-8 sm:px-6 sm:py-10">{children}</main>
     </div>
   );
 }

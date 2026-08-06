@@ -5,8 +5,8 @@ import { requireAuth } from "@/lib/auth";
 import { json, handleError } from "@/lib/api";
 
 // Base64 payload cap — keeps each blob comfortably under the 1MB Firestore
-// document limit. Client compresses to ~150-300KB before sending.
-const MAX_BASE64 = 900 * 1024;
+// document limit. Client compresses to ~300-600KB before sending.
+const MAX_BASE64 = 1_000_000;
 
 /**
  * POST /api/uploads — stores the image as a base64 blob in Firestore and
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     }
 
     const buffer = Buffer.from(body.base64, "base64");
-    if (buffer.length > 700 * 1024) {
+    if (buffer.length > 750 * 1024) {
       return json({ error: "Image too large. Please re-submit after compression." }, 413);
     }
 

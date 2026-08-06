@@ -37,6 +37,12 @@ yarn-error.log*
 # firebase cli
 .firebase/
 
+# firebase service-account keys (SECRET — never commit)
+*-firebase-adminsdk-*.json
+
+# genkit runtime cache
+.genkit/
+
 # vercel
 .vercel
 

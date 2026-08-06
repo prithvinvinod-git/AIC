@@ -16,6 +16,7 @@ export interface IssueDetail {
 export function useIssue(id: string) {
   const [data, setData] = useState<IssueDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [pollTries, setPollTries] = useState(0);
 
   const reload = useCallback(async () => {
     try {
@@ -31,6 +32,19 @@ export function useIssue(id: string) {
   useEffect(() => {
     void reload();
   }, [reload]);
+
+  // The AI triage pipeline runs after submission; poll a few times so the
+  // suggestion shows up on its own instead of requiring a manual refresh.
+  useEffect(() => {
+    if (!data?.issue) return;
+    if (data.issue.aiSuggestion?.aiProcessed) return;
+    if (pollTries >= 8) return;
+    const t = setTimeout(() => {
+      setPollTries((n) => n + 1);
+      void reload();
+    }, 3500);
+    return () => clearTimeout(t);
+  }, [data, reload, pollTries]);
 
   return { ...data, error, reload };
 }

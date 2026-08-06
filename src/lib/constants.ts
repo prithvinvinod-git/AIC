@@ -62,6 +62,73 @@ export const DEPARTMENTS = [
   "Library",
 ];
 
+export const COLLEGES = [
+  "Engineering",
+  "Dental",
+  "Pharmaceutical",
+  "Medical",
+  "Nursing",
+] as const;
+
+export type College = (typeof COLLEGES)[number];
+
+export const DEPARTMENTS_BY_COLLEGE: Record<College, string[]> = {
+  Engineering: [
+    "Computer Science",
+    "Information Technology",
+    "Electronics & Communication",
+    "Electrical",
+    "Mechanical",
+    "Civil",
+    "Automobile",
+  ],
+  Dental: [
+    "Oral Medicine",
+    "Oral & Maxillofacial Surgery",
+    "Conservative Dentistry",
+    "Prosthodontics",
+    "Periodontics",
+    "Endodontics",
+    "Orthodontics",
+    "Pedodontics",
+    "Public Health Dentistry",
+  ],
+  Pharmaceutical: [
+    "Pharmaceutics",
+    "Pharmaceutical Chemistry",
+    "Pharmacology",
+    "Pharmacognosy",
+    "Pharmacy Practice",
+    "Clinical Pharmacy",
+  ],
+  Medical: [
+    "Anatomy",
+    "Physiology",
+    "Biochemistry",
+    "Pathology",
+    "Microbiology",
+    "Pharmacology",
+    "Community Medicine",
+    "General Medicine",
+    "General Surgery",
+    "Pediatrics",
+    "Obstetrics & Gynecology",
+    "Orthopedics",
+    "Radiology",
+    "Anesthesia",
+    "Dermatology",
+    "Psychiatry",
+  ],
+  Nursing: [
+    "Medical-Surgical Nursing",
+    "Pediatric Nursing",
+    "Community Health Nursing",
+    "Obstetrics & Gynecological Nursing",
+    "Psychiatric Nursing",
+    "Fundamentals of Nursing",
+  ],
+};
+
 export const BUILDINGS = [
   "Block A",
   "Block B",

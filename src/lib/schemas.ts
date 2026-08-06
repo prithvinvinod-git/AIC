@@ -8,7 +8,12 @@ export const locationSchema = z.object({
 });
 
 export const imageSchema = z.object({
-  url: z.string().url(),
+  url: z
+    .string()
+    .min(1, "Image URL is required")
+    .refine((u) => u.startsWith("/api/images/") || /^https?:\/\//.test(u), {
+      message: "Image URL must point to an uploaded image",
+    }),
   uploadedBy: z.string(),
   at: z.string(),
 });
@@ -16,9 +21,11 @@ export const imageSchema = z.object({
 export const createIssueSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters").max(140),
   description: z.string().min(10, "Describe the issue in at least 10 characters"),
+  college: z.string().optional(),
   department: z.string().min(1, "Department is required"),
   location: locationSchema,
   categoryId: z.string().min(1, "Category is required"),
+  priority: z.number().int().min(1).max(5).optional(),
   images: z.array(imageSchema).max(6).default([]),
 });
 
@@ -60,9 +67,11 @@ export const feedbackSchema = z.object({
 export const adminUserSchema = z.object({
   uid: z.string().optional(),
   name: z.string().min(1),
-  email: z.string().email(),
+  email: z.string().email().or(z.literal("")).default(""),
   password: z.string().min(6).optional(),
   role: z.enum(["reporter", "validator", "hod", "principal", "maintenance", "head", "admin"]),
+  portal: z.enum(["reporter", "validator", "hod", "principal", "maintenance", "head", "admin"]).optional(),
+  college: z.string().optional(),
   department: z.string(),
   phone: z.string().optional(),
   isActive: z.boolean().default(true),

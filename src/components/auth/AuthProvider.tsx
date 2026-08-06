@@ -10,8 +10,10 @@ import {
   type ReactNode,
 } from "react";
 import {
+  GoogleAuthProvider,
   onAuthStateChanged,
   signInWithEmailAndPassword,
+  signInWithPopup,
   signOut,
   type User,
 } from "firebase/auth";
@@ -21,7 +23,9 @@ import type { Role } from "@/lib/types";
 
 export interface SessionClaims {
   role: Role;
+  portal?: Role;
   department: string;
+  college?: string;
   name: string;
 }
 
@@ -29,9 +33,10 @@ interface AuthContextValue {
   user: User | null;
   claims: SessionClaims | null;
   ready: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<SessionClaims>;
+  loginWithGoogle: () => Promise<SessionClaims>;
   logout: () => Promise<void>;
-  refreshClaims: () => Promise<void>;
+  refreshClaims: () => Promise<SessionClaims>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -41,25 +46,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [claims, setClaims] = useState<SessionClaims | null>(null);
   const [ready, setReady] = useState(false);
 
-  const refreshClaims = useCallback(async () => {
+  const refreshClaims = useCallback(async (): Promise<SessionClaims> => {
     const auth = getClientAuth();
     const current = auth.currentUser;
     if (!current) {
       setClaims(null);
       setAuthToken(null);
-      return;
+      return { role: "reporter", department: "", name: "User" };
     }
     const result = await current.getIdTokenResult(true);
     setAuthToken(result.token);
-    setClaims({
+    const next: SessionClaims = {
       role: (result.claims.role as Role) || "reporter",
+      portal: result.claims.portal as Role | undefined,
       department: (result.claims.department as string) || "",
+      college: result.claims.college as string | undefined,
       name:
         (result.claims.name as string) ||
         current.displayName ||
         current.email?.split("@")[0] ||
         "User",
-    });
+    };
+    setClaims(next);
+    return next;
   }, []);
 
   useEffect(() => {
@@ -67,19 +76,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const unsub = onAuthStateChanged(auth, (u) => {
       setUser(u);
       if (u) {
-        void refreshClaims();
+        void refreshClaims().finally(() => setReady(true));
       } else {
         setClaims(null);
         setAuthToken(null);
+        setReady(true);
       }
-      setReady(true);
     });
     return unsub;
   }, [refreshClaims]);
 
-  const login = useCallback(async (email: string, password: string) => {
-    await signInWithEmailAndPassword(getClientAuth(), email, password);
-    await refreshClaims();
+  const login = useCallback(
+    async (email: string, password: string): Promise<SessionClaims> => {
+      await signInWithEmailAndPassword(getClientAuth(), email, password);
+      return refreshClaims();
+    },
+    [refreshClaims]
+  );
+
+  const loginWithGoogle = useCallback(async (): Promise<SessionClaims> => {
+    await signInWithPopup(getClientAuth(), new GoogleAuthProvider());
+    return refreshClaims();
   }, [refreshClaims]);
 
   const logout = useCallback(async () => {
@@ -87,8 +104,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ user, claims, ready, login, logout, refreshClaims }),
-    [user, claims, ready, login, logout, refreshClaims]
+    () => ({ user, claims, ready, login, loginWithGoogle, logout, refreshClaims }),
+    [user, claims, ready, login, loginWithGoogle, logout, refreshClaims]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
