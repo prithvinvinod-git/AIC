@@ -182,7 +182,7 @@ config/{docId}
   ai                      { enabled, triageModel, routingModel, threshold }
   sequenceCounters        { issues: 0 }
 
-stats/daily/{YYYY-MM-DD}
+stats/{YYYY-MM-DD}
   totalCreated, totalClosed, byCategory{}, byStatus{},
   slaBreached, avgResolutionMs, sumResolutionMs, issuesClosed
 ```
@@ -255,7 +255,7 @@ Clock **starts at acceptance** — `VALIDATED` for P3–5, `APPROVED` for P1–2
 
 - Deadlines computed server-side, stored on the doc (`sla.responseDeadline`, `sla.resolutionDeadline`) so queues `orderBy` them.
 - Cloud Function (every 15 min) flags breaches → red badges + notifications to Head and team.
-- `stats/daily` accumulates breach counts & resolution times for the compliance chart.
+- `stats` (per-day counters `stats/{YYYY-MM-DD}`) accumulates breach counts & resolution times for the compliance chart.
 
 ---
 
@@ -298,8 +298,8 @@ GET   /api/ai/weekly-insights        run weeklyInsightsFlow (or scheduled)
 | Trigger | Action |
 |---|---|
 | `onCreate` user | Assign default `reporter` role claim |
-| `onCreate` issue | Allocate `issueNo` via transaction on `config/sequenceCounters`; write `stats/daily`; queue async **triageFlow** |
-| `onWrite` issue.status | Notification matrix (§10); compute SLA deadlines on validate/approve; update `stats/daily`; auto-escalate P1/2 |
+| `onCreate` issue | Allocate `issueNo` via transaction on `config/sequenceCounters`; write `stats/{YYYY-MM-DD}`; queue async **triageFlow** |
+| `onWrite` issue.status | Notification matrix (§10); compute SLA deadlines on validate/approve; update `stats/{YYYY-MM-DD}`; auto-escalate P1/2 |
 | `onCreate` comment/attachment | Bump `counters` |
 | Scheduled (15 min) | SLA breach scan |
 | Scheduled (hourly) | Auto-close `VERIFIED` past grace → `CLOSED` (autoClosed: true) |
@@ -412,7 +412,7 @@ All four dashboards share the same app shell (sidebar, topbar, notification bell
 **Scope:** institution-wide governance view (Principal sees all departments; HOD sees their own by default, filterable).
 **KPI strip:** Escalations pending · Escalations awaiting feedback · SLA compliance % · Avg resolution time
 **Main widget:** **Escalation queue** — `ESCALATED` issues with full evidence (photos, description, validator's priority, AI brief) and inline **Confirm severity / Revise severity** controls → `APPROVED`.
-**Charts (from `stats/daily`):**
+**Charts (from `stats/{YYYY-MM-DD}`):**
 - Issues per week (trend, by department)
 - Open vs closed (area chart)
 - SLA compliance % by priority (bar)
@@ -451,8 +451,8 @@ All four dashboards share the same app shell (sidebar, topbar, notification bell
 |---|---|---|
 | D1 | `issues` where `reporter.uid == me` orderBy `createdAt desc` | feedback-pending: status `VERIFIED` |
 | D2 | `issues` where `department == myDept` and `status == NEW` | rejected/validated by `validator.uid` |
-| D3 | `issues` where `status == ESCALATED` | `stats/daily` range queries |
-| D4 | `issues` where `routing.teamId == myTeam` and `status in [ASSIGNED, ONGOING, COMPLETED]` | `stats/daily` per team |
+| D3 | `issues` where `status == ESCALATED` | `stats/{YYYY-MM-DD}` range queries |
+| D4 | `issues` where `routing.teamId == myTeam` and `status in [ASSIGNED, ONGOING, COMPLETED]` | `stats/{YYYY-MM-DD}` per team |
 
 > Note: Firestore can't do `status in [...]` combined with another field without a composite index — add `(routing.teamId, status, sla.resolutionDeadline)` and `(department, status, createdAt)` to `firestore.indexes.json`.
 
@@ -477,7 +477,7 @@ All four dashboards share the same app shell (sidebar, topbar, notification bell
 | Job Detail | D4 | Start → `ONGOING`; Auto-fill requirements; Draft closure report; Complete → `COMPLETED`; Set Pending + reason → `PENDING` |
 | Verification Module | D4+ (Head) | `COMPLETED` → `VERIFIED` or send-back → `ONGOING`; `PENDING` reassignment tab; confirm AI routing suggestions; team workload strip; all-category toggle |
 | Admin Panel | Admin | Users CRUD + role · Teams (name/category/members) · Categories (CRUD, default team, SLA hours) · Config (grace, assignment mode, AI toggles) |
-| Analytics | Admin/Head/HOD | Issues/week, by category, by status, SLA compliance %, avg resolution time, per-team workload, AI accuracy (backed by `stats/daily`) |
+| Analytics | Admin/Head/HOD | Issues/week, by category, by status, SLA compliance %, avg resolution time, per-team workload, AI accuracy (backed by `stats/{YYYY-MM-DD}`) |
 
 ---
 
@@ -588,7 +588,7 @@ POST /api/ai/draft-closure        → draftClosureFlow → draft closure report 
 
 ### 14.5 Feature 5 — Weekly Governance Insights (scheduled, cross-stage) ★★★★
 
-A scheduled flow reads `stats/daily` and produces a plain-language narrative report + powers the HOD "trending complaints" panel.
+A scheduled flow reads `stats/{YYYY-MM-DD}` and produces a plain-language narrative report + powers the HOD "trending complaints" panel.
 
 ```
 Scheduled (Mon 7 AM) → weeklyInsightsFlow → email (Resend) + dashboard panel
@@ -605,7 +605,7 @@ export const weeklyInsightsFlow = ai.defineFlow(
       recommendations: z.array(z.string()),
     }) },
   async ({ weekStart }) => {
-    const stats = await readDailyStats(weekStart);   // Firestore stats/daily
+    const stats = await readDailyStats(weekStart);   // Firestore stats/{YYYY-MM-DD}
     const res = await ai.generate({
       model: 'googleai/gemini-2.0-flash',
       prompt: `Summarize this week's campus maintenance data: ${JSON.stringify(stats)}

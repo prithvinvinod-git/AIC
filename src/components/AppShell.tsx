@@ -3,7 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { HardHat, LogOut, Menu, X } from "lucide-react";
+import { LogOut, Menu, X } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { NAV_ITEMS, homeFor, portalRoles } from "@/lib/nav";
 import { ROLE_LABEL } from "@/lib/constants";
@@ -43,7 +43,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
           <Link
             key={item.href}
             href={item.href}
-            className={`rounded-full px-4 py-2.5 text-sm font-medium transition-colors ${
+            className={`rounded-full px-6 py-3 text-sm font-medium transition-colors lg:px-7 lg:text-[15px] ${
               active ? "bg-ink text-white" : "text-slate hover:bg-paper hover:text-graphite"
             }`}
           >
@@ -57,32 +57,29 @@ export default function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-full">
       <header className="sticky top-0 z-40 border-b border-silver bg-white/90 backdrop-blur">
-        <div className="mx-auto flex h-20 w-full max-w-[1200px] items-center gap-2 px-4 sm:gap-5 sm:px-6">
+        <div className="mx-auto flex h-[54px] w-full max-w-[1200px] items-center gap-2 pl-0 pr-4 sm:h-[86px] sm:gap-5 sm:pl-0 sm:pr-6">
           <Link
             href={homeFor(claims)}
-            className="flex min-w-0 shrink-0 items-center gap-2.5 font-display text-xl font-semibold text-ink"
+            className="flex min-w-0 shrink-0 items-center font-display text-lg font-semibold text-ink sm:text-xl lg:-ml-[150px]"
           >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ink text-white">
-              <HardHat className="h-5 w-5" aria-hidden />
-            </span>
             <span className="truncate">CampusCare</span>
           </Link>
 
-          <nav className="hidden items-center gap-1 lg:flex">{navLinks()}</nav>
+          <nav className="hidden items-center gap-1.5 lg:ml-[150px] lg:flex">{navLinks()}</nav>
 
           <div className="ml-auto flex items-center gap-2 sm:gap-3">
             <div className="hidden items-center gap-2.5 lg:flex">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-paper text-sm font-semibold text-graphite">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-paper text-sm font-semibold text-graphite sm:h-11 sm:w-11 sm:text-base">
                 {initials(claims.name)}
               </span>
               <div className="leading-tight">
-                <p className="max-w-[180px] truncate text-[15px] font-medium text-graphite">{claims.name}</p>
+                <p className="max-w-[180px] truncate text-sm font-medium text-graphite sm:text-[15px]">{claims.name}</p>
                 <p className="text-xs text-slate">{ROLE_LABEL[role]}</p>
               </div>
             </div>
             <button
               onClick={() => void logout()}
-              className="btn btn-ghost btn-sm hidden lg:inline-flex"
+              className="btn btn-ghost hidden px-3 py-2 text-sm lg:inline-flex sm:px-4"
               title="Sign out"
             >
               <LogOut className="h-4 w-4" aria-hidden />

@@ -191,13 +191,13 @@ export const TRANSITION_RULES: Record<IssueStatus, TransitionRule[]> = {
     },
     {
       to: "COMPLETED",
-      roles: ["maintenance"],
+      roles: ["maintenance", "head", "admin"],
       check: (issue, actor, input) => {
-        if (!issue.routing?.staff?.some((s) => s.uid === actor.uid))
+        if (actor.role === "maintenance" && !issue.routing?.staff?.some((s) => s.uid === actor.uid))
           return "You are not assigned to this job.";
         if (!input.note || input.note.trim().length < 5)
           return "A closure report is required.";
-        const unresolved = issue.requirements.filter(
+        const unresolved = (Array.isArray(issue.requirements) ? issue.requirements : []).filter(
           (r) => !r.resolved && r.needsApproval
         );
         if (unresolved.length > 0 && !input.verdict)
@@ -467,14 +467,14 @@ export async function applyTransition(
           verifiedBy: { uid: actor.uid, name: actor.name },
           verifiedAt: nowIso(),
           verdict: input.verdict || note || "Verified",
-          note: input.note,
+          ...(input.note ? { note: input.note } : {}),
         };
         break;
       }
       case "CLOSED": {
         patches.feedback = {
           rating: input.rating || 0,
-          comment: input.note,
+          ...(input.note ? { comment: input.note } : {}),
           givenAt: nowIso(),
           autoClosed: isAuto,
         };

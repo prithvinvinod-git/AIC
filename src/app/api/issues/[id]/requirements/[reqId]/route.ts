@@ -24,14 +24,23 @@ export async function PATCH(
     const snap = await ref.get();
     if (!snap.exists) return json({ error: "Issue not found." }, 404);
 
-    const requirements = snap.data()?.requirements || [];
-    const idx = requirements.findIndex((r: { id?: string }) => r.id === reqId);
+    const issueData = snap.data();
+    const rawRequirements = issueData?.requirements;
+    const requirements: Array<{ id?: string } & Record<string, unknown>> = Array.isArray(rawRequirements)
+      ? [...(rawRequirements as Array<{ id?: string } & Record<string, unknown>>)]
+      : [];
+    const idx = requirements.findIndex((r) => r.id === reqId);
     if (idx === -1) return json({ error: "Requirement not found." }, 404);
 
-    const update: Record<string, unknown> = { updatedAt: new Date().toISOString() };
-    update[`requirements.${idx}.resolved`] = body.resolved;
+    // Firestore cannot address array elements with dotted paths (it treats
+    // `requirements.0.resolved` as a map key, corrupting the array). Write the
+    // whole modified array back instead.
+    requirements[idx] = { ...requirements[idx], resolved: body.resolved };
 
-    await ref.update(update);
+    await ref.update({
+      requirements,
+      updatedAt: new Date().toISOString(),
+    });
 
     return json({ ok: true });
   } catch (e) {

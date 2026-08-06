@@ -122,7 +122,11 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     if (status && status !== "all") query = query.where("status", "==", status);
 
     const snap = await query.orderBy("createdAt", "desc").limit(100).get();
-    const issues = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    const issues = snap.docs.map((d) => {
+      const data = d.data();
+      if (!Array.isArray(data.requirements)) data.requirements = [];
+      return { id: d.id, ...data };
+    });
 
     return json({ issues });
   } catch (e) {

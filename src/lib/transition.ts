@@ -14,16 +14,20 @@ import type { TransitionInput } from "./issueMachine";
  * Shared driver for every status-mutating endpoint: verify the ID token,
  * validate the body, run the state machine inside a transaction, then fire
  * the notification matrix. The only door through which `status` changes.
+ *
+ * `preParsed` lets callers that already consumed the request body (a body
+ * stream can only be read once) hand over the validated payload.
  */
 export async function runTransition(
   req: NextRequest,
   issueId: string,
   schema: ZodSchema<Record<string, unknown>>,
-  toOverride?: Issue["status"]
+  toOverride?: Issue["status"],
+  preParsed?: Record<string, unknown>
 ): Promise<NextResponse> {
   try {
     const user = await requireAuth(req);
-    const body = await parseBody(req, schema);
+    const body = preParsed ?? (await parseBody(req, schema));
 
     const beforeSnap = await adminDb().doc(`issues/${issueId}`).get();
     if (!beforeSnap.exists) return json({ error: "Issue not found." }, 404);

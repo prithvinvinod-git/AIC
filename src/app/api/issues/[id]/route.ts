@@ -23,8 +23,11 @@ export async function GET(
       db.collection(`issues/${id}/attachments`).orderBy("at", "asc").get(),
     ]);
 
+    const issue = snap.data() || {};
+    if (!Array.isArray(issue.requirements)) issue.requirements = [];
+
     return json({
-      issue: { id, ...snap.data() },
+      issue: { id, ...issue },
       timeline: timelineSnap.docs.map((d) => ({ id: d.id, ...d.data() })),
       comments: commentsSnap.docs.map((d) => ({ id: d.id, ...d.data() })),
       attachments: attachmentsSnap.docs.map((d) => ({ id: d.id, ...d.data() })),

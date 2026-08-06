@@ -25,6 +25,7 @@ interface SummaryResponse {
     totals: {
       issues: number;
       totalAllTime: number;
+      open: number;
       closed: number;
       avgResolutionHours: number;
       slaCompliancePct: number;
@@ -33,7 +34,7 @@ interface SummaryResponse {
       byDepartment: Record<string, number>;
       byPriority: Record<number, number>;
     };
-    trend: { day: string; created: number; closed: number }[];
+    trend: { day: string; created: number; closed: number; unresolved: number }[];
   };
 }
 
@@ -72,6 +73,7 @@ export default function AnalyticsPage() {
 
   const kpis = [
     { label: "Issues (window)", value: t.issues },
+    { label: "Still unresolved", value: t.open },
     { label: "Resolved (all-time)", value: t.closed },
     { label: "Avg resolution", value: `${t.avgResolutionHours}h` },
     { label: "SLA compliance", value: `${t.slaCompliancePct}%` },
@@ -97,7 +99,7 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 xl:grid-cols-5">
         {kpis.map((k) => (
           <div key={k.label} className="kpi">
             <p className="text-xs font-medium uppercase tracking-wide text-slate">{k.label}</p>
@@ -107,7 +109,7 @@ export default function AnalyticsPage() {
       </div>
 
       <div className="card">
-        <p className="font-medium text-graphite">Created vs closed</p>
+        <p className="font-medium text-graphite">Created vs resolved vs still unresolved</p>
         <div className="mt-4 h-64">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data.summary.trend}>
@@ -116,7 +118,8 @@ export default function AnalyticsPage() {
               <YAxis allowDecimals={false} tick={{ fontSize: 11 }} stroke="#898989" />
               <Tooltip />
               <Line type="monotone" dataKey="created" name="Created" stroke="#101010" strokeWidth={2} />
-              <Line type="monotone" dataKey="closed" name="Closed" stroke="#0099ff" strokeWidth={2} />
+              <Line type="monotone" dataKey="closed" name="Resolved" stroke="#0099ff" strokeWidth={2} />
+              <Line type="monotone" dataKey="unresolved" name="Still unresolved" stroke="#f59e0b" strokeWidth={2} strokeDasharray="5 3" />
             </LineChart>
           </ResponsiveContainer>
         </div>

@@ -1,19 +1,22 @@
 "use client";
 
 import { useIssues } from "@/hooks/useIssues";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { Loading, EmptyState } from "@/components/ui/States";
 import { AssignCard, VerifyCard } from "@/components/issues/HeadCards";
 import { MaintenanceJobCard } from "@/components/issues/MaintenanceJobCard";
 
 export default function HeadPage() {
   const { issues, reload } = useIssues({});
+  const { claims } = useAuth();
+  const isHead = claims?.role === "head";
 
   if (!issues) return <Loading label="Loading job board…" />;
 
+  const active = issues.filter((i) => ["ASSIGNED", "ONGOING"].includes(i.status));
   const assignQueue = issues.filter((i) => ["APPROVED", "ESCALATED"].includes(i.status));
   const verifyQueue = issues.filter((i) => i.status === "COMPLETED");
   const blocked = issues.filter((i) => i.status === "PENDING");
-  const active = issues.filter((i) => ["ASSIGNED", "ONGOING"].includes(i.status));
 
   return (
     <div className="flex flex-col gap-10">
@@ -26,15 +29,34 @@ export default function HeadPage() {
 
       <section className="flex flex-col gap-4">
         <h2 className="font-display text-lg font-semibold text-ink">
+          Active jobs <span className="text-sm font-normal text-slate">({active.length})</span>
+        </h2>
+        {active.length === 0 ? (
+          <EmptyState title="No active jobs" body="Assigned jobs being worked on will appear here." />
+        ) : (
+          <div className="grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {active.map((issue) => (
+              <MaintenanceJobCard key={issue.id} issue={issue} onRefresh={() => void reload()} readOnly />
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <h2 className="font-display text-lg font-semibold text-ink">
           Assign queue <span className="text-sm font-normal text-slate">({assignQueue.length})</span>
         </h2>
         {assignQueue.length === 0 ? (
           <EmptyState title="Nothing to assign" body="Approved and escalated issues will land here." />
         ) : (
-          <div className="grid gap-4 lg:grid-cols-2">
-            {assignQueue.map((issue) => (
-              <AssignCard key={issue.id} issue={issue} onRefresh={() => void reload()} />
-            ))}
+          <div className="grid items-start gap-4 lg:grid-cols-2">
+            {assignQueue.map((issue) =>
+              isHead ? (
+                <AssignCard key={issue.id} issue={issue} onRefresh={() => void reload()} />
+              ) : (
+                <MaintenanceJobCard key={issue.id} issue={issue} onRefresh={() => void reload()} readOnly />
+              )
+            )}
           </div>
         )}
       </section>
@@ -46,10 +68,14 @@ export default function HeadPage() {
         {verifyQueue.length === 0 ? (
           <EmptyState title="Nothing to verify" body="Completed jobs awaiting your verification will appear here." />
         ) : (
-          <div className="grid gap-4 lg:grid-cols-2">
-            {verifyQueue.map((issue) => (
-              <VerifyCard key={issue.id} issue={issue} onRefresh={() => void reload()} />
-            ))}
+          <div className="grid items-start gap-4 lg:grid-cols-2">
+            {verifyQueue.map((issue) =>
+              isHead ? (
+                <VerifyCard key={issue.id} issue={issue} onRefresh={() => void reload()} />
+              ) : (
+                <MaintenanceJobCard key={issue.id} issue={issue} onRefresh={() => void reload()} readOnly />
+              )
+            )}
           </div>
         )}
       </section>
@@ -61,25 +87,14 @@ export default function HeadPage() {
         {blocked.length === 0 ? (
           <EmptyState title="No blocked jobs" body="Jobs awaiting parts or permissions will appear here." />
         ) : (
-          <div className="grid gap-4 lg:grid-cols-2">
-            {blocked.map((issue) => (
-              <AssignCard key={issue.id} issue={issue} onRefresh={() => void reload()} />
-            ))}
-          </div>
-        )}
-      </section>
-
-      <section className="flex flex-col gap-4">
-        <h2 className="font-display text-lg font-semibold text-ink">
-          Active jobs <span className="text-sm font-normal text-slate">({active.length})</span>
-        </h2>
-        {active.length === 0 ? (
-          <EmptyState title="No active jobs" body="Assigned jobs being worked on will appear here." />
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {active.map((issue) => (
-              <MaintenanceJobCard key={issue.id} issue={issue} onRefresh={() => void reload()} />
-            ))}
+          <div className="grid items-start gap-4 lg:grid-cols-2">
+            {blocked.map((issue) =>
+              isHead ? (
+                <AssignCard key={issue.id} issue={issue} onRefresh={() => void reload()} />
+              ) : (
+                <MaintenanceJobCard key={issue.id} issue={issue} onRefresh={() => void reload()} readOnly />
+              )
+            )}
           </div>
         )}
       </section>

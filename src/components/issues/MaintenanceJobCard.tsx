@@ -6,6 +6,7 @@ import { ListChecks, PlayCircle, Sparkles } from "lucide-react";
 import type { Issue, Requirement } from "@/lib/types";
 import { api, ApiError } from "@/lib/clientApi";
 import { StatusBadge, PriorityBadge } from "@/components/ui/Badge";
+import { formatDateTime } from "@/lib/format";
 
 interface DraftRequirement {
   item: string;
@@ -16,9 +17,11 @@ interface DraftRequirement {
 export function MaintenanceJobCard({
   issue,
   onRefresh,
+  readOnly = false,
 }: {
   issue: Issue;
   onRefresh: () => void;
+  readOnly?: boolean;
 }) {
   const router = useRouter();
   const [mode, setMode] = useState<"start" | "block" | "complete" | "req" | null>(null);
@@ -168,27 +171,42 @@ export function MaintenanceJobCard({
           <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-slate">
             <ListChecks className="h-3.5 w-3.5" aria-hidden /> Requirements
           </p>
-          <ul className="mt-2 flex flex-col gap-1">
+          <ul className="mt-2 flex flex-col gap-1.5">
             {issue.requirements.map((r, i) => (
-              <li key={`${(r as Requirement & { id?: string }).id || i}`} className="flex items-center gap-2 text-sm">
-                {isAssigned || isOngoing ? (
+              <li key={`${(r as Requirement & { id?: string }).id || i}`} className="flex items-center gap-3 text-sm">
+                {readOnly ? (
+                  <span
+                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border-2 ${
+                      r.resolved ? "border-[#2e7d32] bg-[#2e7d32] text-white" : "border-slate bg-white"
+                    }`}
+                    aria-label={r.resolved ? "Resolved" : "Unresolved"}
+                    title={r.resolved ? "Resolved" : "Unresolved"}
+                  >
+                    {r.resolved && <span className="text-xl leading-none">✓</span>}
+                  </span>
+                ) : (
                   <button
                     type="button"
                     onClick={() => void toggleRequirement(r)}
-                    className={`flex h-4 w-4 items-center justify-center rounded border ${
-                      r.resolved ? "border-ink bg-ink text-white" : "border-slate bg-white"
+                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border-2 transition-colors ${
+                      r.resolved
+                        ? "border-[#2e7d32] bg-[#2e7d32] text-white"
+                        : "border-slate bg-white hover:border-ink"
                     }`}
-                    aria-label={r.resolved ? "Unresolve" : "Resolve"}
+                    aria-label={r.resolved ? "Mark as unresolved" : "Mark as resolved"}
+                    title={r.resolved ? "Mark as unresolved" : "Mark as resolved"}
                   >
-                    {r.resolved && <span className="text-[9px]">✓</span>}
+                    {r.resolved && <span className="text-xl leading-none">✓</span>}
                   </button>
-                ) : (
-                  <span className={`h-4 w-4 rounded border ${r.resolved ? "border-ink bg-ink" : "border-slate"}`} />
                 )}
                 <span className={r.resolved ? "text-slate line-through" : "text-graphite"}>
                   {r.item} ×{r.qty}
                   {r.needsApproval && (
-                    <span className="ml-1 rounded bg-[#fffbeb] px-1.5 py-0.5 text-[10px] font-medium text-[#d97706]">
+                    <span
+                      className={`ml-1 rounded px-1.5 py-0.5 text-[10px] font-medium ${
+                        r.resolved ? "bg-[#ecfdf5] text-[#2e7d32]" : "bg-[#fffbeb] text-[#d97706]"
+                      }`}
+                    >
                       approval
                     </span>
                   )}
@@ -196,10 +214,16 @@ export function MaintenanceJobCard({
               </li>
             ))}
           </ul>
+          {unresolvedApproval > 0 && (
+            <p className="mt-2 text-xs text-[#d97706]">
+              Tick the box next to each approval-flagged item once it&apos;s been obtained, or add a waiver note
+              in the closure report.
+            </p>
+          )}
         </div>
       )}
 
-      {(isAssigned || isOngoing) && (
+      {!readOnly && (isAssigned || isOngoing) && (
         <div className="flex flex-wrap items-center gap-2">
           {isAssigned && (
             <button className="btn btn-primary btn-sm" onClick={() => void act("start")} disabled={busy}>
@@ -297,9 +321,9 @@ export function MaintenanceJobCard({
             void addRequirement(e);
           }}
         >
-          <div className="flex flex-col gap-2 sm:flex-row">
+          <div className="grid grid-cols-5 gap-2">
             <input
-              className="input flex-1"
+              className="input col-span-4"
               required
               minLength={2}
               value={reqItem}
@@ -307,7 +331,7 @@ export function MaintenanceJobCard({
               onChange={(e) => setReqItem(e.target.value)}
             />
             <input
-              className="input w-20"
+              className="input col-span-1"
               type="number"
               min={0}
               value={reqQty}
@@ -336,6 +360,26 @@ export function MaintenanceJobCard({
       {isBlocked && (
         <p className="rounded-lg bg-[#fffbeb] px-3 py-2 text-xs text-[#d97706]">
           Blocked while awaiting parts or permissions. The maintenance head can reassign.
+        </p>
+      )}
+
+      {issue.status === "COMPLETED" && (
+        <p className="rounded-lg bg-[#fffbeb] px-3 py-2 text-xs text-[#d97706]">
+          Awaiting verification by the maintenance head.
+        </p>
+      )}
+
+      {issue.status === "VERIFIED" && issue.verification && (
+        <div className="rounded-lg bg-[#ecfdf5] px-3 py-2 text-xs text-[#2e7d32]">
+          <p className="font-medium">Verified by {issue.verification.verifiedBy.name}</p>
+          {issue.verification.note && <p className="mt-1">{issue.verification.note}</p>}
+          <p className="mt-1 text-slate">on {formatDateTime(issue.verification.verifiedAt)}</p>
+        </div>
+      )}
+
+      {issue.status === "PENDING" && issue.verification?.sendBackReason && (
+        <p className="rounded-lg bg-[#fee2e2] px-3 py-2 text-xs text-[#b91c1c]">
+          Sent back: {issue.verification.sendBackReason}
         </p>
       )}
 

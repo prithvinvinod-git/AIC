@@ -11,6 +11,7 @@ const TABS: { key: IssueStatus | "all"; label: string }[] = [
   { key: "ONGOING", label: "In progress" },
   { key: "PENDING", label: "Blocked" },
   { key: "COMPLETED", label: "Done" },
+  { key: "VERIFIED", label: "Verified" },
 ];
 
 export default function JobsPage() {
@@ -21,7 +22,7 @@ export default function JobsPage() {
 
   const count = (s: IssueStatus) => issues.filter((i) => i.status === s).length;
   const visible = issues.filter((i) => tab === "all" || i.status === tab);
-  const showDone = tab === "COMPLETED";
+  const showDone = tab === "COMPLETED" || tab === "VERIFIED";
 
   return (
     <div className="flex flex-col gap-6">
@@ -48,7 +49,7 @@ export default function JobsPage() {
           body="New assignments from the maintenance head will appear here."
         />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {visible.map((issue) => (
             <MaintenanceJobCard key={issue.id} issue={issue} onRefresh={() => void reload()} />
           ))}

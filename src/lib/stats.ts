@@ -19,7 +19,7 @@ export interface DailyStatPatch {
 }
 
 export async function bumpDailyStat(patch: DailyStatPatch, date: Date = new Date()): Promise<void> {
-  const ref = adminDb().doc(`stats/daily/${dayKey(date)}`);
+  const ref = adminDb().doc(`stats/${dayKey(date)}`);
   const data: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(patch)) {
     if (v === undefined) continue;
@@ -37,7 +37,7 @@ export async function bumpDailyStat(patch: DailyStatPatch, date: Date = new Date
 
 export async function incrementCategoryCount(categoryName: string, amount = 1, date: Date = new Date()): Promise<void> {
   await adminDb()
-    .doc(`stats/daily/${dayKey(date)}`)
+    .doc(`stats/${dayKey(date)}`)
     .set(
       { byCategory: { [categoryName]: FieldValue.increment(amount) } },
       { merge: true }
@@ -46,7 +46,7 @@ export async function incrementCategoryCount(categoryName: string, amount = 1, d
 
 export async function incrementStatusCount(status: string, amount = 1, date: Date = new Date()): Promise<void> {
   await adminDb()
-    .doc(`stats/daily/${dayKey(date)}`)
+    .doc(`stats/${dayKey(date)}`)
     .set(
       { byStatus: { [status]: FieldValue.increment(amount) } },
       { merge: true }

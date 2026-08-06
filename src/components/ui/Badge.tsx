@@ -2,17 +2,17 @@ import type { IssueStatus } from "@/lib/types";
 import { PRIORITY_COLOR, PRIORITY_LABEL, STATUS_LABEL } from "@/lib/constants";
 
 const STATUS_TONE: Record<IssueStatus, string> = {
-  NEW: "bg-paper text-graphite",
+  NEW: "bg-[#eff6fe] text-[#2563eb]",
   VALIDATED: "bg-[#eff6fe] text-[#2563eb]",
   ESCALATED: "bg-[#fffbeb] text-[#d97706]",
   APPROVED: "bg-[#eff6fe] text-[#2563eb]",
-  ASSIGNED: "bg-ink text-white",
+  ASSIGNED: "bg-[#eff6fe] text-[#2563eb]",
   ONGOING: "bg-[#eff6fe] text-[#2563eb]",
-  PENDING: "bg-silver text-slate",
-  COMPLETED: "bg-graphite text-white",
+  PENDING: "bg-[#fffbeb] text-[#d97706]",
+  COMPLETED: "bg-[#ecfdf5] text-[#2e7d32]",
   VERIFIED: "bg-[#ecfdf5] text-[#2e7d32]",
   REJECTED: "bg-[#fef2f2] text-[#c0392b]",
-  CLOSED: "bg-silver text-slate",
+  CLOSED: "bg-[#ecfdf5] text-[#2e7d32]",
 };
 
 export function StatusBadge({ status }: { status: IssueStatus }) {

@@ -10,29 +10,8 @@ export interface WeeklyInsight {
   recommendations: string[];
 }
 
-interface DailyStat {
-  totalCreated?: number;
-  totalClosed?: number;
-  slaBreached?: number;
-  sumResolutionMs?: number;
-  byCategory?: Record<string, number>;
-}
-
-/** Read stats/daily docs between two dates. */
-async function readDailyStats(from: Date, to: Date) {
-  const out: Record<string, DailyStat> = {};
-  const cursor = new Date(from);
-  while (cursor <= to) {
-    const key = cursor.toISOString().slice(0, 10);
-    const snap = await adminDb().doc(`stats/daily/${key}`).get();
-    if (snap.exists) out[key] = snap.data() as DailyStat;
-    cursor.setDate(cursor.getDate() + 1);
-  }
-  return out;
-}
-
 /**
- * F5 — Weekly governance insights. Reads stats/daily, produces a plain-language
+ * F5 — Weekly governance insights. Reads per-day stats docs, produces a plain-language
  * narrative (AI when enabled, deterministic summary otherwise) that powers the
  * HOD "trending complaints" panel and the weekly report email.
  */
@@ -42,22 +21,41 @@ export async function weeklyInsightsFlow(input: { weekStart?: string }): Promise
   if (!input.weekStart) start.setDate(end.getDate() - 6);
   start.setHours(0, 0, 0, 0);
 
-  const stats = await readDailyStats(start, end);
+  const db = adminDb();
+  const since = start.toISOString();
+  const [createdSnap, resolvedSnap] = await Promise.all([
+    db.collection("issues").where("createdAt", ">=", since).limit(1000).get(),
+    db.collection("issues").where("status", "in", ["VERIFIED", "CLOSED"]).limit(1000).get(),
+  ]);
 
-  const totals = Object.values(stats).reduce(
-    (acc, d) => {
-      acc.created += d.totalCreated || 0;
-      acc.closed += d.totalClosed || 0;
-      acc.breached += d.slaBreached || 0;
-      acc.avgMs += d.sumResolutionMs || 0;
-      const byCat = d.byCategory || {};
-      for (const [k, v] of Object.entries(byCat)) {
-        acc.byCat[k] = (acc.byCat[k] || 0) + v;
-      }
-      return acc;
-    },
-    { created: 0, closed: 0, breached: 0, avgMs: 0, byCat: {} as Record<string, number> }
-  );
+  const byCat: Record<string, number> = {};
+  for (const doc of createdSnap.docs) {
+    const cat = doc.data().routing?.categoryName || "Uncategorized";
+    byCat[cat] = (byCat[cat] || 0) + 1;
+  }
+
+  const created = createdSnap.size;
+  let closed = 0;
+  let breached = 0;
+  let sumResolutionMs = 0;
+  for (const doc of resolvedSnap.docs) {
+    const d = doc.data();
+    const resolvedAt = d.verification?.verifiedAt || d.updatedAt;
+    if (!resolvedAt) continue;
+    const t = new Date(resolvedAt).getTime();
+    if (t < start.getTime()) continue;
+    closed++;
+    if (d.createdAt) sumResolutionMs += t - new Date(d.createdAt).getTime();
+    if (d.sla?.breachedFlags?.resolution) breached++;
+  }
+
+  const totals = {
+    created,
+    closed,
+    breached,
+    avgMs: closed ? Math.round(sumResolutionMs / closed) : 0,
+    byCat,
+  };
 
   const topCategories = (Object.entries(totals.byCat) as [string, number][])
     .sort((a, b) => b[1] - a[1])

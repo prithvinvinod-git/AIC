@@ -5,10 +5,12 @@ import { json, handleError } from "@/lib/api";
 
 const db = adminDb();
 
+const OPEN_STATUSES = ["NEW", "VALIDATED", "ESCALATED", "APPROVED", "ASSIGNED", "ONGOING", "PENDING"];
+
 /**
  * GET /api/analytics/summary?range=7|30 — aggregates over the requested window.
  * Computed live from the issues collection (demo-accurate without relying on
- * scheduled Cloud Functions), merged with stats/daily counters when present.
+ * scheduled Cloud Functions), merged with per-day stats counters when present.
  */
 export async function GET(req: NextRequest): Promise<NextResponse> {
   try {
@@ -20,9 +22,10 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     const range = Number(req.nextUrl.searchParams.get("range") || 7);
     const since = new Date(Date.now() - range * 24 * 3600 * 1000).toISOString();
 
-    const [issueSnap, closedSnap, totalSnap] = await Promise.all([
+    const [issueSnap, resolvedSnap, openSnap, totalSnap] = await Promise.all([
       db.collection("issues").where("createdAt", ">=", since).limit(500).get(),
-      db.collection("issues").where("status", "==", "CLOSED").limit(500).get(),
+      db.collection("issues").where("status", "in", ["VERIFIED", "CLOSED"]).limit(500).get(),
+      db.collection("issues").where("status", "in", OPEN_STATUSES).limit(1000).get(),
       db.collection("issues").limit(1000).get(),
     ]);
 
@@ -42,31 +45,33 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       if (d.priority) byPriority[d.priority] = (byPriority[d.priority] || 0) + 1;
     }
 
-    for (const doc of closedSnap.docs) {
+    for (const doc of resolvedSnap.docs) {
       const d = doc.data();
-      if (d.createdAt && d.updatedAt) {
-        const ms = new Date(d.updatedAt).getTime() - new Date(d.createdAt).getTime();
+      const resolvedAt = d.verification?.verifiedAt || d.updatedAt;
+      if (d.createdAt && resolvedAt) {
+        const ms = new Date(resolvedAt).getTime() - new Date(d.createdAt).getTime();
         sumResolutionMs += ms;
         resolvedCount++;
       }
     }
 
-    // SLA compliance: count breached resolution deadlines among closed.
+    // SLA compliance: count breached resolution deadlines among resolved.
     let slaCompliant = 0;
     let slaTotal = 0;
-    for (const doc of closedSnap.docs) {
+    for (const doc of resolvedSnap.docs) {
       const d = doc.data();
       if (d.sla?.resolutionDeadline) {
         slaTotal++;
+        const resolvedAt = d.verification?.verifiedAt || d.updatedAt;
         const wasBreached =
           d.sla.breachedFlags?.resolution ||
-          new Date(d.updatedAt) > new Date(d.sla.resolutionDeadline);
+          new Date(resolvedAt) > new Date(d.sla.resolutionDeadline);
         if (!wasBreached) slaCompliant++;
       }
     }
 
-    // Week trend (created per day).
-    const trend: { day: string; created: number; closed: number }[] = [];
+    // Week trend (created / resolved / still-unresolved per day).
+    const trend: { day: string; created: number; closed: number; unresolved: number }[] = [];
     for (let i = range - 1; i >= 0; i--) {
       const dayStart = new Date(Date.now() - i * 24 * 3600 * 1000);
       dayStart.setHours(0, 0, 0, 0);
@@ -78,9 +83,13 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
           const t = new Date(d.data().createdAt).getTime();
           return t >= dayStart.getTime() && t < dayEnd.getTime();
         }).length,
-        closed: closedSnap.docs.filter((d) => {
-          const t = new Date(d.data().updatedAt).getTime();
+        closed: resolvedSnap.docs.filter((d) => {
+          const t = new Date(d.data().verification?.verifiedAt || d.data().updatedAt).getTime();
           return t >= dayStart.getTime() && t < dayEnd.getTime();
+        }).length,
+        unresolved: openSnap.docs.filter((d) => {
+          const t = new Date(d.data().createdAt).getTime();
+          return t <= dayEnd.getTime();
         }).length,
       });
     }
@@ -91,6 +100,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         totals: {
           issues: issueSnap.size,
           totalAllTime: totalSnap.size,
+          open: openSnap.size,
           closed: resolvedCount,
           avgResolutionHours: resolvedCount ? Math.round(sumResolutionMs / resolvedCount / 3600000) : 0,
           slaCompliancePct: slaTotal ? Math.round((slaCompliant / slaTotal) * 100) : 100,

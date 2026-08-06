@@ -51,7 +51,6 @@ export const requirementSchema = z.object({
 });
 
 export const resolveRequirementSchema = z.object({
-  requirementId: z.string().min(1),
   resolved: z.boolean(),
 });
 

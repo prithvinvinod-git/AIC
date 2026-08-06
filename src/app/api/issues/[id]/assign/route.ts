@@ -66,7 +66,7 @@ export async function POST(
       "routing.staff": staffObjs,
     });
 
-    return runTransition(req, id, schema, "ASSIGNED");
+    return runTransition(req, id, schema, "ASSIGNED", body);
   } catch (e) {
     return handleError(e);
   }

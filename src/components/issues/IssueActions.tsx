@@ -111,6 +111,21 @@ export function IssueActions({ issue, onChanged }: Props) {
     if (issue.status === "ONGOING") {
       return <MaintenanceComplete issue={issue} onChanged={onChanged} />;
     }
+    if (issue.status === "COMPLETED") {
+      return (
+        <div className="card">
+          <p className="text-sm text-[#d97706]">Awaiting verification by the maintenance head.</p>
+        </div>
+      );
+    }
+    if (issue.status === "VERIFIED" && issue.verification) {
+      return (
+        <div className="card">
+          <p className="text-sm text-[#2e7d32]">Verified by {issue.verification.verifiedBy.name}.</p>
+          {issue.verification.note && <p className="mt-1 text-sm text-slate">{issue.verification.note}</p>}
+        </div>
+      );
+    }
   }
 
   return null;
@@ -470,20 +485,32 @@ export function RequirementsPanel({ issue, onChanged }: { issue: Issue; onChange
               {canEdit ? (
                 <button
                   type="button"
-                  className={`flex h-4 w-4 items-center justify-center rounded border ${
-                    r.resolved ? "border-ink bg-ink text-white" : "border-slate bg-white"
+                  className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border-2 transition-colors ${
+                    r.resolved
+                      ? "border-[#2e7d32] bg-[#2e7d32] text-white"
+                      : "border-slate bg-white hover:border-ink"
                   }`}
+                  aria-label={r.resolved ? "Mark as unresolved" : "Mark as resolved"}
+                  title={r.resolved ? "Mark as unresolved" : "Mark as resolved"}
                   onClick={() => void toggle(r)}
                 >
-                  {r.resolved && <span className="text-[9px]">✓</span>}
+                  {r.resolved && <span className="text-xl leading-none">✓</span>}
                 </button>
               ) : (
-                <span className={`h-4 w-4 rounded border ${r.resolved ? "border-ink bg-ink" : "border-slate"}`} />
+                <span
+                  className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border-2 ${
+                    r.resolved ? "border-[#2e7d32] bg-[#2e7d32]" : "border-slate"
+                  }`}
+                />
               )}
               <span className={r.resolved ? "text-slate line-through" : "text-graphite"}>
                 {r.item} ×{r.qty}
                 {r.needsApproval && (
-                  <span className="ml-1 rounded bg-[#fffbeb] px-1.5 py-0.5 text-[10px] font-medium text-[#d97706]">
+                  <span
+                    className={`ml-1 rounded px-1.5 py-0.5 text-[10px] font-medium ${
+                      r.resolved ? "bg-[#ecfdf5] text-[#2e7d32]" : "bg-[#fffbeb] text-[#d97706]"
+                    }`}
+                  >
                     approval
                   </span>
                 )}
@@ -493,16 +520,20 @@ export function RequirementsPanel({ issue, onChanged }: { issue: Issue; onChange
         </ul>
       )}
       {canEdit && (
-        <form onSubmit={(e) => void add(e)} className="mt-3 flex flex-col gap-2 border-t border-silver pt-3 sm:flex-row">
-          <input className="input flex-1" placeholder="e.g. LED tube replacement" required minLength={2} value={item} onChange={(e) => setItem(e.target.value)} />
-          <input className="input w-20" type="number" min={0} value={qty} onChange={(e) => setQty(e.target.value)} />
-          <label className="flex items-center gap-2 text-sm text-slate">
-            <input type="checkbox" checked={needsApproval} onChange={(e) => setNeedsApproval(e.target.checked)} />
-            Approval
-          </label>
-          <button type="submit" className="btn btn-primary btn-sm">
-            Add
-          </button>
+        <form onSubmit={(e) => void add(e)} className="mt-3 flex flex-col gap-2 border-t border-silver pt-3">
+          <div className="grid grid-cols-5 gap-2">
+            <input className="input col-span-4" placeholder="e.g. LED tube replacement" required minLength={2} value={item} onChange={(e) => setItem(e.target.value)} />
+            <input className="input col-span-1" type="number" min={0} value={qty} onChange={(e) => setQty(e.target.value)} />
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="flex items-center gap-2 text-sm text-slate">
+              <input type="checkbox" checked={needsApproval} onChange={(e) => setNeedsApproval(e.target.checked)} />
+              Approval
+            </label>
+            <button type="submit" className="btn btn-primary btn-sm">
+              Add
+            </button>
+          </div>
         </form>
       )}
       {error && <p className="mt-2 text-sm text-[#c0392b]">{error}</p>}
