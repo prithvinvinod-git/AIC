@@ -2,7 +2,8 @@
 
 import { useCallback, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, CircleCheckBig, Clock3, MapPin, Star } from "lucide-react";
+import { ArrowLeft, CircleCheckBig, Clock3, Download, MapPin, Star } from "lucide-react";
+import { downloadIssueReceipt } from "@/lib/receiptPdf";
 import { useIssue } from "@/hooks/useIssue";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Loading, EmptyState } from "@/components/ui/States";
@@ -26,6 +27,17 @@ export default function IssueDetailPage() {
   const [comment, setComment] = useState("");
   const [commentBusy, setCommentBusy] = useState(false);
   const [commentError, setCommentError] = useState<string | null>(null);
+  const [receiptBusy, setReceiptBusy] = useState(false);
+
+  const downloadReceipt = useCallback(async () => {
+    if (!issue || !timeline) return;
+    setReceiptBusy(true);
+    try {
+      await downloadIssueReceipt(issue, timeline);
+    } finally {
+      setReceiptBusy(false);
+    }
+  }, [issue, timeline]);
 
   const postComment = useCallback(
     async (e: React.FormEvent) => {
@@ -175,6 +187,18 @@ export default function IssueDetailPage() {
               onClick={() => setCloseOpen(true)}
             >
               <CircleCheckBig className="h-3.5 w-3.5" aria-hidden /> Close issue
+            </button>
+          )}
+
+          {issue.status === "CLOSED" && (
+            <button
+              type="button"
+              className="btn btn-primary"
+              disabled={receiptBusy}
+              onClick={() => void downloadReceipt()}
+            >
+              <Download className="h-3.5 w-3.5" aria-hidden />
+              {receiptBusy ? "Preparing receipt…" : "Download receipt (PDF)"}
             </button>
           )}
 
