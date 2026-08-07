@@ -99,16 +99,16 @@ export default function SettingsPage() {
           <button
             type="button"
             disabled={busy}
-            onClick={() => void toggleNotifications(!settings?.notifyEmail)}
+            onClick={() => void toggleNotifications(!(settings?.notifyEmail ?? true))}
             role="switch"
-            aria-checked={Boolean(settings?.notifyEmail)}
+            aria-checked={Boolean(settings?.notifyEmail ?? true)}
             className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${
-              settings?.notifyEmail ? "bg-ink" : "bg-stone"
+              settings?.notifyEmail ?? true ? "bg-ink" : "bg-stone"
             }`}
           >
             <span
               className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-all ${
-                settings?.notifyEmail ? "left-[22px]" : "left-0.5"
+                settings?.notifyEmail ?? true ? "left-[22px]" : "left-0.5"
               }`}
             />
           </button>

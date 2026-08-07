@@ -6,13 +6,18 @@ import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { api, ApiError } from "@/lib/clientApi";
 import { Loading, EmptyState } from "@/components/ui/States";
-import { DEPARTMENTS, ROLE_LABEL } from "@/lib/constants";
+import { COLLEGES, DEPARTMENTS_BY_COLLEGE, ROLE_LABEL, type College } from "@/lib/constants";
 import type { AppUser, Category, Team, Role } from "@/lib/types";
 
 const TABS = ["Users", "Teams", "Categories", "Config"] as const;
 type Tab = (typeof TABS)[number];
 
 const ALL_ROLES: Role[] = ["reporter", "validator", "hod", "principal", "maintenance", "admin"];
+
+const USER_TABS = ["Regular users", "Faculties"] as const;
+type UserTab = (typeof USER_TABS)[number];
+
+const FACULTY_ROLES: Role[] = ["validator", "hod", "principal", "maintenance", "admin"];
 
 export default function AdminPage() {
   const { claims } = useAuth();
@@ -47,13 +52,15 @@ export default function AdminPage() {
 }
 
 function UsersTab() {
+  const [userTab, setUserTab] = useState<UserTab>("Regular users");
   const [users, setUsers] = useState<AppUser[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("demo1234");
-  const [role, setRole] = useState<Role>("reporter");
-  const department = DEPARTMENTS[0];
+  const [role, setRole] = useState<Role>("validator");
+  const [college, setCollege] = useState<College>(COLLEGES[0]);
+  const [department, setDepartment] = useState<string>(DEPARTMENTS_BY_COLLEGE[COLLEGES[0]][0]);
 
   const load = useCallback(async () => {
     try {
@@ -69,13 +76,17 @@ function UsersTab() {
     void load();
   }, [load]);
 
+  const isFaculty = userTab === "Faculties";
+  const addRole: Role = isFaculty ? role : "reporter";
+  const depts = DEPARTMENTS_BY_COLLEGE[college];
+
   const addUser = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
       try {
         await api("/api/auth/provision", {
           method: "POST",
-          body: JSON.stringify({ name, email, password, role, department }),
+          body: JSON.stringify({ name, email, password, role: addRole, college, department }),
         });
         setName("");
         setEmail("");
@@ -84,7 +95,7 @@ function UsersTab() {
         setError(e2 instanceof ApiError ? e2.message : "Failed to create user.");
       }
     },
-    [name, email, password, role, department, load]
+    [name, email, password, addRole, college, department, load]
   );
 
   const updateUser = useCallback(
@@ -104,24 +115,69 @@ function UsersTab() {
 
   if (!users) return <Loading label="Loading users…" />;
 
+  const visible = isFaculty
+    ? users.filter((u) => u.role !== "reporter")
+    : users.filter((u) => u.role === "reporter");
+
   return (
     <div className="flex flex-col gap-4">
       {error && <p className="rounded-lg bg-[#fef2f2] px-3 py-2 text-sm text-[#c0392b]">{error}</p>}
+
+      <div className="flex flex-wrap gap-2">
+        {USER_TABS.map((t) => (
+          <button
+            key={t}
+            type="button"
+            className={`btn btn-sm ${userTab === t ? "btn-primary" : "btn-ghost"}`}
+            onClick={() => setUserTab(t)}
+          >
+            {t}
+          </button>
+        ))}
+      </div>
 
       <form onSubmit={addUser} className="card grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <input className="input" placeholder="Name" required value={name} onChange={(e) => setName(e.target.value)} />
         <input className="input" placeholder="Email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
         <input className="input" placeholder="Password" type="text" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
-        <select className="input" value={role} onChange={(e) => setRole(e.target.value as Role)}>
-          {ALL_ROLES.map((r) => (
-            <option key={r} value={r}>
-              {ROLE_LABEL[r]}
-            </option>
-          ))}
-        </select>
+        {isFaculty ? (
+          <select className="input" value={role} onChange={(e) => setRole(e.target.value as Role)}>
+            {FACULTY_ROLES.map((r) => (
+              <option key={r} value={r}>
+                {ROLE_LABEL[r]}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <select className="input" value={addRole} disabled>
+            <option value="reporter">{ROLE_LABEL.reporter}</option>
+          </select>
+        )}
         <button type="submit" className="btn btn-primary btn-sm">
           Add user
         </button>
+        <select
+          className="input"
+          value={college}
+          onChange={(e) => {
+            const next = e.target.value as College;
+            setCollege(next);
+            setDepartment(DEPARTMENTS_BY_COLLEGE[next][0]);
+          }}
+        >
+          {COLLEGES.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
+        <select className="input" value={department} onChange={(e) => setDepartment(e.target.value)}>
+          {depts.map((d) => (
+            <option key={d} value={d}>
+              {d}
+            </option>
+          ))}
+        </select>
       </form>
 
       <div className="card overflow-x-auto p-0">
@@ -129,19 +185,21 @@ function UsersTab() {
           <thead>
             <tr className="border-b border-silver text-left text-xs uppercase tracking-wide text-slate">
               <th className="px-4 py-3">User</th>
+              <th className="px-4 py-3">College</th>
               <th className="px-4 py-3">Department</th>
               <th className="px-4 py-3">Role</th>
               <th className="px-4 py-3">Active</th>
             </tr>
           </thead>
           <tbody>
-            {users.map((u) => (
+            {visible.map((u) => (
               <tr key={u.uid} className="border-b border-silver last:border-0">
                 <td className="px-4 py-3">
                   <p className="font-medium text-graphite">{u.name}</p>
                   <p className="text-xs text-slate">{u.email}</p>
                 </td>
-                <td className="px-4 py-3 text-slate">{u.department}</td>
+                <td className="px-4 py-3 text-slate">{u.college || "—"}</td>
+                <td className="px-4 py-3 text-slate">{u.department || "—"}</td>
                 <td className="px-4 py-3">
                   <select
                     className="input w-auto py-1 text-xs"
@@ -167,6 +225,11 @@ function UsersTab() {
             ))}
           </tbody>
         </table>
+        {visible.length === 0 && (
+          <p className="px-4 py-6 text-center text-sm text-slate">
+            {isFaculty ? "No faculties yet." : "No regular users yet."}
+          </p>
+        )}
       </div>
     </div>
   );

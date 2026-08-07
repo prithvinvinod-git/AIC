@@ -142,6 +142,7 @@ export interface AISuggestion {
 export interface Issue {
   id?: string;
   issueNo: string;
+  trackingToken?: string;
   title: string;
   description: string;
   college?: string;

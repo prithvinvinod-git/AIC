@@ -12,7 +12,8 @@ import type { Category, ImageRef } from "@/lib/types";
 const MAX_IMAGES = 3;
 
 // Downscale + re-encode to JPEG on the client so blobs stay under the
-// Firestore 1MB document limit (~300-600KB typical output at this size).
+// Firestore 1MB document limit (typically ~100-300KB output at this size,
+// ~10-20x smaller than the raw photo).
 function fileToCompressedBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -20,7 +21,7 @@ function fileToCompressedBase64(file: File): Promise<string> {
       const dataUrl = String(reader.result || "");
       const img = new Image();
       img.onload = () => {
-        const maxDim = 1600;
+        const maxDim = 1200;
         let { width, height } = img;
         if (width > maxDim || height > maxDim) {
           const scale = maxDim / Math.max(width, height);
@@ -35,8 +36,10 @@ function fileToCompressedBase64(file: File): Promise<string> {
           resolve(dataUrl.split(",")[1] || "");
           return;
         }
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, width, height);
         ctx.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL("image/jpeg", 0.8).split(",")[1] || "");
+        resolve(canvas.toDataURL("image/jpeg", 0.7).split(",")[1] || "");
       };
       img.onerror = () => resolve(dataUrl.split(",")[1] || "");
       img.src = dataUrl;

@@ -43,6 +43,7 @@ export async function getRecipientEmails(roles: Role[], department?: string): Pr
         const u = d.data();
         if (!roles.includes(u.role as Role)) return false;
         if (department && u.department && u.department !== department) return false;
+        if (u.notifyEmail === false) return false;
         return true;
       })
       .map((d) => d.data().email as string);
@@ -68,7 +69,11 @@ export async function getTeamEmails(teamId: string, staffUids: string[] = []): P
     const emails: string[] = [];
     for (const uid of uids) {
       const u = await db.doc(`users/${uid}`).get();
-      if (u.exists) emails.push((u.data()?.email as string) || "");
+      if (u.exists) {
+        const uData = u.data() as { email?: string; notifyEmail?: boolean } | undefined;
+        if (uData?.notifyEmail === false) continue;
+        emails.push(uData?.email || "");
+      }
     }
     return clean(emails);
   } catch (e) {

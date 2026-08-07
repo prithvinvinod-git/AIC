@@ -312,9 +312,11 @@ export async function downloadIssueReceipt(issue: Issue, timeline: TimelineEntry
     import("pdfmake/build/pdfmake"),
     import("pdfmake/build/vfs_fonts"),
   ]);
-  const pm = pdfMake as unknown as { vfs: Record<string, string> };
-  const vfs = pdfFonts as unknown as { pdfMake: { vfs: Record<string, string> } };
-  pm.vfs = vfs.pdfMake.vfs;
+  const pm = pdfMake as unknown as { addVirtualFileSystem: (vfs: Record<string, string>) => void };
+  // pdfmake 0.3.x `vfs_fonts.js` exports the raw virtual file system map
+  // (`module.exports = vfs`); it must be registered via addVirtualFileSystem
+  // so the browser virtual file system can resolve the Roboto font files.
+  pm.addVirtualFileSystem(pdfFonts as unknown as Record<string, string>);
   const safeNo = (issue.issueNo || "issue").replace(/[^A-Za-z0-9-]/g, "");
   pdfMake.createPdf(buildDefinition(issue, timeline)).download(`receipt-${safeNo}.pdf`);
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { after } from "next/server";
+import { randomUUID } from "crypto";
 import type { Query } from "firebase-admin/firestore";
 import { adminDb } from "@/lib/firebaseAdmin";
 import { requireAuth } from "@/lib/auth";
@@ -28,12 +29,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     if (!cat.isActive) return json({ error: "Category is inactive." }, 400);
 
     const issueNo = await allocateIssueNo(db);
+    const trackingToken = randomUUID();
     const ref = db.collection("issues").doc();
     const now = new Date().toISOString();
     const priority = body.priority && body.priority >= 1 && body.priority <= 5 ? body.priority : 0;
 
     const issueData = {
       issueNo,
+      trackingToken,
       title: body.title,
       description: body.description,
       college: body.college || "",

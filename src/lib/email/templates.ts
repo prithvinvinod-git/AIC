@@ -21,6 +21,15 @@ function issueUrl(id: string | undefined): string {
   return `${appUrl()}/issues/${id}`;
 }
 
+function trackingUrl(token: string): string {
+  return `${appUrl()}/track/${token}`;
+}
+
+/** Prefer the public tracking link (no login needed); fall back to the app page for legacy docs. */
+function issueLink(issue: Issue): string {
+  return issue.trackingToken ? trackingUrl(issue.trackingToken) : issueUrl(issue.id);
+}
+
 function esc(value: unknown): string {
   return String(value ?? "").replace(/[&<>"']/g, (c) => {
     const map: Record<string, string> = {
@@ -153,9 +162,9 @@ export function reportedTemplate(issue: Issue, priority: number): { html: string
     <p style="margin:20px 0 4px;color:${TEXT};font-size:15px;"><strong>${esc(issue.title)}</strong></p>
     <p style="margin:0 0 18px;color:${MUTED};">${esc(issue.description)}</p>
     ${issueMeta(issue)}
-    ${cta(issueUrl(issue.id), "View issue")}
+    ${cta(issueLink(issue), "Track this issue")}
   `;
-  const text = `${headline}\n\n${issue.title}\n\n${issue.issueNo}\nDepartment: ${issue.department}\nCategory: ${issue.routing?.categoryName || "—"}\nReported: ${fmt(issue.createdAt)}\n\nView: ${issueUrl(issue.id)}`;
+  const text = `${headline}\n\n${issue.title}\n\n${issue.issueNo}\nDepartment: ${issue.department}\nCategory: ${issue.routing?.categoryName || "—"}\nReported: ${fmt(issue.createdAt)}\n\nTrack: ${issueLink(issue)}`;
   return { html: shell(body), text };
 }
 
@@ -166,9 +175,9 @@ export function approvedTemplate(issue: Issue): { html: string; text: string } {
     ${severityBadge(issue.priority)}
     ${issueMeta(issue)}
     <p style="margin:8px 0 0;font-size:13px;color:${MUTED};">Severity may have been revised by the approving authority (HOD / Principal).</p>
-    ${cta(issueUrl(issue.id), "View issue")}
+    ${cta(issueLink(issue), "Track this issue")}
   `;
-  const text = `Issue approved — ${issue.issueNo}\n\n${issue.title}\n\n${issue.issueNo}\nDepartment: ${issue.department}\nCategory: ${issue.routing?.categoryName || "—"}\n\nView: ${issueUrl(issue.id)}`;
+  const text = `Issue approved — ${issue.issueNo}\n\n${issue.title}\n\n${issue.issueNo}\nDepartment: ${issue.department}\nCategory: ${issue.routing?.categoryName || "—"}\n\nTrack: ${issueLink(issue)}`;
   return { html: shell(body), text };
 }
 
