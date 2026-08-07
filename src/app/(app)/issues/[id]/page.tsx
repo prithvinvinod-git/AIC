@@ -2,12 +2,14 @@
 
 import { useCallback, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Clock3, MapPin } from "lucide-react";
+import { ArrowLeft, CircleCheckBig, Clock3, MapPin, Star } from "lucide-react";
 import { useIssue } from "@/hooks/useIssue";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Loading, EmptyState } from "@/components/ui/States";
 import { PriorityBadge, StatusBadge } from "@/components/ui/Badge";
+import { IssuePhotos } from "@/components/ui/IssuePhotos";
 import { AISuggestionCard } from "@/components/issues/AISuggestionCard";
+import { CloseIssueModal } from "@/components/issues/CloseIssueModal";
 import { IssueActions, RequirementsPanel } from "@/components/issues/IssueActions";
 import { api, ApiError } from "@/lib/clientApi";
 import { deadlineLabel, formatDateTime, timeAgo } from "@/lib/format";
@@ -18,8 +20,9 @@ export default function IssueDetailPage() {
   const router = useRouter();
   const id = params.id;
   const { issue, timeline, comments, error, reload } = useIssue(id);
-  const { claims } = useAuth();
+  const { claims, user } = useAuth();
 
+  const [closeOpen, setCloseOpen] = useState(false);
   const [comment, setComment] = useState("");
   const [commentBusy, setCommentBusy] = useState(false);
   const [commentError, setCommentError] = useState<string | null>(null);
@@ -48,8 +51,8 @@ export default function IssueDetailPage() {
         title="Issue not found"
         body={error}
         icon={
-          <button className="btn btn-ghost btn-sm" onClick={() => router.back()}>
-            <ArrowLeft className="h-4 w-4" aria-hidden /> Go back
+          <button className="btn btn-ghost btn-sm rounded-full border border-silver" onClick={() => router.back()}>
+            <ArrowLeft className="h-3.5 w-3.5" aria-hidden /> Go back
           </button>
         }
       />
@@ -64,8 +67,8 @@ export default function IssueDetailPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <button className="btn btn-ghost btn-sm self-start" onClick={() => router.back()}>
-        <ArrowLeft className="h-4 w-4" aria-hidden /> Back
+      <button className="btn btn-ghost btn-sm self-start rounded-full border border-silver" onClick={() => router.back()}>
+        <ArrowLeft className="h-3.5 w-3.5" aria-hidden /> Back
       </button>
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -121,16 +124,8 @@ export default function IssueDetailPage() {
               <span>{timeAgo(issue.createdAt)}</span>
             </div>
             {issue.images.length > 0 && (
-              <div className="mt-4 flex flex-wrap gap-3">
-                {issue.images.map((im, i) => (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    key={i}
-                    src={im.url}
-                    alt={`Issue photo ${i + 1}`}
-                    className="h-32 w-32 rounded-xl border border-silver object-cover"
-                  />
-                ))}
+              <div className="mt-4">
+                <IssuePhotos images={issue.images} size={148} />
               </div>
             )}
           </div>
@@ -173,6 +168,16 @@ export default function IssueDetailPage() {
         </div>
 
         <div className="flex flex-col gap-4">
+          {issue.status === "VERIFIED" && claims?.role === "reporter" && issue.reporter?.uid === user?.uid && (
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => setCloseOpen(true)}
+            >
+              <CircleCheckBig className="h-3.5 w-3.5" aria-hidden /> Close issue
+            </button>
+          )}
+
           <div className="card">
             <h2 className="font-display text-lg font-semibold text-ink">Timeline</h2>
             <ol className="mt-4 flex flex-col gap-0">
@@ -207,10 +212,19 @@ export default function IssueDetailPage() {
           {issue.feedback && (
             <div className="card">
               <h2 className="font-display text-lg font-semibold text-ink">Feedback</h2>
-              <p className="mt-2 text-sm">
-                Rating: <span className="font-medium text-graphite">{issue.feedback.rating}/3</span>
-              </p>
-              {issue.feedback.comment && <p className="mt-1 text-sm text-slate">{issue.feedback.comment}</p>}
+              <div className="mt-2 flex items-center gap-1.5">
+                {[1, 2, 3, 4, 5].map((r) => (
+                  <Star
+                    key={r}
+                    className={`h-5 w-5 ${
+                      r <= issue.feedback!.rating ? "fill-[#f59e0b] text-[#f59e0b]" : "text-silver"
+                    }`}
+                    aria-hidden
+                  />
+                ))}
+                <span className="ml-1 text-sm text-slate">{issue.feedback.rating}/5</span>
+              </div>
+              {issue.feedback.comment && <p className="mt-2 text-sm text-slate">{issue.feedback.comment}</p>}
               {issue.feedback.autoClosed && (
                 <p className="mt-2 text-xs text-slate">Closed automatically after the feedback grace period.</p>
               )}
@@ -234,6 +248,12 @@ export default function IssueDetailPage() {
           )}
         </div>
       </div>
+
+      <CloseIssueModal
+        issue={closeOpen ? issue : null}
+        onClose={() => setCloseOpen(false)}
+        onClosed={() => void reload()}
+      />
     </div>
   );
 }

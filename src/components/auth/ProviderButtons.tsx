@@ -4,7 +4,7 @@ import { Mail } from "lucide-react";
 
 export function GoogleIcon() {
   return (
-    <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24" aria-hidden>
+    <svg className="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" aria-hidden>
       <path
         fill="#4285F4"
         d="M23.5 12.27c0-.79-.07-1.54-.2-2.27H12v4.51h6.46a5.52 5.52 0 0 1-2.4 3.62v3h3.87c2.27-2.09 3.57-5.17 3.57-8.86Z"
@@ -42,7 +42,7 @@ export function ProviderChooser({
         Continue with Google
       </button>
       <button type="button" onClick={onEmail} disabled={busy} className="btn btn-secondary btn-lg">
-        <Mail className="h-5 w-5 shrink-0 text-slate" aria-hidden />
+        <Mail className="h-3.5 w-3.5 shrink-0 text-slate" aria-hidden />
         Continue with email
       </button>
     </div>

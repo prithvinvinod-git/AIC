@@ -41,10 +41,11 @@ export default function AppShell({ children }: { children: ReactNode }) {
           <Link
             key={item.href}
             href={item.href}
-            className={`rounded-full px-6 py-3 text-sm font-medium transition-colors lg:px-7 lg:text-[15px] ${
+            className={`inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-medium transition-colors lg:px-7 lg:text-[15px] ${
               active ? "bg-ink text-white" : "text-slate hover:bg-paper hover:text-graphite"
             }`}
           >
+            <item.icon className="h-3.5 w-3.5 shrink-0" aria-hidden />
             {item.label}
           </Link>
         );
@@ -55,7 +56,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-full">
       <header className="sticky top-0 z-40 border-b border-silver bg-white/90 backdrop-blur">
-        <div className="mx-auto flex h-[54px] w-full max-w-[1200px] items-center gap-2 pl-0 pr-4 sm:h-[86px] sm:gap-5 sm:pl-0 sm:pr-6">
+        <div className="mx-auto flex h-[54px] w-full max-w-[1200px] items-center gap-2 pl-0 pr-2 sm:h-[86px] sm:gap-5 sm:pl-0 sm:pr-3">
           <Link
             href={homeFor(claims)}
             className="flex min-w-0 shrink-0 items-center font-display text-lg font-semibold text-ink sm:text-xl lg:-ml-[150px]"
@@ -63,23 +64,23 @@ export default function AppShell({ children }: { children: ReactNode }) {
             <span className="truncate">CampusCare</span>
           </Link>
 
-          <nav className="hidden items-center gap-1.5 lg:ml-[150px] lg:flex">{navLinks()}</nav>
+          <nav className="hidden items-center gap-1.5 lg:ml-[150px] md:flex">{navLinks()}</nav>
 
           <div className="ml-auto flex items-center gap-2 sm:gap-3">
             <ProfileMenu />
             <button
-              className="btn btn-ghost btn-sm lg:hidden"
+              className="btn btn-ghost btn-sm md:hidden"
               onClick={() => setMenuOpen((v) => !v)}
               aria-label="Toggle menu"
               aria-expanded={menuOpen}
             >
-              {menuOpen ? <X className="h-4 w-4" aria-hidden /> : <Menu className="h-4 w-4" aria-hidden />}
+              {menuOpen ? <X className="h-3.5 w-3.5" aria-hidden /> : <Menu className="h-3.5 w-3.5" aria-hidden />}
             </button>
           </div>
         </div>
 
         {menuOpen && (
-          <nav className="border-t border-silver bg-white lg:hidden">
+          <nav className="border-t border-silver bg-white md:hidden">
             <div className="mx-auto flex max-w-[1200px] flex-col gap-1 px-4 py-3 sm:px-6">
               {items.map((item) => {
                 const active = pathname === item.href || pathname.startsWith(item.href + "/");
@@ -92,16 +93,19 @@ export default function AppShell({ children }: { children: ReactNode }) {
                       active ? "bg-ink text-white" : "text-graphite hover:bg-paper"
                     }`}
                   >
-                    {item.label}
+                    <span className="flex items-center gap-2.5">
+                      <item.icon className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                      {item.label}
+                    </span>
                   </Link>
                 );
               })}
-              <div className="mt-1 border-t border-silver pt-2 sm:hidden">
+              <div className="mt-1 border-t border-silver pt-2 md:hidden">
                 <button
                   onClick={() => void logout()}
                   className="flex w-full items-center gap-2 rounded-lg px-4 py-3 text-left text-[15px] font-medium text-graphite hover:bg-paper"
                 >
-                  <LogOut className="h-4 w-4" aria-hidden />
+                  <LogOut className="h-3.5 w-3.5" aria-hidden />
                   Sign out
                 </button>
               </div>

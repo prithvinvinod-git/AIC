@@ -111,9 +111,9 @@ export default function SignupPage() {
           setMode("pick");
           setError(null);
         }}
-        className="link-blue flex items-center gap-1 text-sm font-medium"
+        className="link-blue flex items-center gap-1.5 rounded-full border border-silver bg-white px-3 py-1.5 text-sm font-medium"
       >
-        <ArrowLeft className="h-4 w-4" aria-hidden /> All options
+        <ArrowLeft className="h-3.5 w-3.5" aria-hidden /> All options
       </button>
 
       <h1 className="mt-3 font-display text-2xl font-semibold text-ink">Create an account</h1>

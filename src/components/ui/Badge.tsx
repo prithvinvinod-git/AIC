@@ -18,7 +18,6 @@ const STATUS_TONE: Record<IssueStatus, string> = {
 export function StatusBadge({ status }: { status: IssueStatus }) {
   return (
     <span className={`tag ${STATUS_TONE[status]}`}>
-      <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden />
       {STATUS_LABEL[status]}
     </span>
   );

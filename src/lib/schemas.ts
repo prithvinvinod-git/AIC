@@ -39,7 +39,7 @@ export const statusTransitionSchema = z.object({
   staff: z.array(z.string()).optional(),
   rejectionReason: z.string().optional(),
   sendBackReason: z.string().optional(),
-  rating: z.number().int().min(1).max(3).optional(),
+  rating: z.number().int().min(1).max(5).optional(),
   verdict: z.string().optional(),
 });
 
@@ -59,7 +59,7 @@ export const commentSchema = z.object({
 });
 
 export const feedbackSchema = z.object({
-  rating: z.number().int().min(1).max(3),
+  rating: z.number().int().min(1).max(5),
   comment: z.string().max(500).optional(),
 });
 

@@ -211,3 +211,1874 @@ Please retry in 4.942900527s. [{"@type":"type.googleapis.com/google.rpc.Help","l
   traceId: '6065ac93933ad55e959f64cdcea8fd90',
   ignoreFailedSpan: true
 }
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/hod" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html lang="en" data-scroll-behavior="smooth" className="inter_8db6...">
+                          <body
+                            className="min-h-full"
+-                           cz-shortcut-listen="true"
+                          >
+                  ...
+ 
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html lang="en" data-scroll-behavior="smooth" className="inter_8db6...">
+                          <body
+                            className="min-h-full"
+-                           cz-shortcut-listen="true"
+                          >
+                  ...
+ 
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html lang="en" data-scroll-behavior="smooth" className="inter_8db6...">
+                          <body
+                            className="min-h-full"
+-                           cz-shortcut-listen="true"
+                          >
+                  ...
+ 
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html lang="en" data-scroll-behavior="smooth" className="inter_8db6...">
+                          <body
+                            className="min-h-full"
+-                           cz-shortcut-listen="true"
+                          >
+                  ...
+ 
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html lang="en" data-scroll-behavior="smooth" className="inter_8db6...">
+                          <body
+                            className="min-h-full"
+-                           cz-shortcut-listen="true"
+                          >
+                  ...
+ 
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/head" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html lang="en" data-scroll-behavior="smooth" className="inter_8db6...">
+                          <body
+                            className="min-h-full"
+-                           cz-shortcut-listen="true"
+                          >
+                  ...
+ 
+triageFlow error, falling back: Error: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent: [429 Too Many Requests] You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. 
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash
+Please retry in 52.465959467s. [{"@type":"type.googleapis.com/google.rpc.Help","links":[{"description":"Learn more about Gemini API quotas","url":"https://ai.google.dev/gemini-api/docs/rate-limits"}]},{"@type":"type.googleapis.com/google.rpc.QuotaFailure","violations":[{"quotaMetric":"generativelanguage.googleapis.com/generate_content_free_tier_input_token_count","quotaId":"GenerateContentInputTokensPerModelPerMinute-FreeTier","quotaDimensions":{"location":"global","model":"gemini-2.0-flash"}},{"quotaMetric":"generativelanguage.googleapis.com/generate_content_free_tier_requests","quotaId":"GenerateRequestsPerMinutePerProjectPerModel-FreeTier","quotaDimensions":{"location":"global","model":"gemini-2.0-flash"}},{"quotaMetric":"generativelanguage.googleapis.com/generate_content_free_tier_requests","quotaId":"GenerateRequestsPerDayPerProjectPerModel-FreeTier","quotaDimensions":{"location":"global","model":"gemini-2.0-flash"}}]},{"@type":"type.googleapis.com/google.rpc.RetryInfo","retryDelay":"52s"}]
+    at handleResponseNotOk (D:\Downloads\cloneserver\AIC\.next\dev\server\chunks\[root-of-the-server]__1_pbb62._.js:5471:11)
+    at async makeRequest (D:\Downloads\cloneserver\AIC\.next\dev\server\chunks\[root-of-the-server]__1_pbb62._.js:5443:9)
+    at async generateContent (D:\Downloads\cloneserver\AIC\.next\dev\server\chunks\[root-of-the-server]__1_pbb62._.js:5885:22)
+    at async ChatSession.sendMessage (D:\Downloads\cloneserver\AIC\.next\dev\server\chunks\[root-of-the-server]__1_pbb62._.js:6255:9)
+    at async triageFlow (src\lib\ai\triage.ts:137:17)
+    at async Module.runAiOnCreate (src\lib\ai\index.ts:51:20)
+    at async (src\app\api\issues\route.ts:79:7)
+  135 |     const allowed = input.categories?.length ? input.categories : CATEGORIES;
+  136 |
+> 137 |     const res = await ai.generate({
+      |                 ^
+  138 |       model: `googleai/${aiModelName()}`,
+  139 |       system: `You are a campus maintenance triage assistant. Map the issue to exactly ONE category from: ${allowed.join(", ")}.
+  140 | Priority: 1 = critical (safety/water/electrical hazard), 5 = cosmetic. Return ONLY structured JSON.`, {
+  status: 429,
+  statusText: 'Too Many Requests',
+  errorDetails: [
+    { '@type': 'type.googleapis.com/google.rpc.Help', links: [Array] },
+    {
+      '@type': 'type.googleapis.com/google.rpc.QuotaFailure',
+      violations: [Array]
+    },
+    {
+      '@type': 'type.googleapis.com/google.rpc.RetryInfo',
+      retryDelay: '52s'
+    }
+  ],
+  traceId: '86e0e201af38a911062e905fb2e87e37',
+  ignoreFailedSpan: true
+}
+triageFlow error, falling back: Error: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent: [429 Too Many Requests] You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. 
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash
+Please retry in 29.728705111s. [{"@type":"type.googleapis.com/google.rpc.Help","links":[{"description":"Learn more about Gemini API quotas","url":"https://ai.google.dev/gemini-api/docs/rate-limits"}]},{"@type":"type.googleapis.com/google.rpc.QuotaFailure","violations":[{"quotaMetric":"generativelanguage.googleapis.com/generate_content_free_tier_requests","quotaId":"GenerateRequestsPerDayPerProjectPerModel-FreeTier","quotaDimensions":{"location":"global","model":"gemini-2.0-flash"}},{"quotaMetric":"generativelanguage.googleapis.com/generate_content_free_tier_requests","quotaId":"GenerateRequestsPerMinutePerProjectPerModel-FreeTier","quotaDimensions":{"location":"global","model":"gemini-2.0-flash"}},{"quotaMetric":"generativelanguage.googleapis.com/generate_content_free_tier_input_token_count","quotaId":"GenerateContentInputTokensPerModelPerMinute-FreeTier","quotaDimensions":{"location":"global","model":"gemini-2.0-flash"}}]},{"@type":"type.googleapis.com/google.rpc.RetryInfo","retryDelay":"29s"}]
+    at handleResponseNotOk (D:\Downloads\cloneserver\AIC\.next\dev\server\chunks\[root-of-the-server]__1_pbb62._.js:5471:11)
+    at async makeRequest (D:\Downloads\cloneserver\AIC\.next\dev\server\chunks\[root-of-the-server]__1_pbb62._.js:5443:9)
+    at async generateContent (D:\Downloads\cloneserver\AIC\.next\dev\server\chunks\[root-of-the-server]__1_pbb62._.js:5885:22)
+    at async ChatSession.sendMessage (D:\Downloads\cloneserver\AIC\.next\dev\server\chunks\[root-of-the-server]__1_pbb62._.js:6255:9)
+    at async triageFlow (src\lib\ai\triage.ts:137:17)
+    at async Module.runAiOnCreate (src\lib\ai\index.ts:51:20)
+    at async (src\app\api\issues\route.ts:79:7)
+  135 |     const allowed = input.categories?.length ? input.categories : CATEGORIES;
+  136 |
+> 137 |     const res = await ai.generate({
+      |                 ^
+  138 |       model: `googleai/${aiModelName()}`,
+  139 |       system: `You are a campus maintenance triage assistant. Map the issue to exactly ONE category from: ${allowed.join(", ")}.
+  140 | Priority: 1 = critical (safety/water/electrical hazard), 5 = cosmetic. Return ONLY structured JSON.`, {
+  status: 429,
+  statusText: 'Too Many Requests',
+  errorDetails: [
+    { '@type': 'type.googleapis.com/google.rpc.Help', links: [Array] },
+    {
+      '@type': 'type.googleapis.com/google.rpc.QuotaFailure',
+      violations: [Array]
+    },
+    {
+      '@type': 'type.googleapis.com/google.rpc.RetryInfo',
+      retryDelay: '29s'
+    }
+  ],
+  traceId: '31f2a3558f9832b12167dd3e7db243a6',
+  ignoreFailedSpan: true
+}
+[browser] Uncaught Error: Module [project]/node_modules/lucide-react/dist/esm/icons/sliders-horizontal.mjs [app-client] (ecmascript) <export default as SlidersHorizontal> was instantiated because it was required from module [project]/src/components/auth/ProfileMenu.tsx [app-client] (ecmascript), but the module factory is not available.
+This is often caused by a stale browser cache, misconfigured Cache-Control headers, or a service worker serving outdated responses.
+To fix this, make sure your Cache-Control headers allow revalidation of chunks and review your service worker configuration. As an immediate workaround, try hard-reloading the page, clearing the browser cache, or unregistering any service workers.
+    at module evaluation (src/components/auth/ProfileMenu.tsx:6:1)
+    at module evaluation (src/components/AppShell.tsx:8:1)
+    at AppLayout (src\app\(app)\layout.tsx:4:10)
+  4 | import Link from "next/link";
+  5 | import { usePathname } from "next/navigation";
+> 6 | import { LogOut, Settings, SlidersHorizontal, UserPen } from "lucide-react";
+    | ^
+  7 | import { useAuth } from "@/components/auth/AuthProvider";
+  8 | import { ROLE_LABEL } from "@/lib/constants";
+  9 | import { initials } from "@/lib/format";
+[browser] ./src/app/(app)/new/page.tsx:373:1
+Error: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+  371 |     </div>
+  372 |   );
+> 373 | }
+      | ^
+  374 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./src/app/(app)/new/page.tsx [Client Component Browser]
+    ./src/app/(app)/new/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/(app)/new/page.tsx [Client Component SSR]
+    ./src/app/(app)/new/page.tsx [Server Component] 
+[browser] ./src/app/(app)/new/page.tsx:373:1
+Error: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+  371 |     </div>
+  372 |   );
+> 373 | }
+      | ^
+  374 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./src/app/(app)/new/page.tsx [Client Component Browser]
+    ./src/app/(app)/new/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/(app)/new/page.tsx [Client Component SSR]
+    ./src/app/(app)/new/page.tsx [Server Component] 
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/new" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html lang="en" data-scroll-behavior="smooth" className="inter_8db6...">
+                          <body
+                            className="min-h-full"
+-                           cz-shortcut-listen="true"
+                          >
+                  ...
+ 
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/new" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html lang="en" data-scroll-behavior="smooth" className="inter_8db6...">
+                          <body
+                            className="min-h-full"
+-                           cz-shortcut-listen="true"
+                          >
+                  ...
+ 
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/new" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html lang="en" data-scroll-behavior="smooth" className="inter_8db6...">
+                          <body
+                            className="min-h-full"
+-                           cz-shortcut-listen="true"
+                          >
+                  ...
+ 
+[browser] ./src/app/(app)/new/page.tsx:373:1
+Error: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+  371 |     </div>
+  372 |   );
+> 373 | }
+      | ^
+  374 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./src/app/(app)/new/page.tsx [Client Component Browser]
+    ./src/app/(app)/new/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/(app)/new/page.tsx [Client Component SSR]
+    ./src/app/(app)/new/page.tsx [Server Component] 
+[browser] ./src/app/(app)/new/page.tsx:373:1
+Error: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+  371 |     </div>
+  372 |   );
+> 373 | }
+      | ^
+  374 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./src/app/(app)/new/page.tsx [Client Component Browser]
+    ./src/app/(app)/new/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/(app)/new/page.tsx [Client Component SSR]
+    ./src/app/(app)/new/page.tsx [Server Component] 
+⚠ Found a change in next.config.ts. Restarting the server to apply the changes...
+[browser] ./src/app/(app)/new/page.tsx:373:1
+Error: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+  371 |     </div>
+  372 |   );
+> 373 | }
+      | ^
+  374 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./src/app/(app)/new/page.tsx [Client Component Browser]
+    ./src/app/(app)/new/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/(app)/new/page.tsx [Client Component SSR]
+    ./src/app/(app)/new/page.tsx [Server Component] 
+[browser] ./src/app/(app)/new/page.tsx:373:1
+Error: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+  371 |     </div>
+  372 |   );
+> 373 | }
+      | ^
+  374 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./src/app/(app)/new/page.tsx [Client Component Browser]
+    ./src/app/(app)/new/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/(app)/new/page.tsx [Client Component SSR]
+    ./src/app/(app)/new/page.tsx [Server Component] 
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/new" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html lang="en" data-scroll-behavior="smooth" className="inter_8db6...">
+                          <body
+                            className="min-h-full"
+-                           cz-shortcut-listen="true"
+                          >
+                  ...
+ 
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/new" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html lang="en" data-scroll-behavior="smooth" className="inter_8db6...">
+                          <body
+                            className="min-h-full"
+-                           cz-shortcut-listen="true"
+                          >
+                  ...
+ 
+⚠ Found a change in next.config.ts. Restarting the server to apply the changes...
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/new" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html lang="en" data-scroll-behavior="smooth" className="inter_8db6...">
+                          <body
+                            className="min-h-full"
+-                           cz-shortcut-listen="true"
+                          >
+                  ...
+ 
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/new" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html lang="en" data-scroll-behavior="smooth" className="inter_8db6...">
+                          <body
+                            className="min-h-full"
+-                           cz-shortcut-listen="true"
+                          >
+                  ...
+ 
+ZOD VALIDATION FAILED on POST {
+  "title": "ertgggeg",
+  "description": "gergeg",
+  "college": "Engineering",
+  "department": "Computer Science",
+  "categoryId": "H2ISdQRaa7HzgX7706dK",
+  "priority": 3,
+  "location": {
+    "building": "Block A",
+    "floor": "Ground",
+    "name": "Block A"
+  },
+  "images": [
+    {
+      "url": "/api/images/c9957fcf-1ccc-4cc6-80b4-61e7a6074b63",
+      "uploadedBy": "demo",
+      "at": "2026-08-07T09:44:14.906Z"
+    }
+  ]
+}
+DETAILS [
+  {
+    "path": "description",
+    "message": "Describe the issue in at least 10 characters"
+  }
+]
+ZOD VALIDATION FAILED on POST {
+  "title": "ertgggeg",
+  "description": "gergeg",
+  "college": "Engineering",
+  "department": "Computer Science",
+  "categoryId": "H2ISdQRaa7HzgX7706dK",
+  "priority": 3,
+  "location": {
+    "building": "Block A",
+    "floor": "Ground",
+    "name": "Block A"
+  },
+  "images": [
+    {
+      "url": "/api/images/c9957fcf-1ccc-4cc6-80b4-61e7a6074b63",
+      "uploadedBy": "demo",
+      "at": "2026-08-07T09:44:30.162Z"
+    }
+  ]
+}
+DETAILS [
+  {
+    "path": "description",
+    "message": "Describe the issue in at least 10 characters"
+  }
+]
+ZOD VALIDATION FAILED on POST {
+  "title": "ertgggeg",
+  "description": "gergeg",
+  "college": "Engineering",
+  "department": "Computer Science",
+  "categoryId": "H2ISdQRaa7HzgX7706dK",
+  "priority": 3,
+  "location": {
+    "building": "Block A",
+    "floor": "Ground",
+    "name": "Block A"
+  },
+  "images": []
+}
+DETAILS [
+  {
+    "path": "description",
+    "message": "Describe the issue in at least 10 characters"
+  }
+]
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/new" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html lang="en" data-scroll-behavior="smooth" className="inter_8db6...">
+                          <body
+                            className="min-h-full"
+-                           cz-shortcut-listen="true"
+                          >
+                  ...
+ 
+ZOD VALIDATION FAILED on POST {
+  "title": "vdvxxvxv",
+  "description": "vvx",
+  "college": "Engineering",
+  "department": "Computer Science",
+  "categoryId": "H2ISdQRaa7HzgX7706dK",
+  "priority": 3,
+  "location": {
+    "building": "Block A",
+    "floor": "Ground",
+    "name": "Block A"
+  },
+  "images": []
+}
+DETAILS [
+  {
+    "path": "description",
+    "message": "Describe the issue in at least 10 characters"
+  }
+]
+ZOD VALIDATION FAILED on POST {
+  "title": "broken ac",
+  "description": "erwrwerwr",
+  "college": "Engineering",
+  "department": "Computer Science",
+  "categoryId": "H2ISdQRaa7HzgX7706dK",
+  "priority": 3,
+  "location": {
+    "building": "Block A",
+    "floor": "Ground",
+    "name": "werwrwr"
+  },
+  "images": []
+}
+DETAILS [
+  {
+    "path": "description",
+    "message": "Describe the issue in at least 10 characters"
+  }
+]
+ZOD VALIDATION FAILED on POST {
+  "title": "broken ac",
+  "description": "erwrwerwr",
+  "college": "Engineering",
+  "department": "Computer Science",
+  "categoryId": "H2ISdQRaa7HzgX7706dK",
+  "priority": 3,
+  "location": {
+    "building": "Block A",
+    "floor": "Ground",
+    "name": "werwrwr"
+  },
+  "images": [
+    {
+      "url": "/api/images/4a3bd7d8-74bb-4414-b494-aa42e6bcdfe6",
+      "uploadedBy": "demo",
+      "at": "2026-08-07T09:46:06.157Z"
+    },
+    {
+      "url": "/api/images/0e127f63-655a-41de-9d52-56090cf4717a",
+      "uploadedBy": "demo",
+      "at": "2026-08-07T09:46:06.157Z"
+    },
+    {
+      "url": "/api/images/5659ec5c-52b4-406f-b1ab-521d8179b465",
+      "uploadedBy": "demo",
+      "at": "2026-08-07T09:46:06.157Z"
+    }
+  ]
+}
+DETAILS [
+  {
+    "path": "description",
+    "message": "Describe the issue in at least 10 characters"
+  }
+]
+ZOD VALIDATION FAILED on POST {
+  "title": "broken ac",
+  "description": "erwrwerwr",
+  "college": "Engineering",
+  "department": "Computer Science",
+  "categoryId": "H2ISdQRaa7HzgX7706dK",
+  "priority": 3,
+  "location": {
+    "building": "Block A",
+    "floor": "Ground",
+    "name": "werwrwr"
+  },
+  "images": [
+    {
+      "url": "/api/images/4a3bd7d8-74bb-4414-b494-aa42e6bcdfe6",
+      "uploadedBy": "demo",
+      "at": "2026-08-07T09:46:08.711Z"
+    },
+    {
+      "url": "/api/images/0e127f63-655a-41de-9d52-56090cf4717a",
+      "uploadedBy": "demo",
+      "at": "2026-08-07T09:46:08.711Z"
+    },
+    {
+      "url": "/api/images/5659ec5c-52b4-406f-b1ab-521d8179b465",
+      "uploadedBy": "demo",
+      "at": "2026-08-07T09:46:08.711Z"
+    }
+  ]
+}
+DETAILS [
+  {
+    "path": "description",
+    "message": "Describe the issue in at least 10 characters"
+  }
+]
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/login" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html lang="en" data-scroll-behavior="smooth" className="inter_8db6...">
+                          <body
+                            className="min-h-full"
+-                           cz-shortcut-listen="true"
+                          >
+                  ...
+ 
+triageFlow error, falling back: Error: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent: [429 Too Many Requests] You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. 
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash
+Please retry in 54.666551584s. [{"@type":"type.googleapis.com/google.rpc.Help","links":[{"description":"Learn more about Gemini API quotas","url":"https://ai.google.dev/gemini-api/docs/rate-limits"}]},{"@type":"type.googleapis.com/google.rpc.QuotaFailure","violations":[{"quotaMetric":"generativelanguage.googleapis.com/generate_content_free_tier_requests","quotaId":"GenerateRequestsPerDayPerProjectPerModel-FreeTier","quotaDimensions":{"location":"global","model":"gemini-2.0-flash"}},{"quotaMetric":"generativelanguage.googleapis.com/generate_content_free_tier_requests","quotaId":"GenerateRequestsPerMinutePerProjectPerModel-FreeTier","quotaDimensions":{"location":"global","model":"gemini-2.0-flash"}},{"quotaMetric":"generativelanguage.googleapis.com/generate_content_free_tier_input_token_count","quotaId":"GenerateContentInputTokensPerModelPerMinute-FreeTier","quotaDimensions":{"location":"global","model":"gemini-2.0-flash"}}]},{"@type":"type.googleapis.com/google.rpc.RetryInfo","retryDelay":"54s"}]
+    at handleResponseNotOk (D:\Downloads\cloneserver\AIC\.next\dev\server\chunks\[root-of-the-server]__1_pbb62._.js:5471:11)
+    at async makeRequest (D:\Downloads\cloneserver\AIC\.next\dev\server\chunks\[root-of-the-server]__1_pbb62._.js:5443:9)
+    at async generateContent (D:\Downloads\cloneserver\AIC\.next\dev\server\chunks\[root-of-the-server]__1_pbb62._.js:5885:22)
+    at async ChatSession.sendMessage (D:\Downloads\cloneserver\AIC\.next\dev\server\chunks\[root-of-the-server]__1_pbb62._.js:6255:9)
+    at async triageFlow (src\lib\ai\triage.ts:137:17)
+    at async Module.runAiOnCreate (src\lib\ai\index.ts:51:20)
+    at async (src\app\api\issues\route.ts:79:7)
+  135 |     const allowed = input.categories?.length ? input.categories : CATEGORIES;
+  136 |
+> 137 |     const res = await ai.generate({
+      |                 ^
+  138 |       model: `googleai/${aiModelName()}`,
+  139 |       system: `You are a campus maintenance triage assistant. Map the issue to exactly ONE category from: ${allowed.join(", ")}.
+  140 | Priority: 1 = critical (safety/water/electrical hazard), 5 = cosmetic. Return ONLY structured JSON.`, {
+  status: 429,
+  statusText: 'Too Many Requests',
+  errorDetails: [
+    { '@type': 'type.googleapis.com/google.rpc.Help', links: [Array] },
+    {
+      '@type': 'type.googleapis.com/google.rpc.QuotaFailure',
+      violations: [Array]
+    },
+    {
+      '@type': 'type.googleapis.com/google.rpc.RetryInfo',
+      retryDelay: '54s'
+    }
+  ],
+  traceId: 'c003a69db769d50be32f79285c5fc410',
+  ignoreFailedSpan: true
+}
+ZOD VALIDATION FAILED on POST {
+  "title": "spiderman",
+  "description": "hahaha",
+  "college": "Engineering",
+  "department": "Computer Science",
+  "categoryId": "H2ISdQRaa7HzgX7706dK",
+  "priority": 3,
+  "location": {
+    "building": "Block A",
+    "floor": "Ground",
+    "name": "Block A"
+  },
+  "images": [
+    {
+      "url": "/api/images/cef7b508-6383-4884-81d7-1e4a98f73c4f",
+      "uploadedBy": "demo",
+      "at": "2026-08-07T09:48:07.780Z"
+    }
+  ]
+}
+DETAILS [
+  {
+    "path": "description",
+    "message": "Describe the issue in at least 10 characters"
+  }
+]
+[browser] SUBMIT ERROR Validation failed. {
+  details: [
+    {
+      message: [32m'Describe the issue in at least 10 characters'[39m,
+      path: [32m'description'[39m
+    }
+  ],
+  error: [32m'Validation failed.'[39m
+} 
+    at NewIssuePage.useCallback[submit] (src/app/(app)/new/page.tsx:143:19)
+  141 |               ? ` (${(d as { path: string; message: string }[]).map((x) => `${x.path}: ${x.message}`).join("; ")})`
+  142 |               : "";
+> 143 |           console.error("SUBMIT ERROR", err.message + extra, d);
+      |                   ^
+  144 |           setError(err.message + extra);
+  145 |         } else {
+  146 |           setError("Failed to submit issue."); (src/app/(app)
+ZOD VALIDATION FAILED on POST {
+  "title": "spiderman",
+  "description": "hahaha",
+  "college": "Engineering",
+  "department": "Computer Science",
+  "categoryId": "H2ISdQRaa7HzgX7706dK",
+  "priority": 3,
+  "location": {
+    "building": "Block A",
+    "floor": "Ground",
+    "name": "sdfsf"
+  },
+  "images": [
+    {
+      "url": "/api/images/cef7b508-6383-4884-81d7-1e4a98f73c4f",
+      "uploadedBy": "demo",
+      "at": "2026-08-07T09:48:16.376Z"
+    }
+  ]
+}
+DETAILS [
+  {
+    "path": "description",
+    "message": "Describe the issue in at least 10 characters"
+  }
+]
+[browser] SUBMIT ERROR Validation failed. {
+  details: [
+    {
+      message: [32m'Describe the issue in at least 10 characters'[39m,
+      path: [32m'description'[39m
+    }
+  ],
+  error: [32m'Validation failed.'[39m
+} 
+    at NewIssuePage.useCallback[submit] (src/app/(app)/new/page.tsx:143:19)
+  141 |               ? ` (${(d as { path: string; message: string }[]).map((x) => `${x.path}: ${x.message}`).join("; ")})`
+  142 |               : "";
+> 143 |           console.error("SUBMIT ERROR", err.message + extra, d);
+      |                   ^
+  144 |           setError(err.message + extra);
+  145 |         } else {
+  146 |           setError("Failed to submit issue."); (src/app/(app)
+ZOD VALIDATION FAILED on POST {
+  "title": "spiderman",
+  "description": "hahaha",
+  "college": "Engineering",
+  "department": "Computer Science",
+  "categoryId": "H2ISdQRaa7HzgX7706dK",
+  "priority": 3,
+  "location": {
+    "building": "Block A",
+    "floor": "Ground",
+    "name": "sdfsf"
+  },
+  "images": [
+    {
+      "url": "/api/images/cef7b508-6383-4884-81d7-1e4a98f73c4f",
+      "uploadedBy": "demo",
+      "at": "2026-08-07T09:48:17.656Z"
+    }
+  ]
+}
+DETAILS [
+  {
+    "path": "description",
+    "message": "Describe the issue in at least 10 characters"
+  }
+]
+[browser] SUBMIT ERROR Validation failed. {
+  details: [
+    {
+      message: [32m'Describe the issue in at least 10 characters'[39m,
+      path: [32m'description'[39m
+    }
+  ],
+  error: [32m'Validation failed.'[39m
+} 
+    at NewIssuePage.useCallback[submit] (src/app/(app)/new/page.tsx:143:19)
+  141 |               ? ` (${(d as { path: string; message: string }[]).map((x) => `${x.path}: ${x.message}`).join("; ")})`
+  142 |               : "";
+> 143 |           console.error("SUBMIT ERROR", err.message + extra, d);
+      |                   ^
+  144 |           setError(err.message + extra);
+  145 |         } else {
+  146 |           setError("Failed to submit issue."); (src/app/(app)
+ZOD VALIDATION FAILED on POST {
+  "title": "spiderman",
+  "description": "hahaha",
+  "college": "Engineering",
+  "department": "Computer Science",
+  "categoryId": "H2ISdQRaa7HzgX7706dK",
+  "priority": 3,
+  "location": {
+    "building": "Block A",
+    "floor": "Ground",
+    "name": "sdfsf"
+  },
+  "images": [
+    {
+      "url": "/api/images/cef7b508-6383-4884-81d7-1e4a98f73c4f",
+      "uploadedBy": "demo",
+      "at": "2026-08-07T09:49:30.538Z"
+    }
+  ]
+}
+DETAILS [
+  {
+    "path": "description",
+    "message": "Describe the issue in at least 10 characters"
+  }
+]
+[browser] SUBMIT ERROR Validation failed. {
+  details: [
+    {
+      message: [32m'Describe the issue in at least 10 characters'[39m,
+      path: [32m'description'[39m
+    }
+  ],
+  error: [32m'Validation failed.'[39m
+} 
+    at NewIssuePage.useCallback[submit] (src/app/(app)/new/page.tsx:143:19)
+  141 |               ? ` (${(d as { path: string; message: string }[]).map((x) => `${x.path}: ${x.message}`).join("; ")})`
+  142 |               : "";
+> 143 |           console.error("SUBMIT ERROR", err.message + extra, d);
+      |                   ^
+  144 |           setError(err.message + extra);
+  145 |         } else {
+  146 |           setError("Failed to submit issue."); (src/app/(app)
+[browser] SUBMIT ERROR Validation failed. {
+  details: [
+    {
+      message: [32m'Describe the issue in at least 10 characters'[39m,
+      path: [32m'description'[39m
+    }
+  ],
+  error: [32m'Validation failed.'[39m
+} 
+    at NewIssuePage.useCallback[submit] (src/app/(app)/new/page.tsx:143:19)
+  141 |               ? ` (${(d as { path: string; message: string }[]).map((x) => `${x.path}: ${x.message}`).join("; ")})`
+  142 |               : "";
+> 143 |           console.error("SUBMIT ERROR", err.message + extra, d);
+      |                   ^
+  144 |           setError(err.message + extra);
+  145 |         } else {
+  146 |           setError("Failed to submit issue."); (src/app/(app)
+Error: listen EADDRINUSE: address already in use 127.0.0.1:3100
+    at <unknown> (Error: listen EADDRINUSE: address already in use 127.0.0.1:3100) {
+  code: 'EADDRINUSE',
+  errno: -4091,
+  syscall: 'listen',
+  address: '127.0.0.1',
+  port: 3100
+}
+⨯ uncaughtException: Error: listen EADDRINUSE: address already in use 127.0.0.1:3100
+    at <unknown> (Error: listen EADDRINUSE: address already in use 127.0.0.1:3100) {
+  code: 'EADDRINUSE',
+  errno: -4091,
+  syscall: 'listen',
+  address: '127.0.0.1',
+  port: 3100
+}
+⨯ uncaughtException:  Error: listen EADDRINUSE: address already in use 127.0.0.1:3100
+    at <unknown> (Error: listen EADDRINUSE: address already in use 127.0.0.1:3100) {
+  code: 'EADDRINUSE',
+  errno: -4091,
+  syscall: 'listen',
+  address: '127.0.0.1',
+  port: 3100
+}
+triageFlow error, falling back: Error: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent: [429 Too Many Requests] You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. 
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash
+Please retry in 38.077260148s. [{"@type":"type.googleapis.com/google.rpc.Help","links":[{"description":"Learn more about Gemini API quotas","url":"https://ai.google.dev/gemini-api/docs/rate-limits"}]},{"@type":"type.googleapis.com/google.rpc.QuotaFailure","violations":[{"quotaMetric":"generativelanguage.googleapis.com/generate_content_free_tier_input_token_count","quotaId":"GenerateContentInputTokensPerModelPerMinute-FreeTier","quotaDimensions":{"location":"global","model":"gemini-2.0-flash"}},{"quotaMetric":"generativelanguage.googleapis.com/generate_content_free_tier_requests","quotaId":"GenerateRequestsPerMinutePerProjectPerModel-FreeTier","quotaDimensions":{"location":"global","model":"gemini-2.0-flash"}},{"quotaMetric":"generativelanguage.googleapis.com/generate_content_free_tier_requests","quotaId":"GenerateRequestsPerDayPerProjectPerModel-FreeTier","quotaDimensions":{"location":"global","model":"gemini-2.0-flash"}}]},{"@type":"type.googleapis.com/google.rpc.RetryInfo","retryDelay":"38s"}]
+    at handleResponseNotOk (D:\Downloads\cloneserver\AIC\.next\dev\server\chunks\[root-of-the-server]__1_pbb62._.js:5471:11)
+    at async makeRequest (D:\Downloads\cloneserver\AIC\.next\dev\server\chunks\[root-of-the-server]__1_pbb62._.js:5443:9)
+    at async generateContent (D:\Downloads\cloneserver\AIC\.next\dev\server\chunks\[root-of-the-server]__1_pbb62._.js:5885:22)
+    at async ChatSession.sendMessage (D:\Downloads\cloneserver\AIC\.next\dev\server\chunks\[root-of-the-server]__1_pbb62._.js:6255:9)
+    at async triageFlow (src\lib\ai\triage.ts:137:17)
+    at async Module.runAiOnCreate (src\lib\ai\index.ts:51:20)
+    at async (src\app\api\issues\route.ts:79:7)
+  135 |     const allowed = input.categories?.length ? input.categories : CATEGORIES;
+  136 |
+> 137 |     const res = await ai.generate({
+      |                 ^
+  138 |       model: `googleai/${aiModelName()}`,
+  139 |       system: `You are a campus maintenance triage assistant. Map the issue to exactly ONE category from: ${allowed.join(", ")}.
+  140 | Priority: 1 = critical (safety/water/electrical hazard), 5 = cosmetic. Return ONLY structured JSON.`, {
+  status: 429,
+  statusText: 'Too Many Requests',
+  errorDetails: [
+    { '@type': 'type.googleapis.com/google.rpc.Help', links: [Array] },
+    {
+      '@type': 'type.googleapis.com/google.rpc.QuotaFailure',
+      violations: [Array]
+    },
+    {
+      '@type': 'type.googleapis.com/google.rpc.RetryInfo',
+      retryDelay: '38s'
+    }
+  ],
+  traceId: 'd0d708b52101d7c2e739ca2d7a030178',
+  ignoreFailedSpan: true
+}
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/hod" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html lang="en" data-scroll-behavior="smooth" className="inter_8db6...">
+                          <body
+                            className="min-h-full"
+-                           cz-shortcut-listen="true"
+                          >
+                  ...
+ 
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/head" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html lang="en" data-scroll-behavior="smooth" className="inter_8db6...">
+                          <body
+                            className="min-h-full"
+-                           cz-shortcut-listen="true"
+                          >
+                  ...
+ 
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/head" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html lang="en" data-scroll-behavior="smooth" className="inter_8db6...">
+                          <body
+                            className="min-h-full"
+-                           cz-shortcut-listen="true"
+                          >
+                  ...
+ 
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/issues/6X..." notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html lang="en" data-scroll-behavior="smooth" className="inter_8db6...">
+                          <body
+                            className="min-h-full"
+-                           cz-shortcut-listen="true"
+                          >
+                  ...
+ 
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/head" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html lang="en" data-scroll-behavior="smooth" className="inter_8db6...">
+                          <body
+                            className="min-h-full"
+-                           cz-shortcut-listen="true"
+                          >
+                  ...
+ 
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/head" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html lang="en" data-scroll-behavior="smooth" className="inter_8db6...">
+                          <body
+                            className="min-h-full"
+-                           cz-shortcut-listen="true"
+                          >
+                  ...
+ 
+triageFlow error, falling back: Error: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent: [429 Too Many Requests] You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. 
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash
+Please retry in 7.874050939s. [{"@type":"type.googleapis.com/google.rpc.Help","links":[{"description":"Learn more about Gemini API quotas","url":"https://ai.google.dev/gemini-api/docs/rate-limits"}]},{"@type":"type.googleapis.com/google.rpc.QuotaFailure","violations":[{"quotaMetric":"generativelanguage.googleapis.com/generate_content_free_tier_requests","quotaId":"GenerateRequestsPerDayPerProjectPerModel-FreeTier","quotaDimensions":{"location":"global","model":"gemini-2.0-flash"}},{"quotaMetric":"generativelanguage.googleapis.com/generate_content_free_tier_requests","quotaId":"GenerateRequestsPerMinutePerProjectPerModel-FreeTier","quotaDimensions":{"location":"global","model":"gemini-2.0-flash"}},{"quotaMetric":"generativelanguage.googleapis.com/generate_content_free_tier_input_token_count","quotaId":"GenerateContentInputTokensPerModelPerMinute-FreeTier","quotaDimensions":{"location":"global","model":"gemini-2.0-flash"}}]},{"@type":"type.googleapis.com/google.rpc.RetryInfo","retryDelay":"7s"}]
+    at handleResponseNotOk (D:\Downloads\cloneserver\AIC\.next\dev\server\chunks\[root-of-the-server]__1_pbb62._.js:5471:11)
+    at async makeRequest (D:\Downloads\cloneserver\AIC\.next\dev\server\chunks\[root-of-the-server]__1_pbb62._.js:5443:9)
+    at async generateContent (D:\Downloads\cloneserver\AIC\.next\dev\server\chunks\[root-of-the-server]__1_pbb62._.js:5885:22)
+    at async ChatSession.sendMessage (D:\Downloads\cloneserver\AIC\.next\dev\server\chunks\[root-of-the-server]__1_pbb62._.js:6255:9)
+    at async triageFlow (src\lib\ai\triage.ts:137:17)
+    at async Module.runAiOnCreate (src\lib\ai\index.ts:51:20)
+    at async (src\app\api\issues\route.ts:79:7)
+  135 |     const allowed = input.categories?.length ? input.categories : CATEGORIES;
+  136 |
+> 137 |     const res = await ai.generate({
+      |                 ^
+  138 |       model: `googleai/${aiModelName()}`,
+  139 |       system: `You are a campus maintenance triage assistant. Map the issue to exactly ONE category from: ${allowed.join(", ")}.
+  140 | Priority: 1 = critical (safety/water/electrical hazard), 5 = cosmetic. Return ONLY structured JSON.`, {
+  status: 429,
+  statusText: 'Too Many Requests',
+  errorDetails: [
+    { '@type': 'type.googleapis.com/google.rpc.Help', links: [Array] },
+    {
+      '@type': 'type.googleapis.com/google.rpc.QuotaFailure',
+      violations: [Array]
+    },
+    {
+      '@type': 'type.googleapis.com/google.rpc.RetryInfo',
+      retryDelay: '7s'
+    }
+  ],
+  traceId: '90d14c59f827460e6761c41f4f8f85a1',
+  ignoreFailedSpan: true
+}
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/head" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html lang="en" data-scroll-behavior="smooth" className="inter_8db6...">
+                          <body
+                            className="min-h-full"
+-                           cz-shortcut-listen="true"
+                          >
+                  ...
+ 
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/issues/LE..." notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html lang="en" data-scroll-behavior="smooth" className="inter_8db6...">
+                          <body
+                            className="min-h-full"
+-                           cz-shortcut-listen="true"
+                          >
+                  ...
+ 
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/jobs" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html lang="en" data-scroll-behavior="smooth" className="inter_8db6...">
+                          <body
+                            className="min-h-full"
+-                           cz-shortcut-listen="true"
+                          >
+                  ...
+ 
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html lang="en" data-scroll-behavior="smooth" className="inter_8db6...">
+                          <body
+                            className="min-h-full"
+-                           cz-shortcut-listen="true"
+                          >
+                  ...
+ 
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/issues/65..." notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html lang="en" data-scroll-behavior="smooth" className="inter_8db6...">
+                          <body
+                            className="min-h-full"
+-                           cz-shortcut-listen="true"
+                          >
+                  ...
+ 
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/issues/pn..." notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html lang="en" data-scroll-behavior="smooth" className="inter_8db6...">
+                          <body
+                            className="min-h-full"
+-                           cz-shortcut-listen="true"
+                          >
+                  ...
+ 
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/issues/65..." notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html lang="en" data-scroll-behavior="smooth" className="inter_8db6...">
+                          <body
+                            className="min-h-full"
+-                           cz-shortcut-listen="true"
+                          >
+                  ...
+ 

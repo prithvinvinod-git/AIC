@@ -86,7 +86,7 @@ export default function Home() {
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link href="/signup" className="btn btn-primary btn-lg">
-              Report your first issue <ArrowRight className="h-4 w-4" aria-hidden />
+              Report your first issue <ArrowRight className="h-3.5 w-3.5" aria-hidden />
             </Link>
             <Link href="/login" className="btn btn-secondary btn-lg">
               Explore demo accounts

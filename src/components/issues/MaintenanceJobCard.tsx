@@ -6,6 +6,7 @@ import { ListChecks, PlayCircle, Sparkles } from "lucide-react";
 import type { Issue, Requirement } from "@/lib/types";
 import { api, ApiError } from "@/lib/clientApi";
 import { StatusBadge, PriorityBadge } from "@/components/ui/Badge";
+import { IssuePhotos } from "@/components/ui/IssuePhotos";
 import { formatDateTime } from "@/lib/format";
 
 interface DraftRequirement {
@@ -166,6 +167,8 @@ export function MaintenanceJobCard({
         </div>
       </button>
 
+      {issue.images.length > 0 && <IssuePhotos images={issue.images} />}
+
       {issue.requirements.length > 0 && (
         <div className="rounded-xl bg-paper p-3">
           <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-slate">
@@ -176,27 +179,27 @@ export function MaintenanceJobCard({
               <li key={`${(r as Requirement & { id?: string }).id || i}`} className="flex items-center gap-3 text-sm">
                 {readOnly ? (
                   <span
-                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border-2 ${
-                      r.resolved ? "border-[#2e7d32] bg-[#2e7d32] text-white" : "border-slate bg-white"
+                    className={`flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full border-2 ${
+                      r.resolved ? "border-[#66bb6a] bg-[#66bb6a] text-white" : "border-slate bg-white"
                     }`}
                     aria-label={r.resolved ? "Resolved" : "Unresolved"}
                     title={r.resolved ? "Resolved" : "Unresolved"}
                   >
-                    {r.resolved && <span className="text-xl leading-none">✓</span>}
+                    {r.resolved && <span className="text-[10px] leading-none">✓</span>}
                   </span>
                 ) : (
                   <button
                     type="button"
                     onClick={() => void toggleRequirement(r)}
-                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border-2 transition-colors ${
+                    className={`flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
                       r.resolved
-                        ? "border-[#2e7d32] bg-[#2e7d32] text-white"
+                        ? "border-[#66bb6a] bg-[#66bb6a] text-white"
                         : "border-slate bg-white hover:border-ink"
                     }`}
                     aria-label={r.resolved ? "Mark as unresolved" : "Mark as resolved"}
                     title={r.resolved ? "Mark as unresolved" : "Mark as resolved"}
                   >
-                    {r.resolved && <span className="text-xl leading-none">✓</span>}
+                    {r.resolved && <span className="text-[10px] leading-none">✓</span>}
                   </button>
                 )}
                 <span className={r.resolved ? "text-slate line-through" : "text-graphite"}>
@@ -227,7 +230,7 @@ export function MaintenanceJobCard({
         <div className="flex flex-wrap items-center gap-2">
           {isAssigned && (
             <button className="btn btn-primary btn-sm" onClick={() => void act("start")} disabled={busy}>
-              <PlayCircle className="h-4 w-4" aria-hidden /> Start job
+              <PlayCircle className="h-3.5 w-3.5" aria-hidden /> Start job
             </button>
           )}
           {isOngoing && (

@@ -6,6 +6,7 @@ import { ShieldCheck } from "lucide-react";
 import type { Issue } from "@/lib/types";
 import { api, ApiError } from "@/lib/clientApi";
 import { StatusBadge, PriorityBadge } from "@/components/ui/Badge";
+import { IssuePhotos } from "@/components/ui/IssuePhotos";
 
 export function EscalationCard({
   issue,
@@ -64,6 +65,8 @@ export function EscalationCard({
         </div>
       </button>
 
+      {issue.images.length > 0 && <IssuePhotos images={issue.images} />}
+
       <div className="mt-4 flex flex-col gap-3 border-t border-silver pt-4 sm:flex-row sm:items-end">
         <div>
           <label className="label" htmlFor={`rev-${issue.id}`}>
@@ -83,7 +86,7 @@ export function EscalationCard({
           </select>
         </div>
         <button className="btn btn-primary btn-sm" disabled={busy} onClick={() => void approve()}>
-          <ShieldCheck className="h-4 w-4" aria-hidden />
+          <ShieldCheck className="h-3.5 w-3.5" aria-hidden />
           {busy ? "Approving…" : approveLabel}
         </button>
         {error && <p className="text-sm text-[#c0392b]">{error}</p>}

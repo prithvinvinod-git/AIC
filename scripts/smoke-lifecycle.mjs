@@ -177,7 +177,7 @@ try {
 
   // 8. Reporter rates -> CLOSED.
   const clo = await api(reporterToken, "POST", `/api/issues/${issueId}/feedback`, {
-    rating: 3,
+    rating: 5,
     comment: "Fixed, thanks.",
   });
   report("feedback -> CLOSED", clo.issue.status === "CLOSED", `(got ${clo.issue.status})`);

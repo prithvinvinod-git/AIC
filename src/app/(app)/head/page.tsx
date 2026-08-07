@@ -15,7 +15,7 @@ export default function HeadPage() {
   if (!issues) return <Loading label="Loading job board…" />;
 
   const active = issues.filter((i) => ["ASSIGNED", "ONGOING"].includes(i.status));
-  const assignQueue = issues.filter((i) => ["APPROVED", "ESCALATED"].includes(i.status));
+  const assignQueue = issues.filter((i) => i.status === "APPROVED");
   const verifyQueue = issues.filter((i) => i.status === "COMPLETED");
   const blocked = issues.filter((i) => i.status === "PENDING");
 
@@ -50,7 +50,7 @@ export default function HeadPage() {
           Assign queue <span className="text-sm font-normal text-slate">({assignQueue.length})</span>
         </h2>
         {assignQueue.length === 0 ? (
-          <EmptyState title="Nothing to assign" body="Approved and escalated issues will land here." />
+          <EmptyState title="Nothing to assign" body="Approved issues awaiting your team assignment will land here." />
         ) : (
           <div className="grid items-start gap-4 lg:grid-cols-2">
             {assignQueue.map((issue) =>

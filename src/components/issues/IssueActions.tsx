@@ -35,10 +35,6 @@ export function IssueActions({ issue, onChanged }: Props) {
   if (!claims) return null;
   const role = claims.role;
 
-  if (role === "reporter" && issue.status === "VERIFIED") {
-    return <ReporterFeedback issue={issue} onDone={onChanged} />;
-  }
-
   if (role === "validator" && issue.status === "NEW") {
     return <ValidatorActions issue={issue} onChanged={onChanged} />;
   }
@@ -187,53 +183,6 @@ function ValidatorActions({ issue, onChanged }: { issue: Issue; onChanged: () =>
         </button>
       </div>
       {error && <p className="text-sm text-[#c0392b]">{error}</p>}
-    </div>
-  );
-}
-
-function ReporterFeedback({ issue, onDone }: { issue: Issue; onDone: () => void }) {
-  const [rating, setRating] = useState(1);
-  const [comment, setComment] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const submit = useCallback(async () => {
-    setBusy(true);
-    setError(null);
-    try {
-      await api(`/api/issues/${issue.id}/feedback`, {
-        method: "POST",
-        body: JSON.stringify({ rating, comment: comment || undefined }),
-      });
-      onDone();
-    } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Failed to submit feedback.");
-      setBusy(false);
-    }
-  }, [issue.id, rating, comment, onDone]);
-
-  return (
-    <div className="card">
-      <p className="font-medium text-graphite">Job verified — rate the resolution</p>
-      <div className="mt-3 flex items-center gap-1.5">
-        {[1, 2, 3].map((r) => (
-          <button
-            key={r}
-            type="button"
-            className={`btn btn-sm ${rating === r ? "btn-primary" : "btn-ghost"}`}
-            onClick={() => setRating(r)}
-          >
-            {r === 1 ? "Excellent" : r === 2 ? "OK" : "Poor"}
-          </button>
-        ))}
-      </div>
-      <input className="input mt-3" placeholder="Optional comment" value={comment} maxLength={500} onChange={(e) => setComment(e.target.value)} />
-      <div className="mt-3 flex items-center gap-2">
-        <button className="btn btn-primary btn-sm" disabled={busy} onClick={() => void submit()}>
-          {busy ? "Closing…" : "Close issue"}
-        </button>
-        {error && <span className="text-sm text-[#c0392b]">{error}</span>}
-      </div>
     </div>
   );
 }
@@ -485,21 +434,21 @@ export function RequirementsPanel({ issue, onChanged }: { issue: Issue; onChange
               {canEdit ? (
                 <button
                   type="button"
-                  className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border-2 transition-colors ${
+                  className={`flex h-[21px] w-[21px] shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
                     r.resolved
-                      ? "border-[#2e7d32] bg-[#2e7d32] text-white"
+                      ? "border-[#66bb6a] bg-[#66bb6a] text-white"
                       : "border-slate bg-white hover:border-ink"
                   }`}
                   aria-label={r.resolved ? "Mark as unresolved" : "Mark as resolved"}
                   title={r.resolved ? "Mark as unresolved" : "Mark as resolved"}
                   onClick={() => void toggle(r)}
                 >
-                  {r.resolved && <span className="text-xl leading-none">✓</span>}
+                  {r.resolved && <span className="text-sm leading-none">✓</span>}
                 </button>
               ) : (
                 <span
-                  className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border-2 ${
-                    r.resolved ? "border-[#2e7d32] bg-[#2e7d32]" : "border-slate"
+                  className={`flex h-[21px] w-[21px] shrink-0 items-center justify-center rounded-full border-2 ${
+                    r.resolved ? "border-[#66bb6a] bg-[#66bb6a]" : "border-slate"
                   }`}
                 />
               )}

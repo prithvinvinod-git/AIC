@@ -3,7 +3,7 @@ import { z } from "zod";
 import { runTransition } from "@/lib/transition";
 
 const schema = z.object({
-  rating: z.number().int().min(1).max(3),
+  rating: z.number().int().min(1).max(5),
   comment: z.string().max(500).optional(),
 });
 

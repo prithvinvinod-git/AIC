@@ -8,6 +8,7 @@ import { api, ApiError } from "@/lib/clientApi";
 import { Loading, EmptyState } from "@/components/ui/States";
 import { AISuggestionCard } from "@/components/issues/AISuggestionCard";
 import { PriorityBadge, StatusBadge } from "@/components/ui/Badge";
+import { IssuePhotos } from "@/components/ui/IssuePhotos";
 import type { Issue } from "@/lib/types";
 
 function ValidatePanel({ issue, onDone }: { issue: Issue; onDone: () => void }) {
@@ -136,10 +137,12 @@ export default function ValidatePage() {
                     <span className="tag tag-outline">{issue.location.name}</span>
                     <span className="tag tag-outline">{issue.routing?.categoryName}</span>
                     <span className="ml-auto flex items-center gap-1 text-slate">
-                      {open ? <XCircle className="h-4 w-4" aria-hidden /> : <CheckCircle2 className="h-4 w-4" aria-hidden />}
+                      {open ? <XCircle className="h-3.5 w-3.5" aria-hidden /> : <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />}
                     </span>
                   </div>
                 </button>
+
+                {issue.images.length > 0 && <IssuePhotos images={issue.images} />}
 
                 {open && <ValidatePanel issue={issue} onDone={() => { setOpenId(null); void reload(); }} />}
               </div>

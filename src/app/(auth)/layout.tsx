@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { HardHat } from "lucide-react";
+import { ArrowLeft, HardHat } from "lucide-react";
 
 export default function AuthLayout({ children }: LayoutProps<"/">) {
   return (
@@ -11,8 +11,11 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
           </span>
           CampusCare
         </Link>
-        <Link href="/" className="link-blue text-sm">
-          Back to home
+        <Link
+          href="/"
+          className="link-blue flex items-center gap-1.5 rounded-full border border-silver bg-white px-3 py-1.5 text-sm font-medium"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" aria-hidden /> Back to home
         </Link>
       </header>
       <main className="flex flex-1 items-center justify-center px-4 pb-16">

@@ -38,6 +38,7 @@ export interface TransitionInput {
   verdict?: string;
   sendBackReason?: string;
   rating?: number;
+  comment?: string;
   isAuto?: boolean;
 }
 
@@ -238,9 +239,9 @@ export const TRANSITION_RULES: Record<IssueStatus, TransitionRule[]> = {
       roles: ["reporter"],
       check: (_i, _a, input) => {
         if (input.isAuto) return null;
-        return input.rating && input.rating >= 1 && input.rating <= 3
+        return input.rating && input.rating >= 1 && input.rating <= 5
           ? null
-          : "Please rate the resolution (1–3) to close the issue.";
+          : "Please rate the resolution (1–5) to close the issue.";
       },
     },
   ],
@@ -474,7 +475,7 @@ export async function applyTransition(
       case "CLOSED": {
         patches.feedback = {
           rating: input.rating || 0,
-          ...(input.note ? { comment: input.note } : {}),
+          ...(input.comment || input.note ? { comment: input.comment || input.note } : {}),
           givenAt: nowIso(),
           autoClosed: isAuto,
         };

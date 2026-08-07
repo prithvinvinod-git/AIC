@@ -6,6 +6,7 @@ import { RotateCcw, Sparkles, ThumbsUp } from "lucide-react";
 import type { Issue, TeamWithMembers } from "@/lib/types";
 import { api, ApiError } from "@/lib/clientApi";
 import { StatusBadge, PriorityBadge } from "@/components/ui/Badge";
+import { IssuePhotos } from "@/components/ui/IssuePhotos";
 
 export function AssignCard({ issue, onRefresh }: { issue: Issue; onRefresh: () => void }) {
   const router = useRouter();
@@ -84,6 +85,8 @@ export function AssignCard({ issue, onRefresh }: { issue: Issue; onRefresh: () =
           <span className="tag tag-outline">{issue.location.name}</span>
         </div>
       </button>
+
+      {issue.images.length > 0 && <IssuePhotos images={issue.images} />}
 
       <div className="mt-4 flex flex-col gap-3 border-t border-silver pt-4">
         <div className="flex flex-col gap-2 sm:flex-row">
@@ -189,6 +192,8 @@ export function VerifyCard({ issue, onRefresh }: { issue: Issue; onRefresh: () =
         )}
       </button>
 
+      {issue.images.length > 0 && <IssuePhotos images={issue.images} />}
+
       <div className="mt-4 flex flex-col gap-2 border-t border-silver pt-4">
         <input
           className="input"
@@ -198,7 +203,7 @@ export function VerifyCard({ issue, onRefresh }: { issue: Issue; onRefresh: () =
         />
         <div className="flex flex-wrap gap-2">
           <button className="btn btn-primary btn-sm" disabled={busy} onClick={() => void submit("verify")}>
-            <ThumbsUp className="h-4 w-4" aria-hidden /> Verify
+            <ThumbsUp className="h-3.5 w-3.5" aria-hidden /> Verify
           </button>
           <div className="flex flex-1 items-center gap-2">
             <input
@@ -213,7 +218,7 @@ export function VerifyCard({ issue, onRefresh }: { issue: Issue; onRefresh: () =
               disabled={busy || sendBackReason.trim().length < 3}
               onClick={() => void submit("sendback")}
             >
-              <RotateCcw className="h-4 w-4" aria-hidden /> Send back
+              <RotateCcw className="h-3.5 w-3.5" aria-hidden /> Send back
             </button>
           </div>
         </div>
