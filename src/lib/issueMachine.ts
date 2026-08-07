@@ -494,13 +494,17 @@ export async function applyTransition(
     if (sla) patches.sla = sla;
     if (finalStatus !== issue.status) {
       patches.status = finalStatus;
-      steps.push(timelineEntry(issue.status, finalStatus, actor, note, isAuto));
+      const last = steps[steps.length - 1];
+      if (!last || last.to !== finalStatus) {
+        steps.push(timelineEntry(issue.status, finalStatus, actor, note, isAuto));
+      }
     }
 
-    for (const step of steps) {
+    const baseAt = nowIso();
+    for (let i = 0; i < steps.length; i++) {
       tx.set(db.collection(`issues/${issueId}/timeline`).doc(), {
-        ...step,
-        at: nowIso(),
+        ...steps[i],
+        at: new Date(new Date(baseAt).getTime() + i).toISOString(),
       });
     }
     tx.update(ref, {

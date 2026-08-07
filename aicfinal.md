@@ -19,7 +19,7 @@
 11. Firebase Security Rules
 12. Dashboard Architecture (4 Dashboards)
 13. Screen Map
-14. Genkit AI Integration (5 Features)
+14. Genkit AI Integration (7 Features)
 15. opencode Build Plan
 16. Remaining Optional Gaps
 
@@ -287,6 +287,9 @@ POST  /api/ai/suggest-assign         run suggestAssignmentFlow → issue.aiSugge
 POST  /api/ai/extract-requirements   run extractRequirementsFlow → draft requirements
 POST  /api/ai/draft-closure          run draftClosureFlow → draft closure report
 GET   /api/ai/weekly-insights        run weeklyInsightsFlow (or scheduled)
+POST  /api/ai/root-cause             rootCauseFlow → { summary, likelyArea, confidence, recommendation } (Head portal)
+GET   /api/ai/at-risk                atRiskFlow → at-risk locations/categories list (Analytics)
+GET   /api/profile                   own users/ doc  ·  PATCH /api/profile  self-edit name/phone/notifyEmail
 ```
 
 **Core module:** `src/lib/issueMachine.ts` — state machine + RBAC + denormalization + transaction wrapper. The single most important file; implement first.
@@ -460,7 +463,7 @@ All four dashboards share the same app shell (sidebar, topbar, notification bell
 
 ## 13. Screen Map
 
-**Shared:** role-aware sidebar/topbar · notification bell (unread via `where("isRead","==",false)`) · status badge · PriorityBadge (1 red → 5 gray) · SLA countdown chip (green/amber/red).
+**Shared:** role-aware navbar (mobile hamburger + desktop nav) · **profile pill** (avatar + name + settings icon) → rounded dropdown: Profile edit → `/profile`, Settings → `/settings`, Sign out · status badge · PriorityBadge (1 red → 5 gray) · SLA countdown chip (green/amber/red).
 
 | Screen | Dashboard | Contents |
 |---|---|---|
@@ -476,12 +479,16 @@ All four dashboards share the same app shell (sidebar, topbar, notification bell
 | Maintenance Dashboard | D4 | Job board tabs (Claimable / My Jobs / Done), SLA countdowns, requirements checklist |
 | Job Detail | D4 | Start → `ONGOING`; Auto-fill requirements; Draft closure report; Complete → `COMPLETED`; Set Pending + reason → `PENDING` |
 | Verification Module | D4+ (Head) | `COMPLETED` → `VERIFIED` or send-back → `ONGOING`; `PENDING` reassignment tab; confirm AI routing suggestions; team workload strip; all-category toggle |
+| Head Job Board | Head | Active jobs (ASSIGNED/ONGOING) on top as read-only cards; Verify queue (interactive for `head`, read-only otherwise); Assign queue + Blocked sections role-gated; **Root-Cause Analysis card** (possible areas, no definite diagnosis) |
 | Admin Panel | Admin | Users CRUD + role · Teams (name/category/members) · Categories (CRUD, default team, SLA hours) · Config (grace, assignment mode, AI toggles) |
-| Analytics | Admin/Head/HOD | Issues/week, by category, by status, SLA compliance %, avg resolution time, per-team workload, AI accuracy (backed by `stats/{YYYY-MM-DD}`) |
+| Jobs (staff) | D4 | Tabs: Claimable / My Jobs / **Verified**; `COMPLETED` shows "Awaiting verification…", `VERIFIED` shows verifier/note/date, `PENDING` shows send-back reason |
+| Analytics | Admin/Head/HOD | Issues/week, by category, by status, SLA compliance %, avg resolution time, per-team workload, AI accuracy (backed by `stats/{YYYY-MM-DD}`); created vs resolved vs **still unresolved** trend (open backlog never drops to 0), **Still unresolved** KPI, **At-Risk Locations** panel (🔴 High / 🟠 Medium / 🟢 Low) |
+| Profile edit | All | `/profile` — avatar preview, edit name + phone, readonly email/role/department; saves via `PATCH /api/profile` |
+| Settings | All | `/settings` — account summary + email-notification toggle (persisted on the `users/` doc) |
 
 ---
 
-## 14. Genkit AI Integration (5 Features)
+## 14. Genkit AI Integration (7 Features)
 
 **Why Genkit:** it's Google's AI framework built for the Firebase ecosystem. Native Firebase Functions integration, structured JSON output via `outputSchema` (no parsing/hallucinated fields), and a **Dev UI trace tool** that's a demo centerpiece.
 
@@ -618,7 +625,29 @@ export const weeklyInsightsFlow = ai.defineFlow(
 
 **Why it wins:** makes the app feel *institutional*, not a class project — raw ticket data becomes decisions. Most impressive-looking output (polished email with charts + AI narrative).
 
-### 14.6 AI Feature Summary
+### 14.6 Feature 6 — Root-Cause Analysis (Head) ★★★★
+
+On the Head job board, Gemini reviews the last 30 days of **unresolved** issues and returns a single structured `{ summary, likelyArea, confidence (Low|Medium|High), recommendation }`. Wording is always **"possible"** — never a definite diagnosis, so the app never over-claims on thin data.
+
+```
+POST /api/ai/root-cause → { summary, likelyArea, confidence, recommendation }
+```
+
+- Role-gated `["admin","head","hod","principal","maintenance"]`; visible as `RootCauseAnalysisCard` at the top of `/head`.
+- Deterministic fallback when no Gemini key: cluster the unresolved issues by location, name the top cluster with a "frequency-based" note — keeps the demo alive offline.
+
+### 14.7 Feature 7 — Predictive At-Risk Locations (Analytics) ★★★
+
+On the Analytics page, Gemini scans the last 45 days grouped by location + category and returns at-risk rows `{ location, category, count, pattern, risk, recommendation }` with risk badges 🔴 High / 🟠 Medium / 🟢 Low.
+
+```
+GET /api/ai/at-risk → at-risk locations/categories (Analytics, between trend and by-status charts)
+```
+
+- Role-gated `["admin","head","hod","principal"]`; rendered as `AtRiskLocationsCard`.
+- Fallback when no Gemini key: frequency-based tiers (count ≥ 4 High · 2–3 Medium · 1 Low), sorted slice of 10.
+
+### 14.8 AI Feature Summary
 
 | Rank | Feature | Stage | Effort | Demo impact |
 |---|---|---|---|---|
@@ -627,10 +656,12 @@ export const weeklyInsightsFlow = ai.defineFlow(
 | 3 | Smart routing suggestion | 3 | Medium | ★★★★ |
 | 4 | Requirements + closure assistant | 4 | Medium | ★★★ |
 | 5 | Weekly governance insights | All | Low | ★★★★ |
+| 6 | Root-cause analysis (Head) | 3→4 | Low | ★★★★ |
+| 7 | Predictive at-risk locations | All | Low | ★★★★ |
 
-**If you only build two:** #1 (the hook) and #5 (the closer). #2 is the cheapest add-last feature and a crowd favorite. All five share the same Genkit architecture, so building #1 gives you the template for the rest.
+**If you only build two:** #1 (the hook) and #5 (the closer). #2 is the cheapest add-last feature and a crowd favorite. All seven share the same Genkit architecture, so building #1 gives you the template for the rest. #6 and #7 are the cheapest live-demo wins — both have deterministic fallbacks, so they run even without a Gemini key.
 
-### 14.7 AI Guardrails
+### 14.9 AI Guardrails
 
 | Concern | Fix |
 |---|---|
@@ -642,7 +673,7 @@ export const weeklyInsightsFlow = ai.defineFlow(
 | Privacy | Never send photos of people; strip location beyond what the model needs |
 | Accuracy proof | Build labeled test set (~50 issues), run `genkit eval` accuracy evaluator, screenshot report for README |
 
-### 14.8 AI Demo Moments
+### 14.10 AI Demo Moments
 
 1. Submit a photo of a leaking pipe → instant submission → **2s later "AI analysis" chip streams in: Plumbing / P2 / "water damage risk — isolate area"** — live.
 2. Submit the same leak again → **duplicate warning card** links to the open issue.

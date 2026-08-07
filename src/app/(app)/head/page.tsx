@@ -5,6 +5,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { Loading, EmptyState } from "@/components/ui/States";
 import { AssignCard, VerifyCard } from "@/components/issues/HeadCards";
 import { MaintenanceJobCard } from "@/components/issues/MaintenanceJobCard";
+import { RootCauseAnalysisCard } from "@/components/ai/RootCauseAnalysisCard";
 
 export default function HeadPage() {
   const { issues, reload } = useIssues({});
@@ -26,6 +27,8 @@ export default function HeadPage() {
           Route approved work, keep the SLA board honest, and verify completed jobs.
         </p>
       </div>
+
+      <RootCauseAnalysisCard />
 
       <section className="flex flex-col gap-4">
         <h2 className="font-display text-lg font-semibold text-ink">

@@ -18,6 +18,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { api, ApiError } from "@/lib/clientApi";
 import { Loading, EmptyState } from "@/components/ui/States";
 import { ANALYTICS_ROLES } from "@/lib/nav";
+import { AtRiskLocationsCard } from "@/components/ai/AtRiskLocationsCard";
 
 interface SummaryResponse {
   summary: {
@@ -124,6 +125,8 @@ export default function AnalyticsPage() {
           </ResponsiveContainer>
         </div>
       </div>
+
+      <AtRiskLocationsCard />
 
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="card">

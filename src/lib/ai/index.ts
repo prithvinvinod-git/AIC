@@ -7,12 +7,16 @@ import { suggestAssignmentFlow, writeRoutingSuggestion } from "./routing";
 import { extractRequirementsFlow } from "./assist";
 import { draftClosureFlow } from "./assist";
 import { weeklyInsightsFlow, writeWeeklyInsights } from "./insights";
+import { rootCauseFlow } from "./rootCause";
+import { predictiveMaintenanceFlow } from "./predictive";
 
 export { triageFlow, writeTriage };
 export { findDuplicatesFlow, writeDuplicates };
 export { suggestAssignmentFlow, writeRoutingSuggestion };
 export { extractRequirementsFlow, draftClosureFlow };
 export { weeklyInsightsFlow, writeWeeklyInsights };
+export { rootCauseFlow };
+export { predictiveMaintenanceFlow };
 
 export async function getActiveCategories(): Promise<string[]> {
   try {

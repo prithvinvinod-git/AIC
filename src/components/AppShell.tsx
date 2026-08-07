@@ -5,9 +5,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { LogOut, Menu, X } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
+import ProfileMenu from "@/components/auth/ProfileMenu";
 import { NAV_ITEMS, homeFor, portalRoles } from "@/lib/nav";
-import { ROLE_LABEL } from "@/lib/constants";
-import { initials } from "@/lib/format";
 import { Loading } from "@/components/ui/States";
 
 export default function AppShell({ children }: { children: ReactNode }) {
@@ -31,7 +30,6 @@ export default function AppShell({ children }: { children: ReactNode }) {
   if (!ready) return <Loading label="Checking session…" />;
   if (!user || !claims) return null;
 
-  const role = claims.role;
   const accessRoles = portalRoles(claims);
   const items = NAV_ITEMS.filter((i) => i.role === "all" || accessRoles.includes(i.role));
 
@@ -68,23 +66,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
           <nav className="hidden items-center gap-1.5 lg:ml-[150px] lg:flex">{navLinks()}</nav>
 
           <div className="ml-auto flex items-center gap-2 sm:gap-3">
-            <div className="hidden items-center gap-2.5 lg:flex">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-paper text-sm font-semibold text-graphite sm:h-11 sm:w-11 sm:text-base">
-                {initials(claims.name)}
-              </span>
-              <div className="leading-tight">
-                <p className="max-w-[180px] truncate text-sm font-medium text-graphite sm:text-[15px]">{claims.name}</p>
-                <p className="text-xs text-slate">{ROLE_LABEL[role]}</p>
-              </div>
-            </div>
-            <button
-              onClick={() => void logout()}
-              className="btn btn-ghost hidden px-3 py-2 text-sm lg:inline-flex sm:px-4"
-              title="Sign out"
-            >
-              <LogOut className="h-4 w-4" aria-hidden />
-              <span>Sign out</span>
-            </button>
+            <ProfileMenu />
             <button
               className="btn btn-ghost btn-sm lg:hidden"
               onClick={() => setMenuOpen((v) => !v)}
@@ -99,15 +81,6 @@ export default function AppShell({ children }: { children: ReactNode }) {
         {menuOpen && (
           <nav className="border-t border-silver bg-white lg:hidden">
             <div className="mx-auto flex max-w-[1200px] flex-col gap-1 px-4 py-3 sm:px-6">
-              <div className="mb-1 flex items-center gap-2.5 border-b border-silver pb-3 sm:hidden">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-paper text-sm font-semibold text-graphite">
-                  {initials(claims.name)}
-                </span>
-                <div className="min-w-0 leading-tight">
-                  <p className="truncate text-[15px] font-medium text-graphite">{claims.name}</p>
-                  <p className="text-xs text-slate">{ROLE_LABEL[role]}</p>
-                </div>
-              </div>
               {items.map((item) => {
                 const active = pathname === item.href || pathname.startsWith(item.href + "/");
                 return (
