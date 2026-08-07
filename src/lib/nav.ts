@@ -3,6 +3,7 @@ import {
   BarChart3,
   CheckCheck,
   CirclePlus,
+  History,
   LayoutDashboard,
   ShieldCheck,
   TriangleAlert,
@@ -20,7 +21,15 @@ export const ROLE_HOME: Record<Role, string> = {
   admin: "/admin",
 };
 
-export const NAV_ITEMS: { role: Role | "all"; label: string; href: string; icon: LucideIcon }[] = [
+export interface NavItem {
+  label: string;
+  href: string;
+  icon: LucideIcon;
+  role?: Role | "all";
+  roles?: Role[];
+}
+
+export const NAV_ITEMS: NavItem[] = [
   { role: "reporter", label: "My issues", href: "/dashboard", icon: LayoutDashboard },
   { role: "reporter", label: "Submit issue", href: "/new", icon: CirclePlus },
   { role: "validator", label: "Board", href: "/validate", icon: ShieldCheck },
@@ -29,6 +38,7 @@ export const NAV_ITEMS: { role: Role | "all"; label: string; href: string; icon:
   { role: "maintenance", label: "Jobs", href: "/jobs", icon: Wrench },
   { role: "admin", label: "Admin", href: "/admin", icon: UserCog },
   { role: "all", label: "Analytics", href: "/analytics", icon: BarChart3 },
+  { roles: ["admin", "principal"], label: "Issue history", href: "/issue-history", icon: History },
 ];
 
 export const ANALYTICS_ROLES: Role[] = ["hod", "principal", "validator", "admin"];

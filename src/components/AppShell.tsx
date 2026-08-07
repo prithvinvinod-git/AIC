@@ -31,7 +31,10 @@ export default function AppShell({ children }: { children: ReactNode }) {
   if (!user || !claims) return null;
 
   const accessRoles = portalRoles(claims);
-  const items = NAV_ITEMS.filter((i) => i.role === "all" || accessRoles.includes(i.role));
+  const items = NAV_ITEMS.filter((i) => {
+    if (i.roles) return i.roles.some((r) => accessRoles.includes(r));
+    return i.role === "all" || (i.role ? accessRoles.includes(i.role) : false);
+  });
 
   const navLinks = () => (
     <>
