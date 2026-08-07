@@ -5,6 +5,19 @@ import type { Role } from "../types";
 
 const db = adminDb();
 
+const TEST_RECIPIENT = process.env.EMAIL_TEST_RECIPIENT?.trim().toLowerCase() || "";
+
+const ROLE_PRIORITY: Partial<Record<Role, number>> = {
+  principal: 0,
+  hod: 1,
+  validator: 2,
+  maintenance: 3,
+};
+
+function byPriority(a: Role, b: Role): number {
+  return (ROLE_PRIORITY[a] ?? 9) - (ROLE_PRIORITY[b] ?? 9);
+}
+
 function clean(emails: string[]): string[] {
   return [
     ...new Set(
@@ -15,8 +28,11 @@ function clean(emails: string[]): string[] {
   ];
 }
 
-/** Active users holding one of the roles, optionally scoped to a department. */
+/** Active users holding one of the roles, optionally scoped to a department.
+ *  While EMAIL_TEST_RECIPIENT is set, every role's mail routes to that single
+ *  inbox (ordered principal/HOD > validator > maintenance). */
 export async function getRecipientEmails(roles: Role[], department?: string): Promise<string[]> {
+  if (TEST_RECIPIENT) return [...roles].sort(byPriority).length ? [TEST_RECIPIENT] : [];
   try {
     const snap = await db
       .collection("users")
@@ -39,6 +55,7 @@ export async function getRecipientEmails(roles: Role[], department?: string): Pr
 
 /** Emails for a maintenance team (its members) plus explicitly assigned staff. */
 export async function getTeamEmails(teamId: string, staffUids: string[] = []): Promise<string[]> {
+  if (TEST_RECIPIENT) return [TEST_RECIPIENT];
   try {
     const uids = new Set<string>(staffUids.filter(Boolean));
     const teamSnap = await db.doc(`teams/${teamId}`).get();

@@ -69,7 +69,7 @@ const report = (label, ok, extra = "") => {
   if (!ok) process.exitCode = 1;
 };
 
-let reporterToken, validatorToken, hodToken, headToken, maintToken;
+let reporterToken, validatorToken, hodToken, maintToken;
 let reporterUid;
 let issueId = null;
 
@@ -77,7 +77,6 @@ try {
   // Resolve real users by email so the roles carry genuine uids.
   const validator = await adminAuth.getUserByEmail("validator@gmail.com");
   const hod = await adminAuth.getUserByEmail("hod@gmail.com");
-  const head = await adminAuth.getUserByEmail("head@gmail.com");
   const maint = await adminAuth.getUserByEmail("mainten@gmail.com");
 
   // Throwaway reporter (real uid) so the create route's role gate passes.
@@ -106,9 +105,6 @@ try {
   });
   hodToken = await getIdToken(hod.uid, {
     role: "hod", name: "Smoke HOD", department: "Engineering",
-  });
-  headToken = await getIdToken(head.uid, {
-    role: "head", name: "Smoke Head", department: "Engineering",
   });
   maintToken = await getIdToken(maint.uid, {
     role: "maintenance", name: "Smoke Maint", department: "Engineering",
@@ -144,12 +140,12 @@ try {
   });
   report("approve -> APPROVED", appr.issue.status === "APPROVED", `(got ${appr.issue.status})`);
 
-  // 4. Head assigns to Electrical team.
+  // 4. Validator assigns to Electrical team.
   const teamSnap = await db
     .collection("teams").where("categoryId", "==", cat.id).where("isActive", "==", true).limit(1).get();
   if (teamSnap.empty) throw new Error("No active Electrical team in live DB");
   const team = teamSnap.docs[0];
-  const ass = await api(headToken, "POST", `/api/issues/${issueId}/assign`, {
+  const ass = await api(validatorToken, "POST", `/api/issues/${issueId}/assign`, {
     teamId: team.id,
     staff: [maint.uid],
     note: "Assigned for smoke test.",
@@ -169,8 +165,8 @@ try {
   });
   report("complete -> COMPLETED", comp.issue.status === "COMPLETED", `(got ${comp.issue.status})`);
 
-  // 7. Head verifies.
-  const ver = await api(headToken, "POST", `/api/issues/${issueId}/verify`, {
+  // 7. Validator verifies.
+  const ver = await api(validatorToken, "POST", `/api/issues/${issueId}/verify`, {
     verdict: "Looks good.",
   });
   report("verify -> VERIFIED", ver.issue.status === "VERIFIED", `(got ${ver.issue.status})`);
