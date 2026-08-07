@@ -5,6 +5,28 @@ import { json, handleError } from "@/lib/api";
 
 const db = adminDb();
 
+/** Normalise a createdAt value (ISO string, epoch ms, or Firestore Timestamp) to an ISO string. */
+function toIso(v: unknown): string {
+  if (v == null) return "";
+  if (typeof v === "string") return v;
+  if (typeof v === "number") return new Date(v).toISOString();
+  if (typeof v === "object") {
+    const o = v as { toDate?: () => Date; seconds?: number; _seconds?: number };
+    if (typeof o.toDate === "function") return o.toDate().toISOString();
+    const secs = o.seconds ?? o._seconds;
+    if (typeof secs === "number") return new Date(secs * 1000).toISOString();
+  }
+  return "";
+}
+
+/** Millisecond value for sorting — tolerant of missing/odd createdAt values. */
+function createdTimeMs(v: unknown): number {
+  const iso = toIso(v);
+  if (!iso) return 0;
+  const t = Date.parse(iso);
+  return Number.isNaN(t) ? 0 : t;
+}
+
 /** GET /api/admin/users — list all users (admin only). */
 export async function GET(req: NextRequest): Promise<NextResponse> {
   try {
@@ -14,9 +36,17 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     if (role) {
       snap = await db.collection("users").where("role", "==", role).get();
     } else {
-      snap = await db.collection("users").orderBy("createdAt", "asc").get();
+      // Sort in JS, not Firestore: legacy docs may store createdAt as a
+      // Timestamp rather than an ISO string, which breaks orderBy at runtime.
+      snap = await db.collection("users").get();
     }
-    const users = snap.docs.map((d) => ({ uid: d.id, ...d.data() }));
+    const users = snap.docs
+      .map((d) => {
+        const data = d.data();
+        const { createdAt, ...rest } = data as Record<string, unknown>;
+        return { uid: d.id, ...rest, createdAt: toIso(createdAt) };
+      })
+      .sort((a, b) => createdTimeMs(a.createdAt) - createdTimeMs(b.createdAt));
     return json({ users });
   } catch (e) {
     return handleError(e);
