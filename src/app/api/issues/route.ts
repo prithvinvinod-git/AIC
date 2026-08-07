@@ -8,6 +8,7 @@ import { createIssueSchema } from "@/lib/schemas";
 import { allocateIssueNo } from "@/lib/issueMachine";
 import { notifyRole } from "@/lib/notifications";
 import { incrementCategoryCount, incrementStatusCount } from "@/lib/stats";
+import type { Issue } from "@/lib/types";
 
 const db = adminDb();
 
@@ -87,6 +88,21 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         incrementStatusCount("NEW"),
         incrementCategoryCount(cat.name),
       ]);
+
+      // Reported email — reporter severity wins, else the AI triage
+      // suggestion, else P3 (validator-only routing).
+      const snap = await db.doc(`issues/${ref.id}`).get();
+      if (snap.exists) {
+        const issue = { id: ref.id, ...snap.data() } as Issue;
+        const suggested = issue.aiSuggestion?.suggestedPriority;
+        const effective =
+          priority >= 1 && priority <= 5
+            ? priority
+            : suggested && suggested >= 1 && suggested <= 5
+              ? suggested
+              : 3;
+        await import("@/lib/email").then((m) => m.sendIssueReportedEmail(issue, effective));
+      }
     });
 
     return json({ issue: { id: ref.id, ...issueData } }, 201);

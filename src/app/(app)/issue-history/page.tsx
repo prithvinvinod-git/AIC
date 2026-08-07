@@ -2,7 +2,7 @@
 
 /* eslint-disable react-hooks/set-state-in-effect */
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { History, Search, SlidersHorizontal, X } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -49,6 +49,8 @@ export default function IssueHistoryPage() {
   const { claims } = useAuth();
   const [issues, setIssues] = useState<Issue[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const reqRef = useRef(0);
   const [categories, setCategories] = useState<string[]>([]);
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -68,7 +70,8 @@ export default function IssueHistoryPage() {
   }, []);
 
   const load = useCallback(async () => {
-    setIssues(null);
+    setLoading(true);
+    const reqId = ++reqRef.current;
     try {
       const params = new URLSearchParams();
       if (debouncedQuery.trim()) params.set("q", debouncedQuery.trim());
@@ -80,9 +83,16 @@ export default function IssueHistoryPage() {
       const res = await api<{ issues: Issue[]; truncated: boolean }>(
         `/api/issue-history?${params.toString()}`
       );
-      setIssues(res.issues);
+      if (reqId === reqRef.current) {
+        setIssues(res.issues);
+        setError(null);
+      }
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Failed to load issue history.");
+      if (reqId === reqRef.current) {
+        setError(e instanceof ApiError ? e.message : "Failed to load issue history.");
+      }
+    } finally {
+      if (reqId === reqRef.current) setLoading(false);
     }
   }, [applied, debouncedQuery]);
 
@@ -177,7 +187,13 @@ export default function IssueHistoryPage() {
             className="input pl-9"
           />
         </div>
-        <button type="button" className="btn btn-ghost" onClick={openFilters} aria-haspopup="dialog" aria-expanded={open}>
+        {loading && (
+          <span className="inline-flex items-center gap-2 text-xs text-slate" role="status" aria-live="polite">
+            <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-silver border-t-ink" aria-hidden />
+            Searching…
+          </span>
+        )}
+        <button type="button" className="btn btn-secondary" onClick={openFilters} aria-haspopup="dialog" aria-expanded={open}>
           <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden />
           Filters
           {activeFilterCount > 0 && (

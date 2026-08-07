@@ -1,6 +1,7 @@
 import "server-only";
 
 import { NextRequest, NextResponse } from "next/server";
+import { after } from "next/server";
 import type { ZodSchema } from "zod";
 import { adminDb } from "./firebaseAdmin";
 import { requireAuth } from "./auth";
@@ -40,6 +41,16 @@ export async function runTransition(
     )) as Issue;
 
     void notifyRecipientsForIssue(issue, before.status, issue.status);
+
+    // Best-effort emails keyed on the final status. Approvals reach HOD +
+    // Principal; assignments reach the maintenance team. Rejections never email.
+    after(async () => {
+      if (issue.status === "APPROVED") {
+        await import("@/lib/email").then((m) => m.sendIssueApprovedEmail(issue));
+      } else if (issue.status === "ASSIGNED") {
+        await import("@/lib/email").then((m) => m.sendJobAssignmentEmail(issue));
+      }
+    });
 
     return json({ issue });
   } catch (e) {
