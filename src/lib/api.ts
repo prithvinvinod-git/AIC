@@ -37,6 +37,12 @@ export function handleError(e: unknown): NextResponse {
   if (e instanceof ZodError) {
     return err("Validation failed.", 400, e.issues);
   }
+  if (e instanceof Error) {
+    const code = (e as Error & { statusCode?: number }).statusCode;
+    if (typeof code === "number" && code >= 400 && code < 600) {
+      return err(e.message, code);
+    }
+  }
   console.error("API error:", e);
   const msg = e instanceof Error ? e.message : "Internal server error.";
   return err(msg, 500);
