@@ -4,12 +4,12 @@ import { requireAuth } from "@/lib/auth";
 import { json, handleError } from "@/lib/api";
 import { suggestAssignmentFlow, writeRoutingSuggestion } from "@/lib/ai";
 
-/** POST /api/ai/suggest-assign — AI routing suggestion for the Head to confirm. */
+/** POST /api/ai/suggest-assign — AI routing suggestion for the Validator to confirm. */
 export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
     const user = await requireAuth(req);
-    if (!["head", "admin"].includes(user.role)) {
-      return json({ error: "Only the Maintenance Head can use routing suggestions." }, 403);
+    if (!["validator", "admin"].includes(user.role)) {
+      return json({ error: "Only the department validator can use routing suggestions." }, 403);
     }
     const body = (await req.json().catch(() => ({}))) as { issueId?: string };
     if (!body.issueId) return json({ error: "issueId is required." }, 400);

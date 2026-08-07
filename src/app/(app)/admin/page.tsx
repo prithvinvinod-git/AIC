@@ -12,7 +12,7 @@ import type { AppUser, Category, Team, Role } from "@/lib/types";
 const TABS = ["Users", "Teams", "Categories", "Config"] as const;
 type Tab = (typeof TABS)[number];
 
-const ALL_ROLES: Role[] = ["reporter", "validator", "hod", "principal", "maintenance", "head", "admin"];
+const ALL_ROLES: Role[] = ["reporter", "validator", "hod", "principal", "maintenance", "admin"];
 
 export default function AdminPage() {
   const { claims } = useAuth();
@@ -216,7 +216,7 @@ function TeamsTab() {
     [name, categoryId, members, load]
   );
 
-  const maintenanceStaff = users.filter((u) => u.role === "maintenance" || u.role === "head");
+  const maintenanceStaff = users.filter((u) => u.role === "maintenance");
 
   if (!teams) return <Loading label="Loading teams…" />;
 

@@ -7,7 +7,7 @@ import { weeklyInsightsFlow } from "@/lib/ai";
 export async function GET(req: NextRequest): Promise<NextResponse> {
   try {
     const user = await requireAuth(req);
-    if (!["admin", "head", "hod", "principal"].includes(user.role)) {
+    if (!["admin", "validator", "hod", "principal"].includes(user.role)) {
       return json({ error: "Not allowed." }, 403);
     }
     const insight = await weeklyInsightsFlow({});

@@ -7,7 +7,7 @@ const schema = z.object({
   note: z.string().optional(),
 });
 
-/** POST /api/issues/[id]/verify — Head verifies completed work. */
+/** POST /api/issues/[id]/verify — Validator verifies completed work. */
 export async function POST(
   req: NextRequest,
   ctx: RouteContext<"/api/issues/[id]/verify">

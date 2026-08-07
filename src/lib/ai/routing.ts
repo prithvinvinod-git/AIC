@@ -77,7 +77,7 @@ async function rankCandidates(issueId: string, categoryId: string) {
 
 /**
  * F3 — Smart routing suggestion (hybrid). Rule engine ranks candidates, AI
- * (optional) improves the reason. The Head always confirms before anything is
+ * (optional) improves the reason. The Validator always confirms before anything is
  * written to `routing`.
  */
 export async function suggestAssignmentFlow(input: {

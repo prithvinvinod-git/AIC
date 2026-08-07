@@ -362,13 +362,13 @@ export function MaintenanceJobCard({
 
       {isBlocked && (
         <p className="rounded-lg bg-[#fffbeb] px-3 py-2 text-xs text-[#d97706]">
-          Blocked while awaiting parts or permissions. The maintenance head can reassign.
+          Blocked while awaiting parts or permissions. The department validator can reassign.
         </p>
       )}
 
       {issue.status === "COMPLETED" && (
         <p className="rounded-lg bg-[#fffbeb] px-3 py-2 text-xs text-[#d97706]">
-          Awaiting verification by the maintenance head.
+          Awaiting verification by the department validator.
         </p>
       )}
 

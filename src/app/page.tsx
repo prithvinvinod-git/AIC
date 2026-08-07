@@ -38,7 +38,7 @@ const FEATURES = [
   {
     icon: HardHat,
     title: "Verify before close",
-    body: "Reporter feedback and maintenance-head verification gate the final close of every ticket.",
+    body: "Reporter feedback and department-validator verification gate the final close of every ticket.",
   },
 ];
 
@@ -46,8 +46,8 @@ const STEPS = [
   { n: "01", t: "Report", d: "Anyone raises an issue with photo and location." },
   { n: "02", t: "Validate", d: "Department validator triages category and priority." },
   { n: "03", t: "Escalate", d: "Critical issues reach HOD and the Principal for approval." },
-  { n: "04", t: "Execute", d: "Maintenance head routes work; teams log requirements and progress." },
-  { n: "05", t: "Verify", d: "Reporter rates the outcome and the head verifies work done." },
+  { n: "04", t: "Execute", d: "Validator routes work to teams; staff log requirements and progress." },
+  { n: "05", t: "Verify", d: "Reporter rates the outcome and the validator verifies work done." },
 ];
 
 export default function Home() {

@@ -39,20 +39,31 @@ export function IssueActions({ issue, onChanged }: Props) {
     return <ValidatorActions issue={issue} onChanged={onChanged} />;
   }
 
-  if (role === "validator" && issue.status === "VALIDATED") {
-    return (
-      <div className="card">
-        <p className="text-sm text-slate">This issue is awaiting HOD/Principal approval.</p>
-        <button
-          className="btn btn-ghost btn-sm mt-3"
-          disabled={busy}
-          onClick={() => void run(`/api/issues/${issue.id}/escalate`, { note: "Escalated." })}
-        >
-          {busy ? "Escalating…" : "Escalate again"}
-        </button>
-        {error && <p className="mt-2 text-sm text-[#c0392b]">{error}</p>}
-      </div>
-    );
+  if (role === "validator") {
+    if (issue.status === "VALIDATED") {
+      return (
+        <div className="flex flex-col gap-4">
+          <AssignPanel issue={issue} onChanged={onChanged} />
+          <div className="card">
+            <p className="text-sm text-slate">This issue is awaiting HOD/Principal approval.</p>
+            <button
+              className="btn btn-ghost btn-sm mt-3"
+              disabled={busy}
+              onClick={() => void run(`/api/issues/${issue.id}/escalate`, { note: "Escalated." })}
+            >
+              {busy ? "Escalating…" : "Escalate again"}
+            </button>
+            {error && <p className="mt-2 text-sm text-[#c0392b]">{error}</p>}
+          </div>
+        </div>
+      );
+    }
+    if (["APPROVED", "PENDING"].includes(issue.status)) {
+      return <AssignPanel issue={issue} onChanged={onChanged} />;
+    }
+    if (issue.status === "COMPLETED") {
+      return <VerifyPanel issue={issue} onChanged={onChanged} />;
+    }
   }
 
   if (["hod", "principal"].includes(role) && issue.status === "ESCALATED") {
@@ -65,21 +76,12 @@ export function IssueActions({ issue, onChanged }: Props) {
             disabled={busy}
             onClick={() => void run(`/api/issues/${issue.id}/approve`, { note: "Approved for execution." })}
           >
-            {busy ? "Approving…" : "Approve & route to head"}
+            {busy ? "Approving…" : "Approve & route to validator"}
           </button>
           {error && <span className="text-sm text-[#c0392b]">{error}</span>}
         </div>
       </div>
     );
-  }
-
-  if (role === "head") {
-    if (["APPROVED", "ESCALATED", "PENDING"].includes(issue.status)) {
-      return <HeadAssign issue={issue} onChanged={onChanged} />;
-    }
-    if (issue.status === "COMPLETED") {
-      return <HeadVerify issue={issue} onChanged={onChanged} />;
-    }
   }
 
   if (role === "maintenance") {
@@ -110,7 +112,7 @@ export function IssueActions({ issue, onChanged }: Props) {
     if (issue.status === "COMPLETED") {
       return (
         <div className="card">
-          <p className="text-sm text-[#d97706]">Awaiting verification by the maintenance head.</p>
+          <p className="text-sm text-[#d97706]">Awaiting verification by the department validator.</p>
         </div>
       );
     }
@@ -187,7 +189,7 @@ function ValidatorActions({ issue, onChanged }: { issue: Issue; onChanged: () =>
   );
 }
 
-function HeadVerify({ issue, onChanged }: { issue: Issue; onChanged: () => void }) {
+function VerifyPanel({ issue, onChanged }: { issue: Issue; onChanged: () => void }) {
   const [verdict, setVerdict] = useState("");
   const [sendBack, setSendBack] = useState("");
   const [busy, setBusy] = useState(false);
@@ -280,7 +282,7 @@ function MaintenanceComplete({ issue, onChanged }: { issue: Issue; onChanged: ()
   );
 }
 
-function HeadAssign({ issue, onChanged }: { issue: Issue; onChanged: () => void }) {
+function AssignPanel({ issue, onChanged }: { issue: Issue; onChanged: () => void }) {
   const [teams, setTeams] = useState<TeamWithMembers[]>([]);
   const [teamId, setTeamId] = useState("");
   const [staff, setStaff] = useState<string[]>([]);
@@ -386,7 +388,7 @@ export function RequirementsPanel({ issue, onChanged }: { issue: Issue; onChange
   const [qty, setQty] = useState("1");
   const [needsApproval, setNeedsApproval] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const canEdit = claims && ["maintenance", "head", "admin"].includes(claims.role);
+  const canEdit = claims && ["maintenance", "validator", "admin"].includes(claims.role);
 
   const add = useCallback(
     async (e: React.FormEvent) => {

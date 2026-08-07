@@ -46,7 +46,7 @@ export default function JobsPage() {
       {visible.length === 0 ? (
         <EmptyState
           title={`No ${tab === "all" ? "" : TABS.find((t) => t.key === tab)?.label.toLowerCase() + " "}jobs`}
-          body="New assignments from the maintenance head will appear here."
+          body="New assignments from your department validator will appear here."
         />
       ) : (
         <div className="grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-3">

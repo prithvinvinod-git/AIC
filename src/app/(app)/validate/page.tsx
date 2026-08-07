@@ -7,6 +7,9 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { api, ApiError } from "@/lib/clientApi";
 import { Loading, EmptyState } from "@/components/ui/States";
 import { AISuggestionCard } from "@/components/issues/AISuggestionCard";
+import { AssignCard, VerifyCard } from "@/components/issues/HeadCards";
+import { MaintenanceJobCard } from "@/components/issues/MaintenanceJobCard";
+import { RootCauseAnalysisCard } from "@/components/ai/RootCauseAnalysisCard";
 import { PriorityBadge, StatusBadge } from "@/components/ui/Badge";
 import { IssuePhotos } from "@/components/ui/IssuePhotos";
 import type { Issue } from "@/lib/types";
@@ -88,68 +91,141 @@ function ValidatePanel({ issue, onDone }: { issue: Issue; onDone: () => void }) 
 
 export default function ValidatePage() {
   const { claims } = useAuth();
-  const { issues, reload } = useIssues({ status: "NEW" });
+  const { issues, reload } = useIssues({});
   const [openId, setOpenId] = useState<string | null>(null);
 
   if (!claims) return null;
-  if (!issues) return <Loading label="Loading issues to validate…" />;
+  if (!issues) return <Loading label="Loading board…" />;
+
+  const validateQueue = issues.filter((i) => i.status === "NEW");
+  const active = issues.filter((i) => ["ASSIGNED", "ONGOING"].includes(i.status));
+  const assignQueue = issues.filter((i) => i.status === "APPROVED");
+  const verifyQueue = issues.filter((i) => i.status === "COMPLETED");
+  const blocked = issues.filter((i) => i.status === "PENDING");
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-10">
       <div>
-        <h1 className="font-display text-2xl font-semibold text-ink">Validate issues</h1>
+        <h1 className="font-display text-2xl font-semibold text-ink">Validate & manage</h1>
         <p className="mt-1 text-sm text-slate">
-          {claims.department} · Review reports, confirm AI triage, and route them onward.
+          {claims.department} · Review reports, route approved work, and verify completed jobs.
         </p>
       </div>
 
-      {issues.length === 0 ? (
-        <EmptyState
-          icon={<CheckCircle2 className="h-8 w-8" aria-hidden />}
-          title="Nothing to review"
-          body="New issues from your department will appear here for validation."
-        />
-      ) : (
-        <div className="flex flex-col gap-4">
-          {issues.map((issue) => {
-            const open = openId === issue.id;
-            return (
-              <div key={issue.id} className="card">
-                <button
-                  type="button"
-                  className="flex w-full flex-col gap-2 text-left"
-                  onClick={() => setOpenId(open ? null : issue.id || null)}
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-xs font-medium uppercase tracking-wide text-slate">{issue.issueNo}</p>
-                      <h3 className="truncate font-display text-base font-medium text-graphite">
-                        {issue.title}
-                      </h3>
-                    </div>
-                    <div className="flex shrink-0 items-center gap-2">
-                      {issue.priority > 0 && <PriorityBadge priority={issue.priority} />}
-                      <StatusBadge status={issue.status} />
-                    </div>
-                  </div>
-                  <p className="line-clamp-2 text-sm text-slate">{issue.description}</p>
-                  <div className="flex flex-wrap gap-2 text-xs text-slate">
-                    <span className="tag tag-outline">{issue.location.name}</span>
-                    <span className="tag tag-outline">{issue.routing?.categoryName}</span>
-                    <span className="ml-auto flex items-center gap-1 text-slate">
-                      {open ? <XCircle className="h-3.5 w-3.5" aria-hidden /> : <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />}
-                    </span>
-                  </div>
-                </button>
+      <RootCauseAnalysisCard />
 
-                {issue.images.length > 0 && <IssuePhotos images={issue.images} />}
+      <section className="flex flex-col gap-4">
+        <h2 className="font-display text-lg font-semibold text-ink">
+          Validate queue <span className="text-sm font-normal text-slate">({validateQueue.length})</span>
+        </h2>
+        {validateQueue.length === 0 ? (
+          <EmptyState
+            icon={<CheckCircle2 className="h-8 w-8" aria-hidden />}
+            title="Nothing to review"
+            body="New issues from your department will appear here for validation."
+          />
+        ) : (
+          <div className="flex flex-col gap-4">
+            {validateQueue.map((issue) => {
+              const open = openId === issue.id;
+              return (
+                <div key={issue.id} className="card">
+                  <button
+                    type="button"
+                    className="flex w-full flex-col gap-2 text-left"
+                    onClick={() => setOpenId(open ? null : issue.id || null)}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-xs font-medium uppercase tracking-wide text-slate">{issue.issueNo}</p>
+                        <h3 className="truncate font-display text-base font-medium text-graphite">
+                          {issue.title}
+                        </h3>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-2">
+                        {issue.priority > 0 && <PriorityBadge priority={issue.priority} />}
+                        <StatusBadge status={issue.status} />
+                      </div>
+                    </div>
+                    <p className="line-clamp-2 text-sm text-slate">{issue.description}</p>
+                    <div className="flex flex-wrap gap-2 text-xs text-slate">
+                      <span className="tag tag-outline">{issue.location.name}</span>
+                      <span className="tag tag-outline">{issue.routing?.categoryName}</span>
+                      <span className="ml-auto flex items-center gap-1 text-slate">
+                        {open ? <XCircle className="h-3.5 w-3.5" aria-hidden /> : <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />}
+                      </span>
+                    </div>
+                  </button>
 
-                {open && <ValidatePanel issue={issue} onDone={() => { setOpenId(null); void reload(); }} />}
-              </div>
-            );
-          })}
-        </div>
-      )}
+                  {issue.images.length > 0 && <IssuePhotos images={issue.images} />}
+
+                  {open && <ValidatePanel issue={issue} onDone={() => { setOpenId(null); void reload(); }} />}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <h2 className="font-display text-lg font-semibold text-ink">
+          Active jobs <span className="text-sm font-normal text-slate">({active.length})</span>
+        </h2>
+        {active.length === 0 ? (
+          <EmptyState title="No active jobs" body="Assigned jobs being worked on will appear here." />
+        ) : (
+          <div className="grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {active.map((issue) => (
+              <MaintenanceJobCard key={issue.id} issue={issue} onRefresh={() => void reload()} readOnly />
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <h2 className="font-display text-lg font-semibold text-ink">
+          Assign queue <span className="text-sm font-normal text-slate">({assignQueue.length})</span>
+        </h2>
+        {assignQueue.length === 0 ? (
+          <EmptyState title="Nothing to assign" body="Approved issues awaiting your team assignment will land here." />
+        ) : (
+          <div className="grid items-start gap-4 lg:grid-cols-2">
+            {assignQueue.map((issue) => (
+              <AssignCard key={issue.id} issue={issue} onRefresh={() => void reload()} />
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <h2 className="font-display text-lg font-semibold text-ink">
+          Verify queue <span className="text-sm font-normal text-slate">({verifyQueue.length})</span>
+        </h2>
+        {verifyQueue.length === 0 ? (
+          <EmptyState title="Nothing to verify" body="Completed jobs awaiting your verification will appear here." />
+        ) : (
+          <div className="grid items-start gap-4 lg:grid-cols-2">
+            {verifyQueue.map((issue) => (
+              <VerifyCard key={issue.id} issue={issue} onRefresh={() => void reload()} />
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <h2 className="font-display text-lg font-semibold text-ink">
+          Blocked <span className="text-sm font-normal text-slate">({blocked.length})</span>
+        </h2>
+        {blocked.length === 0 ? (
+          <EmptyState title="No blocked jobs" body="Jobs awaiting parts or permissions will appear here." />
+        ) : (
+          <div className="grid items-start gap-4 lg:grid-cols-2">
+            {blocked.map((issue) => (
+              <AssignCard key={issue.id} issue={issue} onRefresh={() => void reload()} />
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

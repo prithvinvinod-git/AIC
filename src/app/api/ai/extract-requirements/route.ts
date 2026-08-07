@@ -8,7 +8,7 @@ import { extractRequirementsFlow } from "@/lib/ai";
 export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
     const user = await requireAuth(req);
-    if (!["maintenance", "head", "admin"].includes(user.role)) {
+    if (!["maintenance", "validator", "admin"].includes(user.role)) {
       return json({ error: "Not allowed." }, 403);
     }
     const body = (await req.json().catch(() => ({}))) as { issueId?: string };

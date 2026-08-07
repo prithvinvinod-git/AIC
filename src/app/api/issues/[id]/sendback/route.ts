@@ -6,7 +6,7 @@ const schema = z.object({
   sendBackReason: z.string().min(3, "A send-back reason is required."),
 });
 
-/** POST /api/issues/[id]/sendback — Head sends verification back to staff. */
+/** POST /api/issues/[id]/sendback — Validator sends verification back to staff. */
 export async function POST(
   req: NextRequest,
   ctx: RouteContext<"/api/issues/[id]/sendback">

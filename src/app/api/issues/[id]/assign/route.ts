@@ -12,7 +12,7 @@ const schema = z.object({
 });
 
 /**
- * POST /api/issues/[id]/assign — Head routes to a team (and staff in assign
+ * POST /api/issues/[id]/assign — Validator routes to a team (and staff in assign
  * mode). Resolves the default team when none is provided, then runs the
  * machine's ASSIGNED transition transactionally.
  */

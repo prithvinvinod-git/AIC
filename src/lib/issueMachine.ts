@@ -135,12 +135,12 @@ export const TRANSITION_RULES: Record<IssueStatus, TransitionRule[]> = {
   VALIDATED: [
     {
       to: "ESCALATED",
-      roles: ["validator", "head", "admin"],
+      roles: ["validator", "admin"],
       check: never,
     },
     {
       to: "ASSIGNED",
-      roles: ["head", "admin"],
+      roles: ["validator", "admin"],
       check: never,
     },
   ],
@@ -158,7 +158,7 @@ export const TRANSITION_RULES: Record<IssueStatus, TransitionRule[]> = {
   APPROVED: [
     {
       to: "ASSIGNED",
-      roles: ["head", "admin"],
+      roles: ["validator", "admin"],
       check: never,
     },
   ],
@@ -174,7 +174,7 @@ export const TRANSITION_RULES: Record<IssueStatus, TransitionRule[]> = {
     },
     {
       to: "PENDING",
-      roles: ["maintenance", "head", "admin"],
+      roles: ["maintenance", "validator", "admin"],
       check: (_i, _a, input) =>
         input.note && input.note.trim().length >= 3
           ? null
@@ -184,7 +184,7 @@ export const TRANSITION_RULES: Record<IssueStatus, TransitionRule[]> = {
   ONGOING: [
     {
       to: "PENDING",
-      roles: ["maintenance", "head", "admin"],
+      roles: ["maintenance", "validator", "admin"],
       check: (_i, _a, input) =>
         input.note && input.note.trim().length >= 3
           ? null
@@ -192,7 +192,7 @@ export const TRANSITION_RULES: Record<IssueStatus, TransitionRule[]> = {
     },
     {
       to: "COMPLETED",
-      roles: ["maintenance", "head", "admin"],
+      roles: ["maintenance", "validator", "admin"],
       check: (issue, actor, input) => {
         if (actor.role === "maintenance" && !issue.routing?.staff?.some((s) => s.uid === actor.uid))
           return "You are not assigned to this job.";
@@ -210,7 +210,7 @@ export const TRANSITION_RULES: Record<IssueStatus, TransitionRule[]> = {
   PENDING: [
     {
       to: "ASSIGNED",
-      roles: ["head", "admin"],
+      roles: ["validator", "admin"],
       check: (_i, _a, input) =>
         input.teamId ? null : "Choose a team to reassign this issue.",
     },
@@ -218,7 +218,7 @@ export const TRANSITION_RULES: Record<IssueStatus, TransitionRule[]> = {
   COMPLETED: [
     {
       to: "VERIFIED",
-      roles: ["head", "admin"],
+      roles: ["validator", "admin"],
       check: (_i, _a, input) =>
         input.verdict && input.verdict.trim().length >= 2
           ? null
@@ -226,7 +226,7 @@ export const TRANSITION_RULES: Record<IssueStatus, TransitionRule[]> = {
     },
     {
       to: "ONGOING",
-      roles: ["head", "admin"],
+      roles: ["validator", "admin"],
       check: (_i, _a, input) =>
         input.sendBackReason && input.sendBackReason.trim().length >= 3
           ? null

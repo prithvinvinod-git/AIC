@@ -4,7 +4,7 @@ import { requireAuth } from "@/lib/auth";
 import { json, parseBody, handleError } from "@/lib/api";
 import { requirementSchema } from "@/lib/schemas";
 
-const ALLOWED_ROLES = ["maintenance", "head", "admin"];
+const ALLOWED_ROLES = ["maintenance", "validator", "admin"];
 
 /** POST /api/issues/[id]/requirements — log a requirements entry. */
 export async function POST(
@@ -15,7 +15,7 @@ export async function POST(
     const { id } = await ctx.params;
     const user = await requireAuth(req);
     if (!ALLOWED_ROLES.includes(user.role)) {
-      return json({ error: "Only maintenance staff or the head can log requirements." }, 403);
+      return json({ error: "Only maintenance staff or the department validator can log requirements." }, 403);
     }
     const body = await parseBody(req, requirementSchema);
 

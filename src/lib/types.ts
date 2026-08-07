@@ -4,7 +4,6 @@ export type Role =
   | "hod"
   | "principal"
   | "maintenance"
-  | "head"
   | "admin";
 
 export const ROLES: Role[] = [
@@ -13,7 +12,6 @@ export const ROLES: Role[] = [
   "hod",
   "principal",
   "maintenance",
-  "head",
   "admin",
 ];
 

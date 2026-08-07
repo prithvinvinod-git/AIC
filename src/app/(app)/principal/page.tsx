@@ -46,7 +46,7 @@ export default function PrincipalPage() {
       <section className="flex flex-col gap-4">
         <h2 className="font-display text-lg font-semibold text-ink">Approved & in progress</h2>
         {approved.length === 0 ? (
-          <EmptyState title="Nothing approved yet" body="Approved issues awaiting the maintenance head will appear here." />
+          <EmptyState title="Nothing approved yet" body="Approved issues awaiting the department validator will appear here." />
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {approved.map((issue) => (

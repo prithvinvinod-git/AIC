@@ -80,7 +80,7 @@ export function notifyRecipientsForIssue(issue: Issue, oldStatus: string, newSta
       break;
     case "ASSIGNED":
       toReporter("Issue assigned", `${issue.issueNo} assigned to a maintenance team.`);
-      notifyRole(["head", "maintenance"], {
+      notifyRole(["validator", "maintenance"], {
         type: "assignment",
         title: "New job assigned",
         body: `${issue.issueNo} routed to ${issue.routing?.categoryName || "team"}.`,
@@ -92,7 +92,7 @@ export function notifyRecipientsForIssue(issue: Issue, oldStatus: string, newSta
       break;
     case "PENDING":
       toReporter("Issue on hold", `${issue.issueNo} is pending a blocker.`);
-      notifyRole(["head"], {
+      notifyRole(["validator"], {
         type: "pending",
         title: "Pending issue needs reassignment",
         body: `${issue.issueNo} hit a blocker — reassign from the queue.`,
@@ -100,7 +100,7 @@ export function notifyRecipientsForIssue(issue: Issue, oldStatus: string, newSta
       });
       break;
     case "COMPLETED":
-      notifyRole(["head"], {
+      notifyRole(["validator"], {
         type: "verification",
         title: "Verification needed",
         body: `${issue.issueNo} completed — verify the work.`,
@@ -112,10 +112,10 @@ export function notifyRecipientsForIssue(issue: Issue, oldStatus: string, newSta
       break;
     case "CLOSED":
       if (oldStatus === "VERIFIED") {
-        notifyRole(["head"], {
+        notifyRole(["validator"], {
           type: "issue",
           title: "Issue closed",
-          body: `${issue.issueNo} closed with rating ${issue.feedback?.rating}/3.`,
+          body: `${issue.issueNo} closed with rating ${issue.feedback?.rating}/5.`,
           link,
         });
       }

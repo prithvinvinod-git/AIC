@@ -5,11 +5,11 @@ import { json, handleError } from "@/lib/api";
 
 const db = adminDb();
 
-/** GET /api/teams — active teams with member names (head/admin). */
+/** GET /api/teams — active teams with member names (validator/admin). */
 export async function GET(req: NextRequest): Promise<NextResponse> {
   try {
     const user = await requireAuth(req);
-    if (!["head", "admin"].includes(user.role)) {
+    if (!["validator", "admin"].includes(user.role)) {
       return json({ error: "Not allowed." }, 403);
     }
     const snap = await db.collection("teams").where("isActive", "==", true).get();

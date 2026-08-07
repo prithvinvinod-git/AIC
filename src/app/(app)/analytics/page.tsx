@@ -62,7 +62,7 @@ export default function AnalyticsPage() {
   if (!claims) return null;
   if (!ANALYTICS_ROLES.includes(claims.role)) {
     return (
-      <EmptyState title="Analytics are role-gated" body="HODs, the Principal, the Maintenance Head and admins can view analytics." />
+      <EmptyState title="Analytics are role-gated" body="HODs, the Principal, department validators and admins can view analytics." />
     );
   }
   if (error) return <EmptyState title="Couldn't load analytics" body={error} />;

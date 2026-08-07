@@ -11,7 +11,7 @@ import { IssuePhotos } from "@/components/ui/IssuePhotos";
 export function EscalationCard({
   issue,
   onAction,
-  approveLabel = "Approve & route to head",
+  approveLabel = "Approve & route to validator",
 }: {
   issue: Issue;
   onAction: () => void;

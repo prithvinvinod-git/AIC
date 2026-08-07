@@ -4,7 +4,7 @@ import { requireAuth } from "@/lib/auth";
 import { json, parseBody, handleError } from "@/lib/api";
 import { resolveRequirementSchema } from "@/lib/schemas";
 
-const ALLOWED_ROLES = ["maintenance", "head", "admin"];
+const ALLOWED_ROLES = ["maintenance", "validator", "admin"];
 
 /** PATCH /api/issues/[id]/requirements/[reqId] — resolve / un-resolve. */
 export async function PATCH(

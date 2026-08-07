@@ -7,7 +7,7 @@ import { rootCauseFlow } from "@/lib/ai/rootCause";
 export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
     const user = await requireAuth(req);
-    if (!["admin", "head", "hod", "principal", "maintenance"].includes(user.role)) {
+    if (!["admin", "validator", "hod", "principal", "maintenance"].includes(user.role)) {
       return json({ error: "Not allowed." }, 403);
     }
     

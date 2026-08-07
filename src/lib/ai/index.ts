@@ -68,7 +68,7 @@ export async function runAiOnCreate(issueId: string): Promise<void> {
   }
 }
 
-/** F3 helper — computes and persists a routing suggestion for the Head. */
+/** F3 helper — computes and persists a routing suggestion for the Validator. */
 export async function runRoutingSuggestion(issueId: string, categoryId: string): Promise<void> {
   try {
     const result = await suggestAssignmentFlow({ issueId, categoryId });

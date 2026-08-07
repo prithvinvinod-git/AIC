@@ -48,7 +48,6 @@ export const ROLE_LABEL: Record<Role, string> = {
   hod: "HOD",
   principal: "Principal",
   maintenance: "Maintenance",
-  head: "Maintenance Head",
   admin: "Admin",
 };
 

@@ -15,7 +15,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     if (!snap.exists) return json({ error: "Issue not found." }, 404);
     const issue = snap.data()!;
 
-    const staffRole = ["validator", "hod", "principal", "head", "admin"].includes(user.role);
+    const staffRole = ["validator", "hod", "principal", "admin"].includes(user.role);
     const isOwner = user.uid === issue.reporter?.uid;
     if (!staffRole && !isOwner) {
       return json({ error: "Not allowed." }, 403);
