@@ -2468,3 +2468,82 @@ Open your browser's console to view the Component stack trace.
     at MessagePort.performWorkUntilDeadline (file://D:/Downloads/cloneserver/AIC/.next/dev/static/chunks/node_modules_next_dist_compiled_1amofcm._.js:2647:64)
     at AppShell (file://D:/Downloads/cloneserver/AIC/.next/dev/static/chunks/src_0vfy97i._.js:105:231)
     at AppLayout (about://React/Server/D:%5CDownloads%5Ccloneserver%5CAIC%5C.next%5Cdev%5Cserver%5Cchunks%5Cssr%5Csrc_04k1q8l._.js?6:14:263)
+[browser] Uncaught Error: Failed prop type: The prop `href` expects a `string` or `object` in `<Link>`, but got `undefined` instead.
+Open your browser's console to view the Component stack trace.
+    at Array.forEach (<anonymous>)
+    at AppShell (src/components/AppShell.tsx:60:11)
+    at AppLayout (src\app\(app)\layout.tsx:4:10)
+  58 |       <header className="sticky top-0 z-40 border-b border-silver bg-white/90 backdrop-blur">
+  59 |         <div className="mx-auto flex h-[54px] w-full max-w-[1200px] items-center gap-2 pl-0 pr-2 sm:h-[86px] sm:gap-5 sm:pl-0 sm:pr-3">
+> 60 |           <Link
+     |           ^
+  61 |             href={homeFor(claims)}
+  62 |             className="flex min-w-0 shrink-0 items-center font-display text-lg font-semibold text-ink sm:text-xl lg:-ml-[150px]"
+  63 |           >
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/issues/65..." notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html lang="en" data-scroll-behavior="smooth" className="inter_8db6...">
+                          <body
+                            className="min-h-full"
+-                           cz-shortcut-listen="true"
+                          >
+                  ...
+ 
+    at <unknown> (file://D:/Downloads/cloneserver/AIC/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:3241:25)
+    at runWithFiberInDEV (file://D:/Downloads/cloneserver/AIC/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:761:74)
+    at emitPendingHydrationWarnings (file://D:/Downloads/cloneserver/AIC/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:3240:13)
+    at completeWork (file://D:/Downloads/cloneserver/AIC/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6712:102)
+    at runWithFiberInDEV (file://D:/Downloads/cloneserver/AIC/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:761:131)
+    at completeUnitOfWork (file://D:/Downloads/cloneserver/AIC/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9452:23)
+    at performUnitOfWork (file://D:/Downloads/cloneserver/AIC/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9387:28)
+    at workLoopConcurrentByScheduler (file://D:/Downloads/cloneserver/AIC/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9381:58)
+    at renderRootConcurrent (file://D:/Downloads/cloneserver/AIC/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9364:71)
+    at performWorkOnRoot (file://D:/Downloads/cloneserver/AIC/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:8891:150)
+    at performWorkOnRootViaSchedulerTask (file://D:/Downloads/cloneserver/AIC/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10085:9)
+    at MessagePort.performWorkUntilDeadline (file://D:/Downloads/cloneserver/AIC/.next/dev/static/chunks/node_modules_next_dist_compiled_1amofcm._.js:2647:64) (file://D:/Downloads/cloneserver/AIC/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:3241:25)
+[browser] Uncaught Error: Failed prop type: The prop `href` expects a `string` or `object` in `<Link>`, but got `undefined` instead.
+Open your browser's console to view the Component stack trace.
+    at Array.forEach (<anonymous>)
+    at AppShell (src/components/AppShell.tsx:60:11)
+    at AppLayout (src\app\(app)\layout.tsx:4:10)
+  58 |       <header className="sticky top-0 z-40 border-b border-silver bg-white/90 backdrop-blur">
+  59 |         <div className="mx-auto flex h-[54px] w-full max-w-[1200px] items-center gap-2 pl-0 pr-2 sm:h-[86px] sm:gap-5 sm:pl-0 sm:pr-3">
+> 60 |           <Link
+     |           ^
+  61 |             href={homeFor(claims)}
+  62 |             className="flex min-w-0 shrink-0 items-center font-display text-lg font-semibold text-ink sm:text-xl lg:-ml-[150px]"
+  63 |           >
+⚠ Fast Refresh had to perform a full reload due to a runtime error.

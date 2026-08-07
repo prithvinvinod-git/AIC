@@ -44,7 +44,12 @@ export function portalRoles(claims: { role: Role; portal?: Role }): Role[] {
   return [claims.portal, claims.role];
 }
 
-/** Landing page after login — prefers the `portal` claim, else the role. */
+/** Landing page after login — prefers the `portal` claim, else the role.
+ *  Falls back defensively for stale claims (e.g. removed roles). */
 export function homeFor(claims: { role: Role; portal?: Role }): string {
-  return ROLE_HOME[claims.portal || claims.role];
+  return (
+    ROLE_HOME[claims.portal || claims.role] ||
+    ROLE_HOME[claims.role] ||
+    "/dashboard"
+  );
 }

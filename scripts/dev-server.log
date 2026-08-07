@@ -2209,3 +2209,9 @@
  GET /api/images/ef15d233-3001-4198-8d48-188799f64341 200 in 8.2s (next.js: 7.9s, application-code: 375ms)
  GET /api/images/cef7b508-6383-4884-81d7-1e4a98f73c4f 200 in 8.4s (next.js: 7.9s, application-code: 569ms)
  GET /api/images/eb927515-ff0a-431d-8d5a-d3a140566206 200 in 8.5s (next.js: 7.9s, application-code: 641ms)
+ GET /issues/65sMpaQS7f5dgvAQNgBF 200 in 360ms (next.js: 149ms, application-code: 210ms)
+✓ Compiled in 375ms
+ GET /issues/65sMpaQS7f5dgvAQNgBF 200 in 312ms (next.js: 97ms, application-code: 215ms)
+ GET /dashboard 200 in 106ms (next.js: 42ms, application-code: 65ms)
+ GET /api/issues/65sMpaQS7f5dgvAQNgBF 200 in 5.0s (next.js: 4.2s, application-code: 850ms)
+ GET /api/issues/65sMpaQS7f5dgvAQNgBF 200 in 254ms (next.js: 21ms, application-code: 233ms)
