@@ -92,18 +92,21 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         incrementCategoryCount(cat.name),
       ]);
 
-      // Reported email — reporter severity wins, else the AI triage
-      // suggestion, else P3 (validator-only routing).
+      // Reported email — the AI-set severity wins (reporter picked default P3),
+      // else the reporter's explicit choice, else the AI suggestion, else P3.
       const snap = await db.doc(`issues/${ref.id}`).get();
       if (snap.exists) {
         const issue = { id: ref.id, ...snap.data() } as Issue;
         const suggested = issue.aiSuggestion?.suggestedPriority;
+        const aiSet = issue.prioritySetBy?.uid === "ai-triage";
         const effective =
-          priority >= 1 && priority <= 5
-            ? priority
-            : suggested && suggested >= 1 && suggested <= 5
-              ? suggested
-              : 3;
+          aiSet && issue.priority >= 1 && issue.priority <= 5
+            ? issue.priority
+            : priority >= 1 && priority <= 5
+              ? priority
+              : suggested && suggested >= 1 && suggested <= 5
+                ? suggested
+                : 3;
         await import("@/lib/email").then((m) => m.sendIssueReportedEmail(issue, effective));
       }
     });

@@ -15,6 +15,14 @@ import { IssueActions, RequirementsPanel } from "@/components/issues/IssueAction
 import { api, ApiError } from "@/lib/clientApi";
 import { deadlineLabel, formatDateTime, timeAgo } from "@/lib/format";
 import { STATUS_LABEL } from "@/lib/constants";
+import type { TimelineEntry } from "@/lib/types";
+
+const dotClass = (t: TimelineEntry): string => {
+  if (!t.from) return "bg-[#c0392b]";
+  if (t.to === "APPROVED") return "bg-[#f59e0b]";
+  if (t.to === "CLOSED") return "bg-[#16a34a]";
+  return t.isAuto ? "bg-action-blue" : "bg-ink";
+};
 
 export default function IssueDetailPage() {
   const params = useParams<{ id: string }>();
@@ -63,7 +71,7 @@ export default function IssueDetailPage() {
         title="Issue not found"
         body={error}
         icon={
-          <button className="btn btn-ghost btn-sm rounded-full border border-silver" onClick={() => router.back()}>
+          <button className="btn btn-secondary btn-sm rounded-full" onClick={() => router.back()}>
             <ArrowLeft className="h-3.5 w-3.5" aria-hidden /> Go back
           </button>
         }
@@ -79,7 +87,7 @@ export default function IssueDetailPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <button className="btn btn-ghost btn-sm self-start rounded-full border border-silver" onClick={() => router.back()}>
+      <button className="btn btn-secondary btn-sm self-start rounded-full" onClick={() => router.back()}>
         <ArrowLeft className="h-3.5 w-3.5" aria-hidden /> Back
       </button>
 
@@ -93,6 +101,9 @@ export default function IssueDetailPage() {
             <span className="tag tag-outline">{issue.routing?.categoryName}</span>
             <span className="tag tag-outline">{issue.department}</span>
           </div>
+          {issue.prioritySetBy && issue.prioritySetBy.uid !== issue.reporter?.uid && (
+            <p className="mt-1.5 text-xs text-slate">Priority set by {issue.prioritySetBy.name}</p>
+          )}
         </div>
         {slaDeadline && (
           <div
@@ -115,6 +126,25 @@ export default function IssueDetailPage() {
               {slaDeadline.text}
             </p>
           </div>
+        )}
+        {!slaDeadline && ["NEW", "VALIDATED", "ESCALATED", "APPROVED"].includes(issue.status) && (
+          <div className="kpi min-w-[160px]">
+            <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-slate">
+              <Clock3 className="h-3.5 w-3.5" aria-hidden /> Resolution SLA
+            </p>
+            <p className="mt-1.5 font-display text-sm font-medium text-slate">Starts once accepted</p>
+          </div>
+        )}
+        {issue.status === "CLOSED" && (
+          <button
+            type="button"
+            className="btn btn-primary w-fit mt-10"
+            disabled={receiptBusy}
+            onClick={() => void downloadReceipt()}
+          >
+            <Download className="h-3.5 w-3.5" aria-hidden />
+            {receiptBusy ? "Preparing receipt…" : "Download receipt"}
+          </button>
         )}
       </div>
 
@@ -183,22 +213,10 @@ export default function IssueDetailPage() {
           {issue.status === "VERIFIED" && claims?.role === "reporter" && issue.reporter?.uid === user?.uid && (
             <button
               type="button"
-              className="btn btn-primary"
+              className="btn btn-primary -mt-[40px]"
               onClick={() => setCloseOpen(true)}
             >
               <CircleCheckBig className="h-3.5 w-3.5" aria-hidden /> Close issue
-            </button>
-          )}
-
-          {issue.status === "CLOSED" && (
-            <button
-              type="button"
-              className="btn btn-primary"
-              disabled={receiptBusy}
-              onClick={() => void downloadReceipt()}
-            >
-              <Download className="h-3.5 w-3.5" aria-hidden />
-              {receiptBusy ? "Preparing receipt…" : "Download receipt (PDF)"}
             </button>
           )}
 
@@ -208,12 +226,10 @@ export default function IssueDetailPage() {
               {timeline?.map((t, i) => (
                 <li key={i} className="relative flex gap-3 pb-5 last:pb-0">
                   {i < (timeline?.length || 0) - 1 && (
-                    <span className="absolute left-[5px] top-3 h-full w-px bg-silver" aria-hidden />
+                    <span className="absolute left-[5px] top-[11px] h-full w-px bg-silver" aria-hidden />
                   )}
                   <span
-                    className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${
-                      t.isAuto ? "bg-action-blue" : "bg-ink"
-                    }`}
+                    className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${dotClass(t)}`}
                     aria-hidden
                   />
                   <div className="min-w-0">

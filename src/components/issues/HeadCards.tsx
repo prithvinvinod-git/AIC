@@ -13,19 +13,24 @@ export function AssignCard({ issue, onRefresh }: { issue: Issue; onRefresh: () =
   const [teams, setTeams] = useState<TeamWithMembers[]>([]);
   const [teamId, setTeamId] = useState("");
   const [staff, setStaff] = useState<string[]>([]);
+  const [suggestReason, setSuggestReason] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [suggesting, setSuggesting] = useState(false);
+  const [teamsError, setTeamsError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const loadTeams = useCallback(() => {
     void api<{ teams: TeamWithMembers[] }>("/api/teams")
       .then((res) => {
         setTeams(res.teams);
-        if (!teamId && res.teams.length) setTeamId(res.teams[0].id);
+        setTeamsError(null);
       })
-      .catch(() => {});
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+      .catch(() => setTeamsError("Couldn't load teams. Please retry."));
   }, []);
+
+  useEffect(() => {
+    loadTeams();
+  }, [loadTeams]);
 
   const selectedTeam = teams.find((t) => t.id === teamId);
 
@@ -47,6 +52,7 @@ export function AssignCard({ issue, onRefresh }: { issue: Issue; onRefresh: () =
   const suggest = useCallback(async () => {
     setSuggesting(true);
     setError(null);
+    setSuggestReason(null);
     try {
       const res = await api<{ result: { teamId: string; staffIds: string[]; reason: string } }>(
         "/api/ai/suggest-assign",
@@ -55,6 +61,7 @@ export function AssignCard({ issue, onRefresh }: { issue: Issue; onRefresh: () =
       const t = res.result;
       if (t?.teamId) setTeamId(t.teamId);
       if (t?.staffIds) setStaff(t.staffIds);
+      setSuggestReason(t?.reason || null);
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Suggestion failed.");
     } finally {
@@ -103,6 +110,15 @@ export function AssignCard({ issue, onRefresh }: { issue: Issue; onRefresh: () =
             {suggesting ? "Suggesting…" : "AI suggest"}
           </button>
         </div>
+        {teamsError && (
+          <p className="flex items-center gap-2 text-xs text-[#c0392b]">
+            {teamsError}
+            <button className="link-blue" onClick={() => void loadTeams()}>
+              Retry
+            </button>
+          </p>
+        )}
+        {suggestReason && <p className="text-xs text-slate">AI suggests this because: {suggestReason}</p>}
 
         {selectedTeam && selectedTeam.members.length > 0 && (
           <div className="flex flex-wrap gap-2">
@@ -125,12 +141,23 @@ export function AssignCard({ issue, onRefresh }: { issue: Issue; onRefresh: () =
             })}
           </div>
         )}
+        {selectedTeam && selectedTeam.members.length === 0 && (
+          <p className="text-xs text-[#d97706]">This team has no members — add staff to the team in Admin.</p>
+        )}
 
         <div className="flex items-center gap-2">
-          <button className="btn btn-primary btn-sm" disabled={busy || !teamId} onClick={() => void assign()}>
+          <button
+            className="btn btn-primary btn-sm"
+            disabled={busy || !teamId || staff.length === 0}
+            onClick={() => void assign()}
+          >
             {busy ? "Assigning…" : "Assign job"}
           </button>
-          {staff.length > 0 && <span className="text-xs text-slate">{staff.length} staff selected</span>}
+          {staff.length > 0 ? (
+            <span className="text-xs text-slate">{staff.length} staff selected</span>
+          ) : (
+            <span className="text-xs text-slate">Select at least one staff member.</span>
+          )}
           {error && <span className="text-xs text-[#c0392b]">{error}</span>}
         </div>
       </div>

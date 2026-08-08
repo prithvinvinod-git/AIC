@@ -125,6 +125,8 @@ export interface AISuggestion {
   reasons?: string[];
   photoSummary?: string;
   safetyFlags?: string[];
+  isSpam?: boolean;
+  spamReasons?: string[];
   routing?: {
     teamId: string;
     staffIds: string[];

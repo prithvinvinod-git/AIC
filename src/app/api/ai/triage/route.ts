@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebaseAdmin";
 import { requireAuth } from "@/lib/auth";
 import { json, handleError } from "@/lib/api";
-import { triageFlow, writeTriage, getActiveCategories } from "@/lib/ai";
+import { triageFlow, writeTriage, applyTriagePriority, getActiveCategories } from "@/lib/ai";
 
 /** POST /api/ai/triage — run triage for an issue (async-safe, one-shot). */
 export async function POST(req: NextRequest): Promise<NextResponse> {
@@ -32,6 +32,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       categories,
     });
     await writeTriage(body.issueId, result);
+    await applyTriagePriority(body.issueId, result);
     return json({ result, cached: false });
   } catch (e) {
     return handleError(e);

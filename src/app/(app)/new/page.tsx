@@ -73,17 +73,22 @@ export default function NewIssuePage() {
   const [locationName, setLocationName] = useState("");
   const [images, setImages] = useState<{ url: string; preview: string; uploading: boolean }[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [categoriesError, setCategoriesError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  useEffect(() => {
+  const loadCategories = useCallback(() => {
     void api<{ categories: Category[] }>("/api/categories")
       .then((res) => {
         setCategories(res.categories);
-        if (!categoryId && res.categories.length) setCategoryId(res.categories[0].id || "");
+        setCategoryId((prev) => prev || res.categories[0]?.id || "");
+        setCategoriesError(null);
       })
-      .catch(() => {});
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+      .catch(() => setCategoriesError("Couldn't load categories. Please retry."));
   }, []);
+
+  useEffect(() => {
+    loadCategories();
+  }, [loadCategories]);
 
   const addImage = useCallback(async (file: File) => {
     if (images.length >= MAX_IMAGES) return;
@@ -204,6 +209,14 @@ export default function NewIssuePage() {
                 </option>
               ))}
             </select>
+            {categoriesError && (
+              <p className="mt-1 flex items-center gap-2 text-xs text-[#c0392b]">
+                {categoriesError}
+                <button type="button" className="link-blue" onClick={() => void loadCategories()}>
+                  Retry
+                </button>
+              </p>
+            )}
           </div>
           <div>
             <label className="label" htmlFor="college">
@@ -372,7 +385,7 @@ export default function NewIssuePage() {
         </aside>
       </div>
 
-      <div className="-mt-[40px] flex justify-end gap-3">
+      <div className="mt-6 flex justify-end gap-3">
         <button type="button" className="btn btn-secondary" onClick={() => router.push("/dashboard")}>
           Cancel
         </button>

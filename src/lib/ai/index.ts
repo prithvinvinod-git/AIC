@@ -1,7 +1,7 @@
 import "server-only";
 
 import { adminDb } from "../firebaseAdmin";
-import { triageFlow, writeTriage } from "./triage";
+import { triageFlow, writeTriage, applyTriagePriority } from "./triage";
 import { findDuplicatesFlow, writeDuplicates } from "./duplicates";
 import { suggestAssignmentFlow, writeRoutingSuggestion } from "./routing";
 import { extractRequirementsFlow } from "./assist";
@@ -10,7 +10,7 @@ import { weeklyInsightsFlow, writeWeeklyInsights } from "./insights";
 import { rootCauseFlow } from "./rootCause";
 import { predictiveMaintenanceFlow } from "./predictive";
 
-export { triageFlow, writeTriage };
+export { triageFlow, writeTriage, applyTriagePriority };
 export { findDuplicatesFlow, writeDuplicates };
 export { suggestAssignmentFlow, writeRoutingSuggestion };
 export { extractRequirementsFlow, draftClosureFlow };
@@ -55,6 +55,8 @@ export async function runAiOnCreate(issueId: string): Promise<void> {
       categories,
     });
     await writeTriage(issueId, triage);
+    // AI owns severity while the issue is still NEW (spam → P5).
+    await applyTriagePriority(issueId, triage);
 
     const dupe = await findDuplicatesFlow({
       issueId,

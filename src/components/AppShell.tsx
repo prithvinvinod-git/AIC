@@ -59,26 +59,28 @@ export default function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-full">
       <header className="sticky top-0 z-40 border-b border-silver bg-white/90 backdrop-blur">
-        <div className="mx-auto flex h-[54px] w-full max-w-[1200px] items-center gap-2 pl-0 pr-2 sm:h-[86px] sm:gap-5 sm:pl-0 sm:pr-3">
+        <div className="mx-auto flex h-[48px] w-full max-w-[1200px] items-center gap-2 pl-0 pr-2 sm:h-[70px] sm:gap-5 sm:pl-0 sm:pr-3">
           <Link
             href={homeFor(claims)}
-            className="flex min-w-0 shrink-0 items-center font-display text-lg font-semibold text-ink sm:text-xl lg:-ml-[150px]"
+            className="flex min-w-0 shrink-0 items-center gap-2 font-brand text-lg leading-none text-ink sm:text-xl lg:-ml-[150px]"
           >
-            <span className="truncate">servox-phi</span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <span className="tracking-wide">Servox</span>
+            <img src="/servoxlogo.png" alt="Servox" className="h-[20px] w-auto shrink-0 sm:h-[24px]" />
           </Link>
 
           <nav className="hidden items-center gap-1.5 lg:ml-[150px] md:flex">{navLinks()}</nav>
 
           <div className="ml-auto flex items-center gap-2 sm:gap-3">
-            <ProfileMenu />
             <button
-              className="btn btn-ghost btn-sm md:hidden"
+              className="btn btn-ghost btn-sm md:hidden!"
               onClick={() => setMenuOpen((v) => !v)}
               aria-label="Toggle menu"
               aria-expanded={menuOpen}
             >
               {menuOpen ? <X className="h-3.5 w-3.5" aria-hidden /> : <Menu className="h-3.5 w-3.5" aria-hidden />}
             </button>
+            <ProfileMenu />
           </div>
         </div>
 

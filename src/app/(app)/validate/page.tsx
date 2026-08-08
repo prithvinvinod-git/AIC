@@ -62,6 +62,9 @@ function ValidatePanel({ issue, onDone }: { issue: Issue; onDone: () => void }) 
               </option>
             ))}
           </select>
+          <p className="mt-1 max-w-[220px] text-xs text-slate">
+            P1–2 go to HOD/Principal approval; P3–5 auto-assign to a team.
+          </p>
         </div>
         <button
           className="btn btn-primary btn-sm"

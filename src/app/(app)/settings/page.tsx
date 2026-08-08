@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { api } from "@/lib/clientApi";
 import { ROLE_LABEL } from "@/lib/constants";
@@ -17,6 +19,7 @@ interface SettingsData {
 
 export default function SettingsPage() {
   const { user, claims, ready } = useAuth();
+  const router = useRouter();
   const [settings, setSettings] = useState<SettingsData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -71,6 +74,9 @@ export default function SettingsPage() {
 
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-6">
+      <button className="btn btn-secondary btn-sm self-start rounded-full" onClick={() => router.back()}>
+        <ArrowLeft className="h-3.5 w-3.5" aria-hidden /> Back
+      </button>
       <div>
         <h1 className="font-display text-2xl font-semibold text-ink">Settings</h1>
         <p className="mt-1 text-sm text-slate">Manage your account and notification preferences.</p>
@@ -78,6 +84,9 @@ export default function SettingsPage() {
 
       <div className="card">
         <h2 className="font-display text-base font-semibold text-ink">Account</h2>
+        <p className="mt-1 text-xs text-slate">
+          Role, department and college are managed by your administrator and can&apos;t be changed here.
+        </p>
         <dl className="mt-4 divide-y divide-silver">
           {rows.map(([k, v]) => (
             <div key={k} className="flex items-center justify-between gap-4 py-3">

@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { api } from "@/lib/clientApi";
 import { ROLE_LABEL } from "@/lib/constants";
@@ -18,6 +20,7 @@ interface ProfileData {
 
 export default function ProfilePage() {
   const { user, claims, ready, refreshClaims } = useAuth();
+  const router = useRouter();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -68,6 +71,9 @@ export default function ProfilePage() {
 
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-6">
+      <button className="btn btn-secondary btn-sm self-start rounded-full" onClick={() => router.back()}>
+        <ArrowLeft className="h-3.5 w-3.5" aria-hidden /> Back
+      </button>
       <div>
         <h1 className="font-display text-2xl font-semibold text-ink">Profile</h1>
         <p className="mt-1 text-sm text-slate">Edit your details. Changes apply to all portals instantly.</p>
@@ -127,10 +133,22 @@ export default function ProfilePage() {
               <p className="text-sm text-graphite">{user.email || "—"}</p>
             </div>
             <div>
+              <label className="label">Role</label>
+              <p className="text-sm text-graphite">{ROLE_LABEL[claims.role]}</p>
+            </div>
+            <div>
               <label className="label">Department</label>
               <p className="text-sm text-graphite">{claims.department || "—"}</p>
             </div>
+            <div>
+              <label className="label">College</label>
+              <p className="text-sm text-graphite">{claims.college || "—"}</p>
+            </div>
           </div>
+
+          <p className="rounded-lg bg-paper px-3 py-2 text-xs text-slate">
+            Role, department and email are managed by your administrator and can&apos;t be changed here.
+          </p>
 
           {error && <p className="rounded-lg bg-[#fef2f2] px-3 py-2 text-sm text-[#c0392b]">{error}</p>}
           {notice && <p className="rounded-lg bg-[#ecfdf5] px-3 py-2 text-sm text-[#047857]">{notice}</p>}

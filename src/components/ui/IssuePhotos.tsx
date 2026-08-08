@@ -1,21 +1,26 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, ImageOff, X } from "lucide-react";
 import type { ImageRef } from "@/lib/types";
 
 /**
  * Clickable issue photo thumbnails. Clicking any thumbnail (or the "+N" tile)
  * opens a fullscreen lightbox with the large image and prev/next navigation.
+ * When `placeholder` is set and no photos exist, an empty tile the same size
+ * as a thumbnail is rendered so surrounding layout (e.g. card footers) stays
+ * aligned whether or not photos were submitted.
  */
 export function IssuePhotos({
   images,
   size = 72,
   limit = 4,
+  placeholder = false,
 }: {
   images: ImageRef[];
   size?: number;
   limit?: number;
+  placeholder?: boolean;
 }) {
   const [openIdx, setOpenIdx] = useState<number | null>(null);
   const visible = images.slice(0, limit);
@@ -39,24 +44,36 @@ export function IssuePhotos({
     };
   }, [openIdx, images.length]);
 
-  if (images.length === 0) return null;
+  if (images.length === 0 && !placeholder) return null;
 
   return (
     <>
       <div className="flex flex-wrap gap-2">
-        {visible.map((im, i) => (
-          <button
-            key={i}
-            type="button"
-            onClick={() => setOpenIdx(i)}
-            className="overflow-hidden rounded-xl border border-silver transition-opacity hover:opacity-80"
+        {images.length === 0 ? (
+          <div
+            className="flex items-center justify-center rounded-xl border border-dashed border-silver bg-paper text-slate"
             style={{ width: size, height: size }}
-            aria-label={`View photo ${i + 1}`}
+            role="img"
+            aria-label="No image"
+            title="No image"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={im.url} alt={`Photo ${i + 1}`} className="h-full w-full object-cover" />
-          </button>
-        ))}
+            <ImageOff className="h-10 w-10" aria-hidden />
+          </div>
+        ) : (
+          visible.map((im, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => setOpenIdx(i)}
+              className="overflow-hidden rounded-xl border border-silver transition-opacity hover:opacity-80"
+              style={{ width: size, height: size }}
+              aria-label={`View photo ${i + 1}`}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={im.url} alt={`Photo ${i + 1}`} className="h-full w-full object-cover" />
+            </button>
+          ))
+        )}
         {extra > 0 && (
           <button
             type="button"

@@ -1,15 +1,14 @@
 import Link from "next/link";
-import { ArrowLeft, HardHat } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 export default function AuthLayout({ children }: LayoutProps<"/">) {
   return (
     <div className="flex min-h-full flex-col">
       <header className="mx-auto flex w-full max-w-[1100px] items-center justify-between px-6 py-6">
-        <Link href="/" className="flex items-center gap-2 font-display text-lg font-semibold text-ink">
-          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-ink text-white">
-            <HardHat className="h-4 w-4" aria-hidden />
-          </span>
-          servox-phi
+        <Link href="/" className="flex items-center gap-2 font-brand text-lg leading-none text-ink sm:text-xl">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <span className="tracking-wide">Servox</span>
+          <img src="/servoxlogo.png" alt="Servox" className="h-[20px] w-auto sm:h-[24px]" />
         </Link>
         <Link
           href="/"

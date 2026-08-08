@@ -19,6 +19,8 @@ export function EscalationCard({
 }) {
   const router = useRouter();
   const [priority, setPriority] = useState(String(issue.priority || 1));
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,6 +38,21 @@ export function EscalationCard({
       onAction();
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Approval failed.");
+      setBusy(false);
+    }
+  };
+
+  const reject = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      await api(`/api/issues/${issue.id}/reject`, {
+        method: "POST",
+        body: JSON.stringify({ rejectionReason: rejectReason }),
+      });
+      onAction();
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "Rejection failed.");
       setBusy(false);
     }
   };
@@ -89,8 +106,45 @@ export function EscalationCard({
           <ShieldCheck className="h-3.5 w-3.5" aria-hidden />
           {busy ? "Approving…" : approveLabel}
         </button>
+        <button className="btn btn-ghost btn-sm" disabled={busy} onClick={() => setRejectOpen((v) => !v)}>
+          Reject escalation
+        </button>
         {error && <p className="text-sm text-[#c0392b]">{error}</p>}
       </div>
+      {rejectOpen && (
+        <form
+          className="flex flex-col gap-2 rounded-xl bg-paper p-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            void reject();
+          }}
+        >
+          <label className="label">Rejection reason</label>
+          <input
+            className="input"
+            required
+            minLength={3}
+            value={rejectReason}
+            placeholder="Why is this being rejected?"
+            onChange={(e) => setRejectReason(e.target.value)}
+          />
+          <div className="flex gap-2">
+            <button type="submit" className="btn btn-danger btn-sm" disabled={busy}>
+              {busy ? "Rejecting…" : "Confirm rejection"}
+            </button>
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              onClick={() => {
+                setRejectOpen(false);
+                setRejectReason("");
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
     </div>
   );
 }

@@ -27,7 +27,7 @@ export function AISuggestionCard({ issue }: { issue: Issue }) {
       <div className="card">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-action-blue" aria-hidden />
+            <Sparkles className="h-16 w-16 text-action-blue" aria-hidden />
             <p className="font-medium text-graphite">AI triage</p>
           </div>
           <button onClick={() => void runTriage()} disabled={running} className="btn btn-ghost btn-sm">
@@ -42,10 +42,18 @@ export function AISuggestionCard({ issue }: { issue: Issue }) {
   return (
     <div className="card">
       <div className="flex items-center gap-2">
-        <Sparkles className="h-4 w-4 text-action-blue" aria-hidden />
+        <Sparkles className="h-16 w-16 text-action-blue" aria-hidden />
         <p className="font-medium text-graphite">AI suggestion</p>
-        {suggestion.aiModel && <span className="tag tag-outline text-[11px]">{suggestion.aiModel}</span>}
       </div>
+
+      {suggestion.isSpam && (
+        <div className="mt-3 rounded-lg bg-[#fef2f2] px-3 py-2.5 text-sm text-[#be123c]">
+          <p className="font-medium">Likely spam</p>
+          {suggestion.spamReasons && suggestion.spamReasons.length > 0 && (
+            <p className="mt-0.5 text-xs opacity-90">{suggestion.spamReasons.join(" · ")}</p>
+          )}
+        </div>
+      )}
 
       <dl className="mt-3 grid grid-cols-2 gap-3 text-sm">
         {suggestion.category && (

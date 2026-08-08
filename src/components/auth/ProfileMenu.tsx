@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LogOut, Settings, SlidersHorizontal, UserPen } from "lucide-react";
+import { LogOut, SlidersHorizontal, UserPen } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { ROLE_LABEL } from "@/lib/constants";
 import { initials } from "@/lib/format";
@@ -42,13 +42,13 @@ export default function ProfileMenu() {
   if (!user || !claims) return null;
 
   return (
-    <div ref={ref} className="relative shrink-0">
+    <div ref={ref} className="relative mr-[-100px] shrink-0">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="menu"
         aria-expanded={open}
-        className="flex max-w-[230px] items-center gap-2 rounded-full border border-silver bg-white pl-2.5 pr-[25px] py-1 transition-colors hover:border-stone hover:bg-paper sm:gap-2.5 sm:py-1.5"
+        className="flex max-w-[230px] items-center gap-2 rounded-full border border-silver bg-white pl-2.5 pr-2.5 py-1 transition-colors hover:border-stone hover:bg-paper sm:gap-2.5 sm:py-1.5"
       >
         {user.photoURL ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -69,7 +69,6 @@ export default function ProfileMenu() {
           </span>
           <span className="hidden text-xs text-slate sm:block">{ROLE_LABEL[claims.role]}</span>
         </span>
-        <Settings className="h-6 w-6 shrink-0 text-slate" aria-hidden />
       </button>
 
       {open && (

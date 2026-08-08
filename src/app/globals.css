@@ -1,6 +1,16 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "TTOctosquaresBlack";
+  src: url("/TT Octosquares Trial Black.ttf") format("truetype");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme {
+  /* Fonts */
+  --font-brand: "TTOctosquaresBlack", ui-sans-serif, sans-serif;
   /* Colors */
   --color-ink: #101010;
   --color-action-blue: #0099ff;

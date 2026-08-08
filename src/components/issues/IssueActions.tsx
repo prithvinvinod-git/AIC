@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Sparkles } from "lucide-react";
 import type { Issue, Requirement, TeamWithMembers } from "@/lib/types";
 import { api, ApiError } from "@/lib/clientApi";
@@ -86,25 +86,7 @@ export function IssueActions({ issue, onChanged }: Props) {
 
   if (role === "maintenance") {
     if (issue.status === "ASSIGNED") {
-      return (
-        <div className="card flex flex-wrap items-center gap-2">
-          <button
-            className="btn btn-primary btn-sm"
-            disabled={busy}
-            onClick={() => void run(`/api/issues/${issue.id}/status`, { to: "ONGOING", note: "Work started." })}
-          >
-            {busy ? "Starting…" : "Start job"}
-          </button>
-          <button
-            className="btn btn-ghost btn-sm"
-            disabled={busy}
-            onClick={() => void run(`/api/issues/${issue.id}/pending`, { note: "Blocked" })}
-          >
-            Set blocked
-          </button>
-          {error && <span className="text-sm text-[#c0392b]">{error}</span>}
-        </div>
-      );
+      return <AssignedActions issue={issue} onChanged={onChanged} />;
     }
     if (issue.status === "ONGOING") {
       return <MaintenanceComplete issue={issue} onChanged={onChanged} />;
@@ -170,6 +152,9 @@ function ValidatorActions({ issue, onChanged }: { issue: Issue; onChanged: () =>
               </option>
             ))}
           </select>
+          <p className="mt-1 max-w-[220px] text-xs text-slate">
+            P1–2 go to HOD/Principal approval; P3–5 auto-assign to a team.
+          </p>
         </div>
         <button className="btn btn-primary btn-sm" disabled={busy} onClick={() => void act("validate")}>
           {busy ? "Validating…" : "Validate & auto-route"}
@@ -236,7 +221,9 @@ function VerifyPanel({ issue, onChanged }: { issue: Issue; onChanged: () => void
 }
 
 function MaintenanceComplete({ issue, onChanged }: { issue: Issue; onChanged: () => void }) {
-  const reportRef = useRef<HTMLTextAreaElement>(null);
+  const [report, setReport] = useState("");
+  const [blockOpen, setBlockOpen] = useState(false);
+  const [blockReason, setBlockReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const unresolvedApproval = issue.requirements.filter((r) => !r.resolved && r.needsApproval).length;
@@ -247,37 +234,167 @@ function MaintenanceComplete({ issue, onChanged }: { issue: Issue; onChanged: ()
     try {
       await api(`/api/issues/${issue.id}/complete`, {
         method: "POST",
-        body: JSON.stringify({ note: reportRef.current?.value || "Work completed." }),
+        body: JSON.stringify({ note: report }),
       });
       onChanged();
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Failed to complete.");
       setBusy(false);
     }
-  }, [issue.id, onChanged]);
+  }, [issue.id, report, onChanged]);
+
+  const block = useCallback(async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      await api(`/api/issues/${issue.id}/pending`, {
+        method: "POST",
+        body: JSON.stringify({ note: blockReason }),
+      });
+      onChanged();
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "Action failed.");
+      setBusy(false);
+    }
+  }, [issue.id, blockReason, onChanged]);
 
   return (
     <div className="card flex flex-col gap-3">
       <p className="font-medium text-graphite">Complete this job</p>
-      <textarea ref={reportRef} className="input resize-none" rows={3} minLength={5} placeholder="Closure report: what was fixed and how…" />
+      <textarea
+        value={report}
+        onChange={(e) => setReport(e.target.value)}
+        className="input resize-none"
+        rows={3}
+        minLength={5}
+        placeholder="Closure report: what was fixed and how… (required)"
+      />
       {unresolvedApproval > 0 && (
         <p className="text-xs text-[#d97706]">
           {unresolvedApproval} approval-flagged requirement(s) unresolved — add a waiver note to the report.
         </p>
       )}
       <div className="flex gap-2">
-        <button className="btn btn-primary btn-sm" disabled={busy} onClick={() => void complete()}>
+        <button
+          className="btn btn-primary btn-sm"
+          disabled={busy || report.trim().length < 5}
+          onClick={() => void complete()}
+        >
           {busy ? "Submitting…" : "Submit & complete"}
         </button>
-        <button
-          className="btn btn-ghost btn-sm"
-          disabled={busy}
-          onClick={() => void api(`/api/issues/${issue.id}/pending`, { method: "POST", body: JSON.stringify({ note: "Blocked" }) }).then(onChanged)}
-        >
+        <button className="btn btn-ghost btn-sm" disabled={busy} onClick={() => setBlockOpen((v) => !v)}>
           Set blocked
         </button>
       </div>
+      {blockOpen && (
+        <form
+          className="flex flex-col gap-2 rounded-xl bg-paper p-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            void block();
+          }}
+        >
+          <label className="label">Blocker reason</label>
+          <input
+            className="input"
+            required
+            minLength={3}
+            value={blockReason}
+            placeholder="Awaiting parts / permission…"
+            onChange={(e) => setBlockReason(e.target.value)}
+          />
+          <div className="flex gap-2">
+            <button type="submit" className="btn btn-ghost btn-sm" disabled={busy}>
+              {busy ? "Setting blocked…" : "Confirm blocked"}
+            </button>
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              onClick={() => {
+                setBlockOpen(false);
+                setBlockReason("");
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
       {error && <p className="text-sm text-[#c0392b]">{error}</p>}
+    </div>
+  );
+}
+
+function AssignedActions({ issue, onChanged }: { issue: Issue; onChanged: () => void }) {
+  const [blockOpen, setBlockOpen] = useState(false);
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const run = useCallback(
+    async (path: string, body: unknown) => {
+      setBusy(true);
+      setError(null);
+      try {
+        await api(path, { method: "POST", body: JSON.stringify(body) });
+        onChanged();
+      } catch (e) {
+        setError(e instanceof ApiError ? e.message : "Action failed.");
+        setBusy(false);
+      }
+    },
+    [onChanged]
+  );
+
+  return (
+    <div className="card flex flex-col gap-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          className="btn btn-primary btn-sm"
+          disabled={busy}
+          onClick={() => void run(`/api/issues/${issue.id}/status`, { to: "ONGOING", note: "Work started." })}
+        >
+          {busy ? "Starting…" : "Start job"}
+        </button>
+        <button className="btn btn-ghost btn-sm" disabled={busy} onClick={() => setBlockOpen((v) => !v)}>
+          Set blocked
+        </button>
+        {error && <span className="text-sm text-[#c0392b]">{error}</span>}
+      </div>
+      {blockOpen && (
+        <form
+          className="flex flex-col gap-2 rounded-xl bg-paper p-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            void run(`/api/issues/${issue.id}/pending`, { note: reason });
+          }}
+        >
+          <label className="label">Blocker reason</label>
+          <input
+            className="input"
+            required
+            minLength={3}
+            value={reason}
+            placeholder="Awaiting parts / permission…"
+            onChange={(e) => setReason(e.target.value)}
+          />
+          <div className="flex gap-2">
+            <button type="submit" className="btn btn-ghost btn-sm" disabled={busy}>
+              {busy ? "Setting blocked…" : "Confirm blocked"}
+            </button>
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              onClick={() => {
+                setBlockOpen(false);
+                setReason("");
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
     </div>
   );
 }
@@ -286,19 +403,24 @@ function AssignPanel({ issue, onChanged }: { issue: Issue; onChanged: () => void
   const [teams, setTeams] = useState<TeamWithMembers[]>([]);
   const [teamId, setTeamId] = useState("");
   const [staff, setStaff] = useState<string[]>([]);
+  const [suggestReason, setSuggestReason] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [suggesting, setSuggesting] = useState(false);
+  const [teamsError, setTeamsError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const loadTeams = useCallback(() => {
     void api<{ teams: TeamWithMembers[] }>("/api/teams")
       .then((res) => {
         setTeams(res.teams);
-        if (!teamId && res.teams.length) setTeamId(res.teams[0].id);
+        setTeamsError(null);
       })
-      .catch(() => {});
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+      .catch(() => setTeamsError("Couldn't load teams. Please retry."));
   }, []);
+
+  useEffect(() => {
+    loadTeams();
+  }, [loadTeams]);
 
   const assign = useCallback(async () => {
     setBusy(true);
@@ -315,13 +437,15 @@ function AssignPanel({ issue, onChanged }: { issue: Issue; onChanged: () => void
   const suggest = useCallback(async () => {
     setSuggesting(true);
     setError(null);
+    setSuggestReason(null);
     try {
-      const res = await api<{ result: { teamId: string; staffIds: string[] } }>("/api/ai/suggest-assign", {
+      const res = await api<{ result: { teamId: string; staffIds: string[]; reason: string } }>("/api/ai/suggest-assign", {
         method: "POST",
         body: JSON.stringify({ issueId: issue.id }),
       });
       if (res.result?.teamId) setTeamId(res.result.teamId);
       if (res.result?.staffIds) setStaff(res.result.staffIds);
+      setSuggestReason(res.result?.reason || null);
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Suggestion failed.");
     } finally {
@@ -340,6 +464,15 @@ function AssignPanel({ issue, onChanged }: { issue: Issue; onChanged: () => void
           {suggesting ? "Suggesting…" : "AI suggest"}
         </button>
       </div>
+      {teamsError && (
+        <p className="flex items-center gap-2 text-xs text-[#c0392b]">
+          {teamsError}
+          <button className="link-blue" onClick={() => void loadTeams()}>
+            Retry
+          </button>
+        </p>
+      )}
+      {suggestReason && <p className="text-xs text-slate">AI suggests this because: {suggestReason}</p>}
       <select
         className="input"
         value={teamId}
@@ -372,10 +505,18 @@ function AssignPanel({ issue, onChanged }: { issue: Issue; onChanged: () => void
           })}
         </div>
       )}
+      {selectedTeam && selectedTeam.members.length === 0 && (
+        <p className="text-xs text-[#d97706]">This team has no members — add staff to the team in Admin.</p>
+      )}
       <div className="flex items-center gap-2">
-        <button className="btn btn-primary btn-sm" disabled={busy || !teamId} onClick={() => void assign()}>
+        <button
+          className="btn btn-primary btn-sm"
+          disabled={busy || !teamId || staff.length === 0}
+          onClick={() => void assign()}
+        >
           {busy ? "Assigning…" : issue.status === "PENDING" ? "Reassign" : "Assign"}
         </button>
+        {staff.length === 0 && <span className="text-xs text-slate">Select at least one staff member.</span>}
         {error && <span className="text-sm text-[#c0392b]">{error}</span>}
       </div>
     </div>

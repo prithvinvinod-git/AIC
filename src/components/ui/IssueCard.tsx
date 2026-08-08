@@ -57,7 +57,7 @@ export function IssueCard({ issue, onClose }: { issue: Issue; onClose?: () => vo
         </div>
       </Link>
 
-      {issue.images.length > 0 && <IssuePhotos images={issue.images} />}
+      <IssuePhotos images={issue.images} placeholder />
 
       {canClose && (
         <button type="button" className="btn btn-primary btn-sm self-start" onClick={onClose}>

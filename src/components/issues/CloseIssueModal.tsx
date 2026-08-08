@@ -72,7 +72,8 @@ export function CloseIssueModal({ issue, onClose, onClosed }: Props) {
           <div>
             <h2 className="font-display text-lg font-semibold text-ink">Close issue</h2>
             <p className="mt-1 text-sm text-slate">
-              {issue.issueNo} — rate the resolution to close this issue.
+              {issue.issueNo} — rate the resolution to close this issue. Unrated issues auto-close after the
+              feedback grace period.
             </p>
           </div>
           <button type="button" onClick={() => close()} disabled={busy} className="btn btn-ghost btn-sm" aria-label="Close">

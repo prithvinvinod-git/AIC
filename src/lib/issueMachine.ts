@@ -154,6 +154,14 @@ export const TRANSITION_RULES: Record<IssueStatus, TransitionRule[]> = {
           ? null
           : "Severity revision must be between 1 and 5.",
     },
+    {
+      to: "REJECTED",
+      roles: ["hod", "principal", "admin"],
+      check: (_i, _a, input) =>
+        input.rejectionReason && input.rejectionReason.trim().length >= 3
+          ? null
+          : "A rejection reason (min 3 chars) is required.",
+    },
   ],
   APPROVED: [
     {
@@ -201,8 +209,11 @@ export const TRANSITION_RULES: Record<IssueStatus, TransitionRule[]> = {
         const unresolved = (Array.isArray(issue.requirements) ? issue.requirements : []).filter(
           (r) => !r.resolved && r.needsApproval
         );
-        if (unresolved.length > 0 && !input.verdict)
-          return `${unresolved.length} approval-flagged requirement(s) are still unresolved. Resolve or waive them first.`;
+        // The closure report note doubles as the waiver (the UI tells staff
+        // they may add a waiver note to the report), so an explicit verdict
+        // is not required when a report is present.
+        if (unresolved.length > 0 && !input.verdict && !input.note)
+          return `${unresolved.length} approval-flagged requirement(s) are still unresolved. Resolve or add a waiver note to the closure report.`;
         return null;
       },
     },

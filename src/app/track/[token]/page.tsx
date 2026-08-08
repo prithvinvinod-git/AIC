@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
-import { ArrowLeft, Clock3, HardHat, MapPin, Star } from "lucide-react";
-import { STATUS_LABEL, STATUS_STEP_ORDER } from "@/lib/constants";
+import { useEffect, useMemo, useState } from "react";
+import { ArrowLeft, Clock3, MapPin, Star } from "lucide-react";
+import { STATUS_LABEL } from "@/lib/constants";
 import { deadlineLabel, formatDateTime, timeAgo } from "@/lib/format";
-import type { Issue, TimelineEntry } from "@/lib/types";
+import type { Issue, IssueStatus, TimelineEntry } from "@/lib/types";
 import { PriorityBadge, StatusBadge } from "@/components/ui/Badge";
 import { EmptyState, Loading } from "@/components/ui/States";
 import { IssuePhotos } from "@/components/ui/IssuePhotos";
@@ -45,11 +45,10 @@ export default function TrackPage() {
   return (
     <div className="flex min-h-full flex-col">
       <header className="mx-auto flex w-full max-w-[1100px] items-center justify-between px-6 py-6">
-        <Link href="/" className="flex items-center gap-2 font-display text-lg font-semibold text-ink">
-          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-ink text-white">
-            <HardHat className="h-4 w-4" aria-hidden />
-          </span>
-          servox-phi
+        <Link href="/" className="flex items-center gap-2 font-brand text-lg leading-none text-ink sm:text-xl">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <span className="tracking-wide">Servox</span>
+          <img src="/servoxlogo.png" alt="Servox" className="h-[20px] w-auto sm:h-[24px]" />
         </Link>
         <Link
           href="/"
@@ -79,8 +78,21 @@ export default function TrackPage() {
 function TrackContent({ data }: { data: TrackData }) {
   const { issue, timeline } = data;
   const priority = issue.priority || 3;
-  const currentIdx = STATUS_STEP_ORDER.indexOf(issue.status);
   const sla = issue.sla;
+
+  // Most issues skip the escalation/approval phase entirely, so only show
+  // those steps when the issue actually went through them (P1–2 path).
+  const escalated =
+    Boolean(issue.escalation?.required) || timeline.some((t) => t.to === "ESCALATED");
+  const steps = useMemo<IssueStatus[]>(
+    () =>
+      escalated
+        ? ["NEW", "VALIDATED", "ESCALATED", "APPROVED", "ASSIGNED", "ONGOING", "COMPLETED", "VERIFIED", "CLOSED"]
+        : ["NEW", "VALIDATED", "ASSIGNED", "ONGOING", "COMPLETED", "VERIFIED", "CLOSED"],
+    [escalated]
+  );
+  const statusIdx = issue.status === "PENDING" ? "ONGOING" : issue.status;
+  const currentIdx = steps.indexOf(statusIdx);
 
   return (
     <div className="space-y-4">
@@ -101,7 +113,7 @@ function TrackContent({ data }: { data: TrackData }) {
       <div className="card">
         <h2 className="sr-only">Progress</h2>
         <ol className="flex">
-          {STATUS_STEP_ORDER.map((s, i) => {
+          {steps.map((s, i) => {
             const done = i < currentIdx;
             const active = i === currentIdx;
             return (

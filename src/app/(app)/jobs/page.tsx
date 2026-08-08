@@ -7,6 +7,7 @@ import { MaintenanceJobCard } from "@/components/issues/MaintenanceJobCard";
 import type { IssueStatus } from "@/lib/types";
 
 const TABS: { key: IssueStatus | "all"; label: string }[] = [
+  { key: "all", label: "All" },
   { key: "ASSIGNED", label: "To do" },
   { key: "ONGOING", label: "In progress" },
   { key: "PENDING", label: "Blocked" },
@@ -38,7 +39,7 @@ export default function JobsPage() {
             className={`btn btn-sm ${tab === t.key ? "btn-primary" : "btn-ghost"}`}
             onClick={() => setTab(t.key)}
           >
-            {t.label} {t.key !== "all" && <span className="opacity-60">({count(t.key)})</span>}
+            {t.label} <span className="opacity-60">({t.key === "all" ? issues.length : count(t.key)})</span>
           </button>
         ))}
       </div>
