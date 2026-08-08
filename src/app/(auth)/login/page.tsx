@@ -75,7 +75,7 @@ export default function LoginPage() {
   if (mode === "pick") {
     return (
       <div className="card">
-        <h1 className="font-display text-2xl font-semibold text-ink">Welcome to CampusCare</h1>
+        <h1 className="font-display text-2xl font-semibold text-ink">Welcome to servox-phi</h1>
         <p className="mt-1 text-sm text-slate">Choose how you want to continue.</p>
 
         <div className="mt-6 flex flex-col gap-3">

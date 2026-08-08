@@ -18,7 +18,7 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "CampusCare — Campus Maintenance Collaboration",
+  title: "servox-phi — Campus Maintenance Collaboration",
   description:
     "Closed-loop complaint management for a professional integrated campus. Report, route, execute, verify and close maintenance issues with AI assistance.",
 };

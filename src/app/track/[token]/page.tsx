@@ -49,7 +49,7 @@ export default function TrackPage() {
           <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-ink text-white">
             <HardHat className="h-4 w-4" aria-hidden />
           </span>
-          CampusCare
+          servox-phi
         </Link>
         <Link
           href="/"
@@ -70,7 +70,7 @@ export default function TrackPage() {
       </main>
 
       <footer className="border-t border-line py-6 text-center text-xs text-slate">
-        CampusCare — campus maintenance, made simple.
+        servox-phi — campus maintenance, made simple.
       </footer>
     </div>
   );

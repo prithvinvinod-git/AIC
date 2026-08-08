@@ -59,7 +59,7 @@ export default function Home() {
             <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-ink text-white">
               <HardHat className="h-4 w-4" aria-hidden />
             </span>
-            CampusCare
+            servox-phi
           </div>
           <nav className="flex items-center gap-3">
             <Link href="/login" className="btn btn-ghost btn-sm">
@@ -124,7 +124,7 @@ export default function Home() {
 
       <footer className="border-t border-silver bg-white">
         <div className="mx-auto flex w-full max-w-[1100px] flex-col items-center justify-between gap-3 px-6 py-6 text-sm text-slate sm:flex-row">
-          <p>© {new Date().getFullYear()} CampusCare</p>
+          <p>© {new Date().getFullYear()} servox-phi</p>
           <p>Built for professional campus teams.</p>
         </div>
       </footer>

@@ -4,7 +4,7 @@ import { initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 
 /**
- * Scheduled maintenance for CampusCare.
+ * Scheduled maintenance for servox-phi.
  *
  * Runs as scheduled Cloud Functions in the real Firebase project. Real emails
  * are out of scope — "email" digests are written into the same notifications

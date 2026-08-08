@@ -119,7 +119,7 @@ function buildDefinition(issue: Issue, timeline: TimelineEntry[]): TDocumentDefi
         {
           width: "*",
           stack: [
-            { text: "CampusCare", fontSize: 20, bold: true, color: ACCENT_DARK },
+            { text: "servox-phi", fontSize: 20, bold: true, color: ACCENT_DARK },
             {
               text: "Campus Maintenance Management",
               fontSize: 8,
@@ -279,7 +279,7 @@ function buildDefinition(issue: Issue, timeline: TimelineEntry[]): TDocumentDefi
   }
 
   content.push({
-    text: "This is a computer-generated receipt from CampusCare. Please do not reply to this document.",
+    text: "This is a computer-generated receipt from servox-phi. Please do not reply to this document.",
     fontSize: 7.5,
     color: MUTED,
     margin: [0, 20, 0, 0] as [number, number, number, number],
@@ -290,14 +290,14 @@ function buildDefinition(issue: Issue, timeline: TimelineEntry[]): TDocumentDefi
     background: () => ({
       canvas: [{ type: "rect", x: 0, y: 0, w: 595.28, h: 841.89, color: CREAM }],
     }),
-    info: { title: `Maintenance receipt — ${issue.issueNo || ""}`, author: "CampusCare" },
+    info: { title: `Maintenance receipt — ${issue.issueNo || ""}`, author: "servox-phi" },
     defaultStyle: { font: "Roboto", fontSize: 9, color: INK, lineHeight: 1.35 },
     content,
     footer: (currentPage: number, pageCount: number) => ({
       margin: [40, 0, 40, 24],
       columns: [
         {
-          text: `Generated ${fmt(new Date().toISOString())} · CampusCare (servox-phi.vercel.app)`,
+          text: `Generated ${fmt(new Date().toISOString())} · servox-phi (servox-phi.vercel.app)`,
           fontSize: 7.5,
           color: MUTED,
         },

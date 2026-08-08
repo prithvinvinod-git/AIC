@@ -103,10 +103,10 @@ function shell(body: string): string {
                     <table role="presentation" cellpadding="0" cellspacing="0">
                       <tr>
                         <td style="vertical-align:middle;padding-right:10px;">
-                          <span style="display:inline-block;width:34px;height:34px;border-radius:10px;background:${ACCENT};color:#ffffff;font-family:${FONT};font-size:16px;font-weight:700;text-align:center;line-height:34px;">CC</span>
+                          <span style="display:inline-block;width:34px;height:34px;border-radius:10px;background:${ACCENT};color:#ffffff;font-family:${FONT};font-size:16px;font-weight:700;text-align:center;line-height:34px;">SP</span>
                         </td>
                         <td style="vertical-align:middle;">
-                          <span style="font-family:${FONT};font-size:20px;font-weight:800;color:#ffffff;">CampusCare</span>
+                          <span style="font-family:${FONT};font-size:20px;font-weight:800;color:#ffffff;">servox-phi</span>
                           <span style="font-family:${FONT};font-size:12px;font-weight:700;color:${ACCENT};text-transform:uppercase;letter-spacing:1.5px;margin-left:10px;">Maintenance</span>
                         </td>
                       </tr>
@@ -121,7 +121,7 @@ function shell(body: string): string {
           </tr>
           <tr>
             <td style="padding:22px 32px;background:${BG_PANEL};border-top:1px solid ${BORDER};">
-              <p style="margin:0;font-family:${FONT};font-size:12px;color:${MUTED};">This is an automated notification from CampusCare. Please do not reply to this email.</p>
+              <p style="margin:0;font-family:${FONT};font-size:12px;color:${MUTED};">This is an automated notification from servox-phi. Please do not reply to this email.</p>
             </td>
           </tr>
         </table>

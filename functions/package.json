@@ -1,5 +1,5 @@
 {
-  "name": "campus-care-functions",
+  "name": "servox-phi-functions",
   "version": "0.1.0",
   "private": true,
   "description": "Scheduled maintenance functions: SLA breach checks, reminders, weekly digest.",

@@ -1,10 +1,10 @@
-# Claude Prompt — CampusCare Issue-Report Workflow Flowcharts
+# Claude Prompt — servox-phi Issue-Report Workflow Flowcharts
 
 Paste the entire block below into Claude (Claude.ai / Claude Code with no repo access needed). It is fully self-contained: everything Claude must know about the app's actual behavior, roles, endpoints, and state machine is described here, taken directly from the working codebase (`src/lib/issueMachine.ts`, `src/app/api/...`, `src/lib/nav.ts`, `src/lib/notifications.ts`).
 
 ---
 
-You are a workflow/process designer. Your job is to produce a precise, complete set of flowcharts for the **CampusCare campus-maintenance application** (Next.js + Firebase). The app moves "issue reports" through a governed state machine. Base every chart strictly on the specification below — do not invent transitions, roles, or endpoints that are not listed.
+You are a workflow/process designer. Your job is to produce a precise, complete set of flowcharts for the **servox-phi campus-maintenance application** (Next.js + Firebase). The app moves "issue reports" through a governed state machine. Base every chart strictly on the specification below — do not invent transitions, roles, or endpoints that are not listed.
 
 ## 1. Deliverables
 

@@ -6,7 +6,7 @@ const firebase_functions_1 = require("firebase-functions");
 const app_1 = require("firebase-admin/app");
 const firestore_1 = require("firebase-admin/firestore");
 /**
- * Scheduled maintenance for CampusCare.
+ * Scheduled maintenance for servox-phi.
  *
  * Runs against the Firebase Emulator Suite in local dev (firebase-admin
  * auto-connects to the Firestore emulator). Real emails are out of scope —

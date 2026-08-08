@@ -64,7 +64,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
             href={homeFor(claims)}
             className="flex min-w-0 shrink-0 items-center font-display text-lg font-semibold text-ink sm:text-xl lg:-ml-[150px]"
           >
-            <span className="truncate">CampusCare</span>
+            <span className="truncate">servox-phi</span>
           </Link>
 
           <nav className="hidden items-center gap-1.5 lg:ml-[150px] md:flex">{navLinks()}</nav>
