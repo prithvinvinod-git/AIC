@@ -5,6 +5,7 @@ import {
   CirclePlus,
   History,
   LayoutDashboard,
+  Megaphone,
   ShieldCheck,
   TriangleAlert,
   UserCog,
@@ -39,6 +40,7 @@ export const NAV_ITEMS: NavItem[] = [
   { role: "admin", label: "Admin", href: "/admin", icon: UserCog },
   { role: "all", label: "Analytics", href: "/analytics", icon: BarChart3 },
   { roles: ["admin", "principal"], label: "Issue history", href: "/issue-history", icon: History },
+  { roles: ["admin", "principal", "hod"], label: "Announcements", href: "/announcements", icon: Megaphone },
 ];
 
 export const ANALYTICS_ROLES: Role[] = ["hod", "principal", "validator", "admin"];

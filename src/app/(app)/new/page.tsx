@@ -6,48 +6,11 @@ import { ImagePlus, Loader2, X } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useToast } from "@/components/ui/Toast";
 import { api, ApiError } from "@/lib/clientApi";
+import { fileToCompressedBase64 } from "@/lib/upload";
 import { BUILDINGS, COLLEGES, DEFAULT_FLOORS, DEPARTMENTS_BY_COLLEGE, PRIORITY_COLOR, PRIORITY_LABEL, type College } from "@/lib/constants";
 import type { Category, ImageRef } from "@/lib/types";
 
 const MAX_IMAGES = 3;
-
-// Downscale + re-encode to JPEG on the client so blobs stay under the
-// Firestore 1MB document limit (typically ~100-300KB output at this size,
-// ~10-20x smaller than the raw photo).
-function fileToCompressedBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = String(reader.result || "");
-      const img = new Image();
-      img.onload = () => {
-        const maxDim = 1200;
-        let { width, height } = img;
-        if (width > maxDim || height > maxDim) {
-          const scale = maxDim / Math.max(width, height);
-          width = Math.round(width * scale);
-          height = Math.round(height * scale);
-        }
-        const canvas = document.createElement("canvas");
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) {
-          resolve(dataUrl.split(",")[1] || "");
-          return;
-        }
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(0, 0, width, height);
-        ctx.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL("image/jpeg", 0.7).split(",")[1] || "");
-      };
-      img.onerror = () => resolve(dataUrl.split(",")[1] || "");
-      img.src = dataUrl;
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
 
 export default function NewIssuePage() {
   const { claims } = useAuth();

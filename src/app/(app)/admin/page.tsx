@@ -6,11 +6,10 @@ import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { api, ApiError } from "@/lib/clientApi";
 import { Loading, EmptyState } from "@/components/ui/States";
-import AnnouncementComposer from "@/components/announcements/AnnouncementComposer";
 import { COLLEGES, DEPARTMENTS_BY_COLLEGE, ROLE_LABEL, type College } from "@/lib/constants";
 import type { AppUser, Category, Team, Role } from "@/lib/types";
 
-const TABS = ["Users", "Teams", "Categories", "Announcements", "Config"] as const;
+const TABS = ["Users", "Teams", "Categories", "Config"] as const;
 type Tab = (typeof TABS)[number];
 
 const ALL_ROLES: Role[] = ["reporter", "validator", "hod", "principal", "maintenance", "admin"];
@@ -33,7 +32,7 @@ export default function AdminPage() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="font-display text-2xl font-semibold text-ink">Admin</h1>
-        <p className="mt-1 text-sm text-slate">Manage users, teams, categories, announcements and SLA defaults.</p>
+        <p className="mt-1 text-sm text-slate">Manage users, teams, categories and SLA defaults.</p>
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -47,7 +46,6 @@ export default function AdminPage() {
       {tab === "Users" && <UsersTab />}
       {tab === "Teams" && <TeamsTab />}
       {tab === "Categories" && <CategoriesTab />}
-      {tab === "Announcements" && <AnnouncementComposer />}
       {tab === "Config" && <ConfigTab />}
     </div>
   );

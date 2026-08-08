@@ -2,7 +2,9 @@
 // cloud project. Exercises:
 //   - HOD publishes an announcement to the `reporter` role
 //   - the target reporter receives an `announcement`-type notification
-//   - a reporter is forbidden from publishing (403)
+//   - a reporter is forbidden from publishing / editing / deleting (403)
+//   - PATCH edits the announcement and only notifies newly added recipients
+//   - DELETE removes the announcement via the API
 //   - mark-all-read round-trip through POST /api/notifications
 // Usage: node scripts/smoke-announcements.mjs  (requires `npm run dev` on :3000)
 import { readFileSync } from "node:fs";
@@ -69,6 +71,7 @@ const report = (label, ok, extra = "") => {
 };
 
 let reporterUid = null;
+let maintenanceUid = null;
 let announcementId = null;
 let hod = null;
 
@@ -89,6 +92,24 @@ try {
     name: "Smoke Reporter",
     email: reporterEmail,
     role: "reporter",
+    department: "Engineering",
+    isActive: true,
+    createdAt: new Date().toISOString(),
+  });
+
+  // Throwaway maintenance user so the PATCH audience-delta is observable.
+  const maintenanceEmail = `smoke.maint.${Date.now()}@campuscare.local`;
+  const maint = await adminAuth.createUser({
+    email: maintenanceEmail,
+    password: "TestPass123!",
+    displayName: "Smoke Maintainer",
+  });
+  maintenanceUid = maint.uid;
+  await adminAuth.setCustomUserClaims(maintenanceUid, { role: "maintenance", name: "Smoke Maintainer" });
+  await db.collection("users").doc(maintenanceUid).set({
+    name: "Smoke Maintainer",
+    email: maintenanceEmail,
+    role: "maintenance",
     department: "Engineering",
     isActive: true,
     createdAt: new Date().toISOString(),
@@ -124,6 +145,7 @@ try {
     notifDoc ? `(title "${notifDoc.data().title}")` : ""
   );
   const notifId = notifDoc ? notifDoc.id : null;
+  const reporterAnnCount = notifSnap.docs.filter((d) => d.data().type === "announcement").length;
 
   // 3. A reporter is forbidden from publishing.
   const denied = await api(reporterToken, "POST", "/api/announcements", {
@@ -141,7 +163,59 @@ try {
     `(status ${list.status})`
   );
 
-  // 5. Mark-all-read round-trip.
+  // 5. HOD edits the announcement — audience grows to include maintenance.
+  const patch = await api(hodToken, "PATCH", `/api/announcements/${announcementId}`, {
+    title: "[SMOKE] Campus maintenance schedule (updated)",
+    audience: { kind: "roles", roles: ["reporter", "maintenance"] },
+  });
+  report("HOD patch -> 200", patch.status === 200, `(status ${patch.status})`);
+  report(
+    "patch reflected in response",
+    patch.json?.announcement?.title === "[SMOKE] Campus maintenance schedule (updated)",
+    `(title "${patch.json?.announcement?.title}")`
+  );
+
+  // 6. Only the newly added maintenance recipient is notified (audience delta).
+  const maintNotif = await db
+    .collection(`notifications/${maintenanceUid}/items`)
+    .orderBy("at", "desc")
+    .limit(20)
+    .get();
+  report(
+    "newly added recipient got notification",
+    maintNotif.docs.some((d) => d.data().type === "announcement")
+  );
+  const afterPatchSnap = await db
+    .collection(`notifications/${reporterUid}/items`)
+    .orderBy("at", "desc")
+    .limit(50)
+    .get();
+  const reporterAnnAfter = afterPatchSnap.docs.filter((d) => d.data().type === "announcement").length;
+  report(
+    "existing recipient not re-notified",
+    reporterAnnAfter === reporterAnnCount,
+    `(announcement notifs ${reporterAnnCount} -> ${reporterAnnAfter})`
+  );
+
+  // 7. A reporter is forbidden from editing or deleting.
+  const patchDenied = await api(reporterToken, "PATCH", `/api/announcements/${announcementId}`, {
+    title: "[SMOKE] Should fail",
+  });
+  report("reporter patch -> 403", patchDenied.status === 403, `(status ${patchDenied.status})`);
+  const delDenied = await api(reporterToken, "DELETE", `/api/announcements/${announcementId}`);
+  report("reporter delete -> 403", delDenied.status === 403, `(status ${delDenied.status})`);
+
+  // 8. HOD deletes via the API; the list no longer contains it.
+  const del = await api(hodToken, "DELETE", `/api/announcements/${announcementId}`);
+  report("HOD delete -> 200", del.status === 200, `(status ${del.status})`);
+  const afterDel = await api(hodToken, "GET", "/api/announcements");
+  report(
+    "list no longer contains it",
+    afterDel.status === 200 && !afterDel.json?.announcements?.some((a) => a.id === announcementId),
+    `(status ${afterDel.status})`
+  );
+
+  // 9. Mark-all-read round-trip.
   if (notifId) {
     const mark = await api(reporterToken, "POST", "/api/notifications", {});
     const after = await db.doc(`notifications/${reporterUid}/items/${notifId}`).get();
@@ -157,12 +231,14 @@ try {
   console.error("ERROR:", e.message);
   process.exitCode = 1;
 } finally {
-  if (reporterUid) {
-    try {
-      const snap = await db.collection(`notifications/${reporterUid}/items`).get();
-      for (const d of snap.docs) await d.ref.delete();
-    } catch {}
-    try { await adminAuth.deleteUser(reporterUid); } catch {}
+  for (const uid of [reporterUid, maintenanceUid]) {
+    if (uid) {
+      try {
+        const snap = await db.collection(`notifications/${uid}/items`).get();
+        for (const d of snap.docs) await d.ref.delete();
+      } catch {}
+      try { await adminAuth.deleteUser(uid); } catch {}
+    }
   }
   // On a clean pass, remove the smoke announcement.
   if (announcementId && process.exitCode !== 1) {

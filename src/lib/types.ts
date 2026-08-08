@@ -210,9 +210,12 @@ export interface Announcement {
   id?: string;
   title: string;
   body: string;
+  /** `/api/images/{id}` URLs; up to 2, first is the card thumbnail. */
+  images: string[];
   audience: AnnouncementAudience;
   author: { uid: string; name: string; role: Role };
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface Team {

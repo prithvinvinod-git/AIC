@@ -14,6 +14,10 @@ const audienceSchema = z.discriminatedUnion("kind", [
 const bodySchema = z.object({
   title: z.string().trim().min(3, "Title must be at least 3 characters.").max(120),
   body: z.string().trim().min(1, "Message can't be empty.").max(2000),
+  images: z
+    .array(z.string().regex(/^\/api\/images\/[a-f0-9-]+$/))
+    .max(2, "You can attach at most 2 images.")
+    .default([]),
   audience: audienceSchema,
 });
 
