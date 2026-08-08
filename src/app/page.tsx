@@ -1,132 +1,58 @@
-import Link from "next/link";
-import {
-  ArrowRight,
-  ClipboardList,
-  Gauge,
-  HardHat,
-  ShieldCheck,
-  Sparkles,
-  Workflow,
-} from "lucide-react";
+"use client";
 
-const FEATURES = [
-  {
-    icon: ClipboardList,
-    title: "Report in 60 seconds",
-    body: "Describe the problem and snap a photo — AI reviews it and your department validator sets the official category and priority.",
-  },
-  {
-    icon: Workflow,
-    title: "Closed-loop workflow",
-    body: "Every issue moves through a governed state machine — validate, escalate, approve, assign, execute, verify, close.",
-  },
-  {
-    icon: Gauge,
-    title: "SLA enforcement",
-    body: "Response and resolution deadlines per priority, with breach tracking and overdue boards.",
-  },
-  {
-    icon: Sparkles,
-    title: "AI that suggests",
-    body: "Triage, duplicate detection, routing, requirements and closure reports — the machine always decides.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Role-based control",
-    body: "Separate views for reporters, department validators, HODs, the Principal and maintenance teams.",
-  },
-  {
-    icon: HardHat,
-    title: "Verify before close",
-    body: "Reporter feedback and department-validator verification gate the final close of every ticket.",
-  },
-];
-
-const STEPS = [
-  { n: "01", t: "Report", d: "Anyone raises an issue with photo and location." },
-  { n: "02", t: "Validate", d: "Department validator triages category and priority." },
-  { n: "03", t: "Escalate", d: "Critical issues reach HOD and the Principal for approval." },
-  { n: "04", t: "Execute", d: "Validator routes work to teams; staff log requirements and progress." },
-  { n: "05", t: "Verify", d: "Reporter rates the outcome and the validator verifies work done." },
-];
+import { useAuth } from "@/components/auth/AuthProvider";
+import { Loading } from "@/components/ui/States";
+import AppHeader from "@/components/AppHeader";
+import PublicNav from "@/components/home/PublicNav";
+import PublicHero from "@/components/home/PublicHero";
+import FeatureSection from "@/components/home/FeatureSection";
+import AiSection from "@/components/home/AiSection";
+import SiteFooter from "@/components/home/SiteFooter";
+import DashboardHero from "@/components/home/DashboardHero";
+import IssueBoard from "@/components/home/IssueBoard";
+import AnnouncementBoard from "@/components/home/AnnouncementBoard";
 
 export default function Home() {
+  const { user, claims, ready } = useAuth();
+
+  if (!ready) {
+    return (
+      <div className="flex min-h-full flex-col">
+        <PublicNav />
+        <main className="flex flex-1 items-center justify-center">
+          <Loading label="Checking session…" />
+        </main>
+        <SiteFooter />
+      </div>
+    );
+  }
+
+  if (!user || !claims) {
+    return (
+      <div className="flex min-h-full flex-col">
+        <PublicNav />
+        <main className="flex-1">
+          <PublicHero />
+          <FeatureSection />
+          <AiSection />
+        </main>
+        <SiteFooter />
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-full flex-col">
-      <header className="border-b border-silver bg-white/80 backdrop-blur">
-        <div className="mx-auto flex h-16 w-full max-w-[1100px] items-center justify-between px-6">
-          <div className="flex items-center gap-2 font-brand text-lg leading-none text-ink sm:text-xl">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <span className="tracking-wide">Servox</span>
-            <img src="/servoxlogo.png" alt="Servox" className="h-[20px] w-auto sm:h-[24px]" />
-          </div>
-          <nav className="flex items-center gap-3">
-            <Link href="/login" className="btn btn-ghost btn-sm">
-              Sign in
-            </Link>
-            <Link href="/signup" className="btn btn-primary btn-sm">
-              Get started
-            </Link>
-          </nav>
+      <AppHeader />
+      <main className="mx-auto w-full max-w-[1200px] flex-1 px-4 py-8 sm:px-6 sm:py-10">
+        <div className="flex flex-col gap-6">
+          <DashboardHero />
+          <section className="grid items-start gap-6 lg:grid-cols-2">
+            <IssueBoard />
+            <AnnouncementBoard />
+          </section>
         </div>
-      </header>
-
-      <main className="flex-1">
-        <section className="mx-auto w-full max-w-[1100px] px-6 pt-20 pb-16 text-center">
-          <span className="tag bg-ink text-white">Campus maintenance, reimagined</span>
-          <h1 className="mx-auto mt-5 max-w-2xl font-display text-4xl font-semibold leading-tight tracking-tight text-ink sm:text-5xl">
-            Report it once.
-            <br />
-            Watch it close.
-          </h1>
-          <p className="mx-auto mt-4 max-w-xl text-lg text-slate">
-            A governed, AI-assisted workflow for professional campus upkeep — from a leak in Block&nbsp;C
-            to a full electrical audit.
-          </p>
-          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Link href="/signup" className="btn btn-primary btn-lg">
-              Report your first issue <ArrowRight className="h-3.5 w-3.5" aria-hidden />
-            </Link>
-            <Link href="/login" className="btn btn-secondary btn-lg">
-              Explore demo accounts
-            </Link>
-          </div>
-        </section>
-
-        <section className="mx-auto w-full max-w-[1100px] px-6 py-12">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {FEATURES.map((f) => (
-              <div key={f.title} className="card">
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-paper text-graphite">
-                  <f.icon className="h-5 w-5" aria-hidden />
-                </span>
-                <h3 className="mt-4 font-display text-base font-medium text-graphite">{f.title}</h3>
-                <p className="mt-1.5 text-sm text-slate">{f.body}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="mx-auto w-full max-w-[1100px] px-6 py-12">
-          <h2 className="font-display text-2xl font-semibold text-ink">How it works</h2>
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-            {STEPS.map((s) => (
-              <div key={s.n} className="card">
-                <p className="font-display text-sm font-semibold text-action-blue">{s.n}</p>
-                <h3 className="mt-2 font-medium text-graphite">{s.t}</h3>
-                <p className="mt-1 text-xs leading-relaxed text-slate">{s.d}</p>
-              </div>
-            ))}
-          </div>
-        </section>
       </main>
-
-      <footer className="border-t border-silver bg-white">
-        <div className="mx-auto flex w-full max-w-[1100px] flex-col items-center justify-between gap-3 px-6 py-6 text-sm text-slate sm:flex-row">
-          <p>© {new Date().getFullYear()} servox-phi</p>
-          <p>Built for professional campus teams.</p>
-        </div>
-      </footer>
     </div>
   );
 }

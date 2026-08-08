@@ -20,6 +20,7 @@ interface HistoryIssue {
   department: string;
   status: IssueStatus;
   priority: number;
+  boardHidden?: boolean;
   routing?: { categoryId: string; categoryName: string; teamId: string };
   reporter?: { uid: string; name: string; department: string };
   createdAt: string;
@@ -86,6 +87,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
               ? (data.status as IssueStatus)
               : "NEW",
             priority: typeof data.priority === "number" ? data.priority : 0,
+            boardHidden: data.boardHidden === true,
             routing: data.routing
               ? {
                   categoryId: String(data.routing.categoryId || ""),

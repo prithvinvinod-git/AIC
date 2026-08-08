@@ -14,12 +14,12 @@ import {
 import type { Role } from "./types";
 
 export const ROLE_HOME: Record<Role, string> = {
-  reporter: "/dashboard",
-  validator: "/validate",
-  hod: "/hod",
-  principal: "/principal",
-  maintenance: "/jobs",
-  admin: "/admin",
+  reporter: "/",
+  validator: "/",
+  hod: "/",
+  principal: "/",
+  maintenance: "/",
+  admin: "/",
 };
 
 export interface NavItem {
@@ -31,6 +31,7 @@ export interface NavItem {
 }
 
 export const NAV_ITEMS: NavItem[] = [
+  { role: "all", label: "Dashboard", href: "/", icon: LayoutDashboard },
   { role: "reporter", label: "My issues", href: "/dashboard", icon: LayoutDashboard },
   { role: "reporter", label: "Submit issue", href: "/new", icon: CirclePlus },
   { role: "validator", label: "Board", href: "/validate", icon: ShieldCheck },
@@ -39,7 +40,7 @@ export const NAV_ITEMS: NavItem[] = [
   { role: "maintenance", label: "Jobs", href: "/jobs", icon: Wrench },
   { role: "admin", label: "Admin", href: "/admin", icon: UserCog },
   { role: "all", label: "Analytics", href: "/analytics", icon: BarChart3 },
-  { roles: ["admin", "principal"], label: "Issue history", href: "/issue-history", icon: History },
+  { roles: ["admin", "principal"], label: "Issues", href: "/issue-history", icon: History },
   { roles: ["admin", "principal", "hod"], label: "Announcements", href: "/announcements", icon: Megaphone },
 ];
 
@@ -62,6 +63,6 @@ export function homeFor(claims: { role: Role; portal?: Role }): string {
   return (
     ROLE_HOME[claims.portal || claims.role] ||
     ROLE_HOME[claims.role] ||
-    "/dashboard"
+    "/"
   );
 }

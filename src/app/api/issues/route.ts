@@ -13,6 +13,10 @@ import type { Issue } from "@/lib/types";
 
 const db = adminDb();
 
+/** Board shows the important half of the queue — P1–P3 — across all users. */
+const BOARD_MAX_PRIORITY = 3;
+const BOARD_LIMIT = 10;
+
 /** POST /api/issues — reporter creates a NEW issue. */
 export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
@@ -117,15 +121,36 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 }
 
-/** GET /api/issues — role-scoped lists. */
+/** GET /api/issues — role-scoped lists, or `scope=board` for the shared
+ *  cross-user board (P1–P3 across all departments, minus hidden issues). */
 export async function GET(req: NextRequest): Promise<NextResponse> {
   try {
     const user = await requireAuth(req);
     const params = req.nextUrl.searchParams;
     const status = params.get("status");
     const mine = params.get("mine") === "true";
+    const board = params.get("scope") === "board";
 
     let query: Query = db.collection("issues");
+
+    if (board) {
+      const snap = await query.orderBy("createdAt", "desc").limit(200).get();
+      const issues: Issue[] = snap.docs
+        .map((d) => {
+          const data = d.data();
+          if (!Array.isArray(data.requirements)) data.requirements = [];
+          return { id: d.id, ...data } as Issue;
+        })
+        .filter(
+          (i) =>
+            typeof i.priority === "number" &&
+            i.priority >= 1 &&
+            i.priority <= BOARD_MAX_PRIORITY &&
+            i.boardHidden !== true
+        )
+        .slice(0, BOARD_LIMIT);
+      return json({ issues });
+    }
 
     if (user.role === "reporter" || mine) {
       query = query.where("reporter.uid", "==", user.uid);

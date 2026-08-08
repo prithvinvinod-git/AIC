@@ -8,9 +8,17 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: "ValveBd";
+  src: url("/valve bd.otf") format("opentype");
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme {
   /* Fonts */
   --font-brand: "TTOctosquaresBlack", ui-sans-serif, sans-serif;
+  --font-valve: "ValveBd", "Poppins", ui-sans-serif, sans-serif;
   /* Colors */
   --color-ink: #101010;
   --color-action-blue: #0099ff;
@@ -261,4 +269,18 @@ body {
 
 .animate-toast-in {
   animation: toast-in 0.2s ease-out both;
+}
+
+@keyframes scroll-pill-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(8px);
+  }
+}
+
+.animate-scroll-pill {
+  animation: scroll-pill-float 2.4s ease-in-out infinite;
 }

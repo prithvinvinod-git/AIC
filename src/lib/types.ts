@@ -178,6 +178,8 @@ export interface Issue {
   reporter: { uid: string; name: string; department: string };
   aiSuggestion?: AISuggestion;
   counters?: { commentCount: number; timelineCount: number };
+  /** Set by admin/principal to exclude an issue from the cross-user board. */
+  boardHidden?: boolean;
   createdAt: string;
   updatedAt: string;
 }

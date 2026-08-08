@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LogOut, SlidersHorizontal, UserPen } from "lucide-react";
+import { ChevronDown, LogOut, SlidersHorizontal, UserPen } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { ROLE_LABEL } from "@/lib/constants";
 import { initials } from "@/lib/format";
@@ -48,7 +48,9 @@ export default function ProfileMenu() {
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="menu"
         aria-expanded={open}
-        className="flex max-w-[230px] items-center gap-2 rounded-full border border-silver bg-white pl-2.5 pr-2.5 py-1 transition-colors hover:border-stone hover:bg-paper sm:gap-2.5 sm:py-1.5"
+        className={`group flex items-center rounded-full border bg-white pl-1 pr-3 py-1 transition-all ${
+          open ? "border-stone shadow-sm" : "border-silver hover:border-stone hover:bg-paper"
+        }`}
       >
         {user.photoURL ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -56,19 +58,25 @@ export default function ProfileMenu() {
             src={user.photoURL}
             alt=""
             referrerPolicy="no-referrer"
-            className="h-10 w-10 shrink-0 rounded-full object-cover sm:h-11 sm:w-11"
+            className="h-[38px] w-[38px] shrink-0 rounded-full object-cover ring-1 ring-black/5 sm:h-[38px] sm:w-[38px]"
           />
         ) : (
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ink text-sm font-semibold text-white sm:h-11 sm:w-11 sm:text-base">
+          <span className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full bg-ink text-sm font-semibold text-white sm:h-[38px] sm:w-[38px] sm:text-base">
             {initials(claims.name)}
           </span>
         )}
-        <span className="flex min-w-0 flex-col items-start leading-tight">
-          <span className="max-w-[90px] truncate text-sm font-medium text-graphite sm:max-w-[110px]">
+        <span className="ml-2.5 flex min-w-0 flex-col items-start leading-tight sm:ml-3">
+          <span className="max-w-[90px] truncate text-sm font-medium text-graphite sm:max-w-[120px]">
             {claims.name}
           </span>
           <span className="hidden text-xs text-slate sm:block">{ROLE_LABEL[claims.role]}</span>
         </span>
+        <ChevronDown
+          className={`ml-1.5 h-4 w-4 shrink-0 text-stone transition-transform duration-200 ${
+            open ? "rotate-180" : "group-hover:-translate-y-px"
+          }`}
+          aria-hidden
+        />
       </button>
 
       {open && (

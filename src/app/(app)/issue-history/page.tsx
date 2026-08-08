@@ -4,9 +4,10 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { History, Search, SlidersHorizontal, X } from "lucide-react";
+import { Eye, EyeOff, History, Search, SlidersHorizontal, X } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { api, ApiError } from "@/lib/clientApi";
+import { useToast } from "@/components/ui/Toast";
 import { Loading, EmptyState } from "@/components/ui/States";
 import { StatusBadge, PriorityBadge } from "@/components/ui/Badge";
 import { formatDate } from "@/lib/format";
@@ -15,6 +16,9 @@ import { STATUSES } from "@/lib/types";
 import type { Category, Issue, IssueStatus } from "@/lib/types";
 
 const HISTORY_ROLES = ["admin", "principal"];
+
+/** Issues at P3 or above (priority number ≤ 3) are board-eligible. */
+const BOARD_MAX_PRIORITY = 3;
 
 const STATUS_GROUPS: { key: string; label: string; statuses: IssueStatus[] }[] = [
   { key: "resolved", label: "Resolved", statuses: ["COMPLETED", "VERIFIED", "CLOSED"] },
@@ -47,6 +51,7 @@ const DEFAULT_FILTERS: Filters = { from: "", to: "", department: "", category: "
 
 export default function IssueHistoryPage() {
   const { claims } = useAuth();
+  const toast = useToast();
   const [issues, setIssues] = useState<Issue[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -57,6 +62,7 @@ export default function IssueHistoryPage() {
   const [applied, setApplied] = useState<Filters>(DEFAULT_FILTERS);
   const [draft, setDraft] = useState<Filters>(DEFAULT_FILTERS);
   const [open, setOpen] = useState(false);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQuery(query), 300);
@@ -144,6 +150,34 @@ export default function IssueHistoryPage() {
     );
   };
 
+  const boardEligible = (i: Issue) => i.priority >= 1 && i.priority <= BOARD_MAX_PRIORITY;
+
+  const toggleBoard = async (issue: Issue) => {
+    if (togglingId) return;
+    setTogglingId(issue.id ?? "");
+    try {
+      const hidden = !issue.boardHidden;
+      await api<{ ok: boolean; boardHidden: boolean }>(
+        `/api/issues/${issue.id}/board-visibility`,
+        { method: "POST", body: JSON.stringify({ hidden }) }
+      );
+      setIssues((prev) =>
+        prev ? prev.map((x) => (x.id === issue.id ? { ...x, boardHidden: hidden } : x)) : prev
+      );
+      toast.show({
+        type: "success",
+        title: hidden ? "Hidden from board" : "Shown on board",
+        message: hidden
+          ? "This issue no longer appears on the shared dashboard board."
+          : "This issue now appears on the shared dashboard board.",
+      });
+    } catch (e) {
+      toast.showError(e, { title: "Couldn't update board visibility" });
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
   const kpis = [
     { label: "Total", value: summary.total },
     { label: "Resolved", value: summary.resolved },
@@ -218,6 +252,7 @@ export default function IssueHistoryPage() {
                 <th className="px-4 py-3 font-medium">Category</th>
                 <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 font-medium">Priority</th>
+                <th className="px-4 py-3 font-medium">Board</th>
                 <th className="px-4 py-3 font-medium">Reported</th>
               </tr>
             </thead>
@@ -239,6 +274,32 @@ export default function IssueHistoryPage() {
                   </td>
                   <td className="px-4 py-3">
                     <PriorityBadge priority={i.priority} />
+                  </td>
+                  <td className="px-4 py-3">
+                    {boardEligible(i) ? (
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => void toggleBoard(i)}
+                          disabled={togglingId === i.id}
+                          aria-label={
+                            i.boardHidden
+                              ? `Show ${i.issueNo} on the dashboard board`
+                              : `Hide ${i.issueNo} from the dashboard board`
+                          }
+                          aria-pressed={!!i.boardHidden}
+                          className="btn btn-ghost btn-sm"
+                        >
+                          {i.boardHidden ? (
+                            <EyeOff className="h-3.5 w-3.5" aria-hidden />
+                          ) : (
+                            <Eye className="h-3.5 w-3.5" aria-hidden />
+                          )}
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-stone">—</span>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <span className="block text-graphite">{formatDate(i.createdAt)}</span>
