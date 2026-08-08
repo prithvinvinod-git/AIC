@@ -182,6 +182,15 @@ export interface Issue {
   updatedAt: string;
 }
 
+export type NotificationType =
+  | "issue"
+  | "escalation"
+  | "assignment"
+  | "verification"
+  | "pending"
+  | "spam"
+  | "announcement";
+
 export interface Notification {
   id?: string;
   type: string;
@@ -190,6 +199,20 @@ export interface Notification {
   link: string;
   isRead: boolean;
   at: string;
+}
+
+/** Who an announcement is broadcast to: everyone, or only users with given roles. */
+export type AnnouncementAudience =
+  | { kind: "all" }
+  | { kind: "roles"; roles: Role[] };
+
+export interface Announcement {
+  id?: string;
+  title: string;
+  body: string;
+  audience: AnnouncementAudience;
+  author: { uid: string; name: string; role: Role };
+  createdAt: string;
 }
 
 export interface Team {

@@ -1,3 +1,14 @@
+import {
+  BellRing,
+  CheckCheck,
+  ClipboardList,
+  Clock,
+  Megaphone,
+  ShieldAlert,
+  TriangleAlert,
+  Wrench,
+  type LucideIcon,
+} from "lucide-react";
 import type { IssueStatus, Role } from "./types";
 
 export const STATUS_LABEL: Record<IssueStatus, string> = {
@@ -49,6 +60,26 @@ export const ROLE_LABEL: Record<Role, string> = {
   principal: "Principal",
   maintenance: "Maintenance",
   admin: "Admin",
+};
+
+/** Icon + color per notification type, used by the bell, feed and page. */
+export const NOTIFICATION_META: Record<
+  string,
+  { label: string; icon: LucideIcon; iconClass: string }
+> = {
+  issue: { label: "Issue update", icon: ClipboardList, iconClass: "text-[#2563eb]" },
+  escalation: { label: "Escalation", icon: TriangleAlert, iconClass: "text-[#d97706]" },
+  assignment: { label: "Assignment", icon: Wrench, iconClass: "text-[#2e7d32]" },
+  verification: { label: "Verification", icon: CheckCheck, iconClass: "text-[#2e7d32]" },
+  pending: { label: "Pending", icon: Clock, iconClass: "text-[#d97706]" },
+  spam: { label: "Flagged", icon: ShieldAlert, iconClass: "text-[#c0392b]" },
+  announcement: { label: "Announcement", icon: Megaphone, iconClass: "text-[#7c3aed]" },
+};
+
+export const NOTIFICATION_FALLBACK_META = {
+  label: "Notification",
+  icon: BellRing,
+  iconClass: "text-slate",
 };
 
 export const DEPARTMENTS = [

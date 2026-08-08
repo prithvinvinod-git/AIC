@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { LogOut, Menu, X } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import ProfileMenu from "@/components/auth/ProfileMenu";
+import NotificationBell from "@/components/notifications/NotificationBell";
 import { NAV_ITEMS, homeFor, portalRoles } from "@/lib/nav";
 import { Loading } from "@/components/ui/States";
 
@@ -65,8 +66,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
             className="flex min-w-0 shrink-0 items-center gap-2 font-brand text-lg leading-none text-ink sm:text-xl lg:-ml-[150px]"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <span className="tracking-wide">Servox</span>
-            <img src="/servoxlogo.png" alt="Servox" className="h-[20px] w-auto shrink-0 sm:h-[24px]" />
+            <img src="/servoxlogo.png" alt="Servox" className="h-[32px] w-auto shrink-0 sm:h-[36px]" />
           </Link>
 
           <nav className="hidden items-center gap-1.5 lg:ml-[150px] md:flex">{navLinks()}</nav>
@@ -80,6 +80,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
             >
               {menuOpen ? <X className="h-3.5 w-3.5" aria-hidden /> : <Menu className="h-3.5 w-3.5" aria-hidden />}
             </button>
+            <NotificationBell />
             <ProfileMenu />
           </div>
         </div>

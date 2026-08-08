@@ -7,6 +7,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { Loading, EmptyState } from "@/components/ui/States";
 import { EscalationCard } from "@/components/issues/EscalationCard";
 import { IssueCard } from "@/components/ui/IssueCard";
+import AnnouncementComposer from "@/components/announcements/AnnouncementComposer";
 
 export default function PrincipalPage() {
   const { claims } = useAuth();
@@ -55,6 +56,8 @@ export default function PrincipalPage() {
           </div>
         )}
       </section>
+
+      <AnnouncementComposer />
     </div>
   );
 }

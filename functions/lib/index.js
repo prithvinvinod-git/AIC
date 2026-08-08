@@ -8,10 +8,9 @@ const firestore_1 = require("firebase-admin/firestore");
 /**
  * Scheduled maintenance for servox-phi.
  *
- * Runs against the Firebase Emulator Suite in local dev (firebase-admin
- * auto-connects to the Firestore emulator). Real emails are out of scope —
- * "email" digests are written into the same notifications collection the app
- * reads, so they surface in the UI without SMTP credentials.
+ * Runs as scheduled Cloud Functions in the real Firebase project. Real emails
+ * are out of scope — "email" digests are written into the same notifications
+ * collection the app reads, so they surface in the UI without SMTP credentials.
  */
 (0, app_1.initializeApp)();
 const db = (0, firestore_1.getFirestore)();

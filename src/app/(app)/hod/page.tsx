@@ -6,6 +6,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { Loading, EmptyState } from "@/components/ui/States";
 import { EscalationCard } from "@/components/issues/EscalationCard";
 import { WeeklyInsightsCard } from "@/components/ai/WeeklyInsightsCard";
+import AnnouncementComposer from "@/components/announcements/AnnouncementComposer";
 
 export default function HodPage() {
   const { claims } = useAuth();
@@ -42,6 +43,8 @@ export default function HodPage() {
           ))}
         </div>
       )}
+
+      <AnnouncementComposer />
     </div>
   );
 }
