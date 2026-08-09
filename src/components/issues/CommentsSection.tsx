@@ -65,9 +65,11 @@ export function CommentsSection({ issueId, comments, onReload }: Props) {
 
   useFocusTrap(dialogRef, open);
 
-  useEffect(() => {
+  const [prevComments, setPrevComments] = useState(comments);
+  if (prevComments !== comments) {
+    setPrevComments(comments);
     setItems(comments);
-  }, [comments]);
+  }
 
   const close = useCallback(() => {
     if (busy) return;

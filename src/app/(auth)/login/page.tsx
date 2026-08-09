@@ -1,12 +1,12 @@
 "use client";
 
-import { useCallback } from "react";
+import { Suspense, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import HeroAuthCard from "@/components/home/HeroAuthCard";
 import { homeFor } from "@/lib/nav";
 import type { SessionClaims } from "@/components/auth/AuthProvider";
 
-export default function LoginPage() {
+function LoginInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -23,4 +23,12 @@ export default function LoginPage() {
   );
 
   return <HeroAuthCard onSuccess={goHome} />;
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginInner />
+    </Suspense>
+  );
 }

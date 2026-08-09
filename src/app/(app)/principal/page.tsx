@@ -14,14 +14,6 @@ export default function PrincipalPage() {
   const { issues: escalated, error: escalatedError, reload: reloadEscalated } = useIssues({ status: "ESCALATED" });
   const { issues: approved, error: approvedError, reload: reloadApproved } = useIssues({ status: "APPROVED" });
 
-  if (!claims) return null;
-  if (!escalated || !approved) return <Loading label="Loading approvals…" />;
-
-  const refreshAll = () => {
-    void reloadEscalated();
-    void reloadApproved();
-  };
-
   useEffect(() => {
     const onFocus = () => {
       void reloadEscalated();
@@ -30,6 +22,14 @@ export default function PrincipalPage() {
     window.addEventListener("focus", onFocus);
     return () => window.removeEventListener("focus", onFocus);
   }, [reloadEscalated, reloadApproved]);
+
+  if (!claims) return null;
+  if (!escalated || !approved) return <Loading label="Loading approvals…" />;
+
+  const refreshAll = () => {
+    void reloadEscalated();
+    void reloadApproved();
+  };
 
   return (
     <div className="flex flex-col gap-8">
