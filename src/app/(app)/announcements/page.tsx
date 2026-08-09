@@ -152,14 +152,6 @@ export default function AnnouncementsPage() {
           <div className="flex flex-col gap-4">
             {items.map((a) => (
               <article key={a.id} className="card overflow-hidden p-0">
-                {a.images?.[0] && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={a.images[0]}
-                    alt=""
-                    className="h-40 w-full object-cover"
-                  />
-                )}
                 <div className="flex flex-col gap-3 p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">

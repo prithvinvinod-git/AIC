@@ -131,6 +131,20 @@ body {
   cursor: not-allowed;
 }
 
+.btn-brand {
+  background: var(--color-action-blue);
+  color: var(--color-white);
+}
+.btn-brand:hover {
+  background: #0080dd;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 153, 255, 0.18);
+}
+.btn-brand:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .btn-ghost {
   background: var(--color-paper);
   color: var(--color-graphite);

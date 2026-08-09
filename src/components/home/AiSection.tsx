@@ -61,8 +61,8 @@ export default function AiSection() {
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {AI_FEATURES.map((f) => (
             <div key={f.title} className="card">
-              <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-paper text-graphite">
-                <f.icon className="h-6 w-6" aria-hidden />
+              <span className="flex h-14 w-14 items-center justify-center rounded-xl bg-paper text-graphite">
+                <f.icon className="h-7 w-7" aria-hidden />
               </span>
               <h3 className="mt-4 font-display text-base font-medium text-graphite">{f.title}</h3>
               <p className="mt-1.5 text-sm text-slate">{f.body}</p>

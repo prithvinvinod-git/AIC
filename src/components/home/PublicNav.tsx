@@ -24,10 +24,10 @@ export default function PublicNav() {
         </nav>
 
         <nav className="flex items-center gap-3 mr-[-100px]">
-          <Link href="/login" className="btn btn-ghost btn-sm">
+          <Link href="/login" className="btn btn-primary btn-sm">
             Sign in
           </Link>
-          <Link href="/signup" className="btn btn-sm bg-action-blue text-white hover:bg-[#0080dd]">
+          <Link href="/signup" className="btn btn-brand btn-sm">
             Get started
           </Link>
         </nav>

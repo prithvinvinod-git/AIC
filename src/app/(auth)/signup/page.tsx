@@ -167,7 +167,7 @@ export default function SignupPage() {
 
           {error && <p className="rounded-lg bg-[#fef2f2] px-3 py-2 text-sm text-[#c0392b]">{error}</p>}
 
-          <button type="submit" disabled={busy} className="btn btn-primary btn-lg w-full">
+          <button type="submit" disabled={busy} className="btn btn-brand btn-lg w-full">
             {busy ? "Creating account…" : "Create account"}
           </button>
         </form>

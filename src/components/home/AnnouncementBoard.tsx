@@ -9,6 +9,7 @@ import { portalRoles } from "@/lib/nav";
 import { ROLE_LABEL } from "@/lib/constants";
 import { timeAgo } from "@/lib/format";
 import { EmptyState, Loading } from "@/components/ui/States";
+import { AnnouncementModal } from "@/components/announcements/AnnouncementModal";
 import type { Announcement, Role } from "@/lib/types";
 
 const MAX_BOARD = 5;
@@ -21,6 +22,7 @@ export default function AnnouncementBoard() {
   const [items, setItems] = useState<Announcement[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+  const [selected, setSelected] = useState<Announcement | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -85,7 +87,12 @@ export default function AnnouncementBoard() {
           />
         ) : (
           visible.map((a) => (
-            <div key={a.id} className="border-b border-silver px-5 py-4 last:border-0">
+            <button
+              key={a.id}
+              type="button"
+              onClick={() => setSelected(a)}
+              className="block w-full border-b border-silver px-5 py-4 text-left transition-colors last:border-0 hover:bg-paper"
+            >
               <div className="flex items-center justify-between gap-3">
                 <p className="font-medium text-ink">{a.title}</p>
                 <span className="shrink-0 text-xs text-slate">{timeAgo(a.createdAt)}</span>
@@ -94,7 +101,7 @@ export default function AnnouncementBoard() {
               <p className="mt-2 text-xs text-stone">
                 {a.author.name} · {ROLE_LABEL[a.author.role] ?? a.author.role}
               </p>
-            </div>
+            </button>
           ))
         )}
       </div>
@@ -107,6 +114,8 @@ export default function AnnouncementBoard() {
           <RefreshCw className="h-3.5 w-3.5" aria-hidden /> Refresh
         </button>
       </div>
+
+      {selected && <AnnouncementModal announcement={selected} onClose={() => setSelected(null)} />}
     </div>
   );
 }
