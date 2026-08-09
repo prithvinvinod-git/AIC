@@ -5,15 +5,18 @@ import { CirclePlus, ListChecks } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { ROLE_LABEL } from "@/lib/constants";
 import { portalRoles } from "@/lib/nav";
+import { feedFor } from "@/lib/roleFeeds";
 import RecentIssuesPanel from "@/components/home/RecentIssuesPanel";
 
-/** First viewport — personal welcome on the left, the reporter's latest issues on the right. */
+/** First viewport — personal welcome on the left, the role-aware latest-issues feed on the right. */
 export default function DashboardHero() {
   const { claims } = useAuth();
 
   const firstName = claims?.name.split(" ")[0] || "there";
   const detail = [claims?.college, claims?.department].filter(Boolean).join(" · ");
   const canReport = claims ? portalRoles(claims).includes("reporter") : false;
+  const activeRole = claims ? portalRoles(claims)[0] : "reporter";
+  const feed = feedFor(activeRole, claims?.department);
 
   return (
     <section className="flex min-h-[calc(100svh-70px)] items-center py-10 sm:py-14">
@@ -41,8 +44,8 @@ export default function DashboardHero() {
                 <CirclePlus className="h-3.5 w-3.5" aria-hidden /> Report new issue
               </Link>
             )}
-            <Link href="/dashboard" className="btn btn-secondary">
-              <ListChecks className="h-3.5 w-3.5" aria-hidden /> My issues
+            <Link href={feed.ctaHref} className="btn btn-secondary">
+              <ListChecks className="h-3.5 w-3.5" aria-hidden /> {feed.ctaLabel}
             </Link>
           </div>
         </div>
