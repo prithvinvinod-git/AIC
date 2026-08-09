@@ -68,6 +68,8 @@ export interface Comment {
   author: { uid: string; name: string; role: Role };
   body: string;
   at: string;
+  likes?: number;
+  likedByUids?: string[];
 }
 
 export interface Requirement {

@@ -2,12 +2,17 @@
 
 import { useCallback, useState } from "react";
 import Link from "next/link";
-import { useAuth } from "@/components/auth/AuthProvider";
+import { useAuth, type SessionClaims } from "@/components/auth/AuthProvider";
 import { ensureReporterProvisioned } from "@/components/auth/provisionReporter";
 import { GoogleIcon } from "@/components/auth/ProviderButtons";
 
+type HeroAuthCardProps = {
+  /** Optional callback invoked with the session after a successful sign-in. */
+  onSuccess?: (session: SessionClaims) => void | Promise<void>;
+};
+
 /** Hero sign-up/sign-in card: login form on top, Google below it, create-account link last. */
-export default function HeroAuthCard() {
+export default function HeroAuthCard({ onSuccess }: HeroAuthCardProps = {}) {
   const { login, loginWithGoogle, refreshClaims } = useAuth();
 
   const [email, setEmail] = useState("");
@@ -21,14 +26,15 @@ export default function HeroAuthCard() {
       setError(null);
       setBusy(true);
       try {
-        await login(email.trim(), password);
+        const session = await login(email.trim(), password);
+        await onSuccess?.(session);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Sign in failed.");
       } finally {
         setBusy(false);
       }
     },
-    [login, email, password]
+    [login, email, password, onSuccess]
   );
 
   const submitGoogle = useCallback(async () => {
@@ -37,7 +43,8 @@ export default function HeroAuthCard() {
     try {
       await loginWithGoogle();
       await ensureReporterProvisioned();
-      await refreshClaims();
+      const session = await refreshClaims();
+      await onSuccess?.(session);
     } catch (err) {
       setError(
         err instanceof Error
@@ -51,7 +58,7 @@ export default function HeroAuthCard() {
     } finally {
       setBusy(false);
     }
-  }, [loginWithGoogle, refreshClaims]);
+  }, [loginWithGoogle, refreshClaims, onSuccess]);
 
   return (
     <div className="card w-full">

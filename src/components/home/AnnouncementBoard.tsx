@@ -54,11 +54,11 @@ export default function AnnouncementBoard() {
     : false;
 
   return (
-    <div className="card flex flex-col overflow-hidden">
+    <div className="card flex min-h-[70svh] flex-col overflow-hidden lg:min-h-0">
       <div className="flex items-center justify-between px-5 py-4">
         <div className="flex items-center gap-2.5">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-paper text-graphite">
-            <Megaphone className="h-4 w-4" aria-hidden />
+          <span className="flex h-9 w-9 -mt-[5px] items-center justify-center text-graphite">
+            <Megaphone className="h-[20px] w-[20px]" aria-hidden />
           </span>
           <div>
             <h2 className="font-display text-base font-semibold text-ink">Announcements</h2>
@@ -72,19 +72,19 @@ export default function AnnouncementBoard() {
         )}
       </div>
 
-      {error ? (
-        <div className="px-5 py-10 text-center text-sm text-slate">{error}</div>
-      ) : !visible ? (
-        <Loading label="Loading announcements…" />
-      ) : visible.length === 0 ? (
-        <EmptyState
-          icon={<Megaphone className="h-8 w-8" aria-hidden />}
-          title="Nothing broadcast yet"
-          body="Announcements from admin, the Principal and HODs will show up here."
-        />
-      ) : (
-        <div className="flex-1">
-          {visible.map((a) => (
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        {error ? (
+          <div className="px-5 py-10 text-center text-sm text-slate">{error}</div>
+        ) : !visible ? (
+          <Loading label="Loading announcements…" />
+        ) : visible.length === 0 ? (
+          <EmptyState
+            icon={<Megaphone className="h-8 w-8" aria-hidden />}
+            title="Nothing broadcast yet"
+            body="Announcements from admin, the Principal and HODs will show up here."
+          />
+        ) : (
+          visible.map((a) => (
             <div key={a.id} className="border-b border-silver px-5 py-4 last:border-0">
               <div className="flex items-center justify-between gap-3">
                 <p className="font-medium text-ink">{a.title}</p>
@@ -95,11 +95,14 @@ export default function AnnouncementBoard() {
                 {a.author.name} · {ROLE_LABEL[a.author.role] ?? a.author.role}
               </p>
             </div>
-          ))}
-        </div>
-      )}
+          ))
+        )}
+      </div>
 
-      <div className="flex items-center justify-between border-t border-silver px-5 py-3">
+      <div className="flex shrink-0 items-center justify-between border-t border-silver px-5 py-3">
+        <p className="text-xs text-slate">
+          {visible ? `${visible.length} announcement${visible.length === 1 ? "" : "s"}` : " "}
+        </p>
         <button type="button" onClick={reload} className="btn btn-ghost btn-sm" aria-label="Refresh announcements">
           <RefreshCw className="h-3.5 w-3.5" aria-hidden /> Refresh
         </button>

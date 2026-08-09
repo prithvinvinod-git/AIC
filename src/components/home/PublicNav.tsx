@@ -6,9 +6,9 @@ export default function PublicNav() {
     <header className="sticky top-0 z-50 border-b border-silver bg-white">
       <div className="mx-auto flex h-[70px] w-full max-w-[1200px] items-center justify-between px-2 sm:px-3">
         <div className="flex items-center gap-2 -ml-30">
+          <span className="font-valve text-2xl leading-none tracking-wide text-ink">Servox</span>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/servoxlogo.png" alt="Servox" className="h-[34px] w-auto sm:h-[38px]" />
-          <span className="font-valve text-2xl leading-none tracking-wide text-ink">Servox</span>
         </div>
 
         <nav className="ml-[800px] hidden items-center gap-[52px] text-sm font-medium text-slate md:flex">
@@ -27,7 +27,7 @@ export default function PublicNav() {
           <Link href="/login" className="btn btn-ghost btn-sm">
             Sign in
           </Link>
-          <Link href="/signup" className="btn btn-primary btn-sm">
+          <Link href="/signup" className="btn btn-sm bg-action-blue text-white hover:bg-[#0080dd]">
             Get started
           </Link>
         </nav>

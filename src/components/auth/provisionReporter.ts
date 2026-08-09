@@ -2,6 +2,7 @@
 
 import { getClientAuth } from "@/lib/firebase";
 import { api } from "@/lib/clientApi";
+import { capitalizeName } from "@/lib/format";
 
 /**
  * Claim an already-signed-in Auth user (e.g. a fresh Google sign-in) as a
@@ -19,7 +20,7 @@ export async function ensureReporterProvisioned(opts?: {
     method: "POST",
     body: JSON.stringify({
       uid: user.uid,
-      name: user.displayName || user.email || user.phoneNumber || "User",
+      name: capitalizeName(user.displayName || user.email || user.phoneNumber || "User"),
       email: user.email || "",
       role: "reporter",
       college: opts?.college || "",

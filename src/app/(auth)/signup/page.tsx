@@ -3,19 +3,18 @@
 import { useCallback, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { getClientAuth } from "@/lib/firebase";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { ProviderChooser } from "@/components/auth/ProviderButtons";
+import { GoogleIcon } from "@/components/auth/ProviderButtons";
 import { ensureReporterProvisioned } from "@/components/auth/provisionReporter";
 import { api } from "@/lib/clientApi";
+import { capitalizeName } from "@/lib/format";
 import { COLLEGES, DEPARTMENTS_BY_COLLEGE, type College } from "@/lib/constants";
 
 export default function SignupPage() {
   const { loginWithGoogle, refreshClaims } = useAuth();
   const router = useRouter();
-  const [mode, setMode] = useState<"pick" | "email">("pick");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [college, setCollege] = useState<College>(COLLEGES[0]);
@@ -32,12 +31,13 @@ export default function SignupPage() {
       try {
         const auth = getClientAuth();
         const cred = await createUserWithEmailAndPassword(auth, email.trim(), password);
-        await updateProfile(cred.user, { displayName: name.trim() });
+        const fullName = name.trim();
+        await updateProfile(cred.user, { displayName: capitalizeName(fullName) });
         await api("/api/auth/provision", {
           method: "POST",
           body: JSON.stringify({
             uid: cred.user.uid,
-            name: name.trim(),
+            name: fullName,
             email: email.trim(),
             role: "reporter",
             college,
@@ -60,7 +60,7 @@ export default function SignupPage() {
     setBusy(true);
     try {
       await loginWithGoogle();
-      await ensureReporterProvisioned({ college, department });
+      await ensureReporterProvisioned();
       await refreshClaims();
       router.replace("/dashboard");
     } catch (err) {
@@ -75,147 +75,118 @@ export default function SignupPage() {
       );
       setBusy(false);
     }
-  }, [loginWithGoogle, refreshClaims, router, college, department]);
-
-  if (mode === "pick") {
-    return (
-      <div className="card">
-        <h1 className="font-display text-2xl font-semibold text-ink">Create your account</h1>
-        <p className="mt-1 text-sm text-slate">Choose how you want to sign up.</p>
-
-        <div className="mt-6 flex flex-col gap-3">
-          <ProviderChooser
-            busy={busy}
-            onGoogle={() => void submitGoogle()}
-            onEmail={() => setMode("email")}
-          />
-        </div>
-
-        {error && <p className="mt-4 rounded-lg bg-[#fef2f2] px-3 py-2 text-sm text-[#c0392b]">{error}</p>}
-
-        <p className="mt-6 text-center text-sm text-slate">
-          Already registered?{" "}
-          <Link href="/login" className="link-blue font-medium">
-            Sign in
-          </Link>
-        </p>
-      </div>
-    );
-  }
+  }, [loginWithGoogle, refreshClaims, router]);
 
   return (
-    <div className="card">
-      <button
-        type="button"
-        onClick={() => {
-          setMode("pick");
-          setError(null);
-        }}
-        className="link-blue flex items-center gap-1.5 rounded-full border border-silver bg-white px-3 py-1.5 text-sm font-medium"
-      >
-        <ArrowLeft className="h-3.5 w-3.5" aria-hidden /> All options
-      </button>
-
-      <h1 className="mt-3 font-display text-2xl font-semibold text-ink">Create an account</h1>
+    <div className="card w-full">
+      <h2 className="font-display text-xl font-semibold text-ink">Create your account</h2>
       <p className="mt-1 text-sm text-slate">Report issues and track their resolution.</p>
 
-      <form onSubmit={submit} className="mt-6 flex flex-col gap-4">
-        <div>
-          <label className="label" htmlFor="name">
-            Full name
-          </label>
-          <input
-            id="name"
-            required
-            className="input"
-            placeholder="Ravi Kumar"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-        </div>
-        <div>
-          <label className="label" htmlFor="email">
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            required
-            className="input"
-            placeholder="you@campus.edu"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </div>
-        <div>
-          <label className="label" htmlFor="college">
-            College
-          </label>
-          <select
-            id="college"
-            className="input"
-            value={college}
-            onChange={(e) => {
-              const c = e.target.value as College;
-              setCollege(c);
-              setDepartment(DEPARTMENTS_BY_COLLEGE[c][0]);
-            }}
-          >
-            {COLLEGES.map((c) => (
-              <option key={c} value={c}>
-                {c} College
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="label" htmlFor="department">
-            Department
-          </label>
-          <select
-            id="department"
-            className="input"
-            value={department}
-            onChange={(e) => setDepartment(e.target.value)}
-          >
-            {DEPARTMENTS_BY_COLLEGE[college].map((d) => (
-              <option key={d} value={d}>
-                {d}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="label" htmlFor="password">
-            Password
-          </label>
-          <input
-            id="password"
-            type="password"
-            required
-            minLength={6}
-            className="input"
-            placeholder="At least 6 characters"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
+      <div className="mt-5 rounded-2xl border border-silver px-10 py-8">
+        <form onSubmit={submit} className="flex flex-col gap-3">
+          <div>
+            <label className="label" htmlFor="name">
+              Full name
+            </label>
+            <input
+              id="name"
+              required
+              className="input"
+              placeholder="Your name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="label" htmlFor="email">
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              required
+              className="input"
+              placeholder="you@campus.edu"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="label" htmlFor="college">
+              College
+            </label>
+            <select
+              id="college"
+              className="input"
+              value={college}
+              onChange={(e) => {
+                const c = e.target.value as College;
+                setCollege(c);
+                setDepartment(DEPARTMENTS_BY_COLLEGE[c][0]);
+              }}
+            >
+              {COLLEGES.map((c) => (
+                <option key={c} value={c}>
+                  {c} College
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="label" htmlFor="department">
+              Department
+            </label>
+            <select
+              id="department"
+              className="input"
+              value={department}
+              onChange={(e) => setDepartment(e.target.value)}
+            >
+              {DEPARTMENTS_BY_COLLEGE[college].map((d) => (
+                <option key={d} value={d}>
+                  {d}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="label" htmlFor="password">
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              required
+              minLength={6}
+              className="input"
+              placeholder="At least 6 characters"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
 
-        {error && (
-          <p className="rounded-lg bg-[#fef2f2] px-3 py-2 text-sm text-[#c0392b]">{error}</p>
-        )}
+          {error && <p className="rounded-lg bg-[#fef2f2] px-3 py-2 text-sm text-[#c0392b]">{error}</p>}
 
-        <button type="submit" disabled={busy} className="btn btn-primary btn-lg">
-          {busy ? "Creating account…" : "Create account"}
-        </button>
-      </form>
+          <button type="submit" disabled={busy} className="btn btn-primary btn-lg w-full">
+            {busy ? "Creating account…" : "Create account"}
+          </button>
+        </form>
+      </div>
 
-      <p className="mt-6 text-center text-sm text-slate">
-        Already registered?{" "}
-        <Link href="/login" className="link-blue font-medium">
-          Sign in
-        </Link>
-      </p>
+      <div className="mt-4 flex items-center gap-3 text-xs text-stone">
+        <span className="h-px flex-1 bg-silver" aria-hidden />
+        or
+        <span className="h-px flex-1 bg-silver" aria-hidden />
+      </div>
+
+      <button type="button" onClick={() => void submitGoogle()} disabled={busy} className="btn btn-secondary btn-lg mt-4 w-full">
+        <GoogleIcon />
+        Continue with Google
+      </button>
+
+      <Link href="/login" className="btn btn-ghost btn-lg mt-3 w-full">
+        Already registered? Sign in
+      </Link>
     </div>
   );
 }

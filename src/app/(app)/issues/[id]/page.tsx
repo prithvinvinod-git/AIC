@@ -11,8 +11,8 @@ import { PriorityBadge, StatusBadge } from "@/components/ui/Badge";
 import { IssuePhotos } from "@/components/ui/IssuePhotos";
 import { AISuggestionCard } from "@/components/issues/AISuggestionCard";
 import { CloseIssueModal } from "@/components/issues/CloseIssueModal";
+import { CommentsSection } from "@/components/issues/CommentsSection";
 import { IssueActions, RequirementsPanel } from "@/components/issues/IssueActions";
-import { api, ApiError } from "@/lib/clientApi";
 import { deadlineLabel, formatDateTime, timeAgo } from "@/lib/format";
 import { STATUS_LABEL } from "@/lib/constants";
 import type { TimelineEntry } from "@/lib/types";
@@ -32,9 +32,6 @@ export default function IssueDetailPage() {
   const { claims, user } = useAuth();
 
   const [closeOpen, setCloseOpen] = useState(false);
-  const [comment, setComment] = useState("");
-  const [commentBusy, setCommentBusy] = useState(false);
-  const [commentError, setCommentError] = useState<string | null>(null);
   const [receiptBusy, setReceiptBusy] = useState(false);
 
   const downloadReceipt = useCallback(async () => {
@@ -46,24 +43,6 @@ export default function IssueDetailPage() {
       setReceiptBusy(false);
     }
   }, [issue, timeline]);
-
-  const postComment = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
-      setCommentBusy(true);
-      setCommentError(null);
-      try {
-        await api(`/api/issues/${id}/comments`, { method: "POST", body: JSON.stringify({ body: comment }) });
-        setComment("");
-        await reload();
-      } catch (e2) {
-        setCommentError(e2 instanceof ApiError ? e2.message : "Failed to post comment.");
-      } finally {
-        setCommentBusy(false);
-      }
-    },
-    [id, comment, reload]
-  );
 
   if (error) {
     return (
@@ -178,35 +157,7 @@ export default function IssueDetailPage() {
 
           <IssueActions issue={issue} onChanged={() => void reload()} />
 
-          <div className="card">
-            <h2 className="font-display text-lg font-semibold text-ink">Comments</h2>
-            <form onSubmit={(e) => void postComment(e)} className="mt-3 flex gap-2">
-              <input
-                className="input flex-1"
-                placeholder="Add a comment…"
-                value={comment}
-                maxLength={1000}
-                onChange={(e) => setComment(e.target.value)}
-              />
-              <button type="submit" className="btn btn-primary btn-sm" disabled={commentBusy || !comment.trim()}>
-                {commentBusy ? "Posting…" : "Post"}
-              </button>
-            </form>
-            {commentError && <p className="mt-2 text-sm text-[#c0392b]">{commentError}</p>}
-            {comments && comments.length > 0 && (
-              <ul className="mt-4 flex flex-col gap-3">
-                {comments.map((c) => (
-                  <li key={c.id} className="rounded-xl bg-paper p-3">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-sm font-medium text-graphite">{c.author.name}</p>
-                      <span className="text-xs text-slate">{formatDateTime(c.at)}</span>
-                    </div>
-                    <p className="mt-1 whitespace-pre-wrap text-sm text-slate">{c.body}</p>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+          <CommentsSection issueId={id} comments={comments ?? []} onReload={() => void reload()} />
         </div>
 
         <div className="flex flex-col gap-4">

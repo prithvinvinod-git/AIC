@@ -27,6 +27,7 @@ export interface SessionClaims {
   department: string;
   college?: string;
   name: string;
+  profilePromptDismissed?: boolean;
 }
 
 interface AuthContextValue {
@@ -61,6 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       portal: result.claims.portal as Role | undefined,
       department: (result.claims.department as string) || "",
       college: result.claims.college as string | undefined,
+      profilePromptDismissed: Boolean(result.claims.profilePromptDismissed),
       name:
         (result.claims.name as string) ||
         current.displayName ||

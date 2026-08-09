@@ -9,6 +9,7 @@ import { createIssueSchema } from "@/lib/schemas";
 import { allocateIssueNo } from "@/lib/issueMachine";
 import { notifyRole } from "@/lib/notifications";
 import { incrementCategoryCount, incrementStatusCount } from "@/lib/stats";
+import { capitalizeFirst } from "@/lib/format";
 import type { Issue } from "@/lib/types";
 
 const db = adminDb();
@@ -37,12 +38,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const ref = db.collection("issues").doc();
     const now = new Date().toISOString();
     const priority = body.priority && body.priority >= 1 && body.priority <= 5 ? body.priority : 0;
+    const title = capitalizeFirst(body.title.trim());
+    const description = capitalizeFirst(body.description.trim());
 
     const issueData = {
       issueNo,
       trackingToken,
-      title: body.title,
-      description: body.description,
+      title,
+      description,
       college: body.college || "",
       department: body.department,
       location: body.location,
@@ -89,7 +92,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         notifyRole(["validator"], {
           type: "issue",
           title: "New issue to review",
-          body: `${issueNo}: ${body.title}`,
+          body: `${issueNo}: ${title}`,
           link: `/issues/${ref.id}`,
         }),
         incrementStatusCount("NEW"),

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { api } from "@/lib/clientApi";
-import { ROLE_LABEL } from "@/lib/constants";
+import { ROLE_LABEL, COLLEGES, DEPARTMENTS_BY_COLLEGE, type College } from "@/lib/constants";
 import { initials } from "@/lib/format";
 import { Loading } from "@/components/ui/States";
 
@@ -23,6 +23,16 @@ export default function ProfilePage() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [college, setCollege] = useState<College>(
+    claims?.college && COLLEGES.includes(claims.college as College)
+      ? (claims.college as College)
+      : COLLEGES[0]
+  );
+  const [department, setDepartment] = useState(
+    claims?.department && DEPARTMENTS_BY_COLLEGE[college].includes(claims.department)
+      ? claims.department
+      : DEPARTMENTS_BY_COLLEGE[college][0]
+  );
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -35,6 +45,13 @@ export default function ProfilePage() {
         if (cancelled) return;
         setName(p.name || claims?.name || "");
         setPhone(p.phone || "");
+        const pc = p.college as College | undefined;
+        if (pc && COLLEGES.includes(pc)) {
+          setCollege(pc);
+          if (p.department && DEPARTMENTS_BY_COLLEGE[pc].includes(p.department)) {
+            setDepartment(p.department);
+          }
+        }
       })
       .catch((e) => {
         if (!cancelled) setError(e instanceof Error ? e.message : "Failed to load profile.");
@@ -53,7 +70,7 @@ export default function ProfilePage() {
       try {
         await api("/api/profile", {
           method: "PATCH",
-          body: JSON.stringify({ name: name.trim(), phone: phone.trim() }),
+          body: JSON.stringify({ name: name.trim(), phone: phone.trim(), college, department }),
         });
         await refreshClaims();
         setNotice("Profile updated.");
@@ -63,7 +80,7 @@ export default function ProfilePage() {
         setBusy(false);
       }
     },
-    [name, phone, refreshClaims]
+    [name, phone, college, department, refreshClaims]
   );
 
   if (!ready) return <Loading label="Loading profile…" />;
@@ -137,17 +154,49 @@ export default function ProfilePage() {
               <p className="text-sm text-graphite">{ROLE_LABEL[claims.role]}</p>
             </div>
             <div>
-              <label className="label">Department</label>
-              <p className="text-sm text-graphite">{claims.department || "—"}</p>
+              <label className="label" htmlFor="college">
+                College
+              </label>
+              <select
+                id="college"
+                className="input"
+                value={college}
+                disabled={busy}
+                onChange={(e) => {
+                  const c = e.target.value as College;
+                  setCollege(c);
+                  setDepartment(DEPARTMENTS_BY_COLLEGE[c][0]);
+                }}
+              >
+                {COLLEGES.map((c) => (
+                  <option key={c} value={c}>
+                    {c} College
+                  </option>
+                ))}
+              </select>
             </div>
             <div>
-              <label className="label">College</label>
-              <p className="text-sm text-graphite">{claims.college || "—"}</p>
+              <label className="label" htmlFor="department">
+                Department
+              </label>
+              <select
+                id="department"
+                className="input"
+                value={department}
+                disabled={busy}
+                onChange={(e) => setDepartment(e.target.value)}
+              >
+                {DEPARTMENTS_BY_COLLEGE[college].map((d) => (
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
           <p className="rounded-lg bg-paper px-3 py-2 text-xs text-slate">
-            Role, department and email are managed by your administrator and can&apos;t be changed here.
+            Role and email are managed by your administrator and can&apos;t be changed here.
           </p>
 
           {error && <p className="rounded-lg bg-[#fef2f2] px-3 py-2 text-sm text-[#c0392b]">{error}</p>}

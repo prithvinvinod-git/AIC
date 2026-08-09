@@ -33,6 +33,21 @@ export function deadlineLabel(deadlineIso: string): { text: string; tone: "ok" |
   return { text: `due in ${units}`, tone: "ok" };
 }
 
+/** Uppercase the first letter of a string, leaving the rest as typed. */
+export function capitalizeFirst(s: string): string {
+  if (!s) return s;
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+/** Title-case a person's name ("john  DOE" → "John Doe"). */
+export function capitalizeName(s: string): string {
+  return s
+    .trim()
+    .split(/\s+/)
+    .map((w) => (w ? w.charAt(0).toUpperCase() + w.slice(1).toLowerCase() : w))
+    .join(" ");
+}
+
 export function initials(name: string): string {
   return name
     .split(" ")

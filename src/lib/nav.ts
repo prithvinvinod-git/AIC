@@ -30,6 +30,8 @@ export interface NavItem {
   roles?: Role[];
 }
 
+export const ANALYTICS_ROLES: Role[] = ["hod", "principal", "validator", "admin"];
+
 export const NAV_ITEMS: NavItem[] = [
   { role: "all", label: "Dashboard", href: "/", icon: LayoutDashboard },
   { role: "reporter", label: "My issues", href: "/dashboard", icon: LayoutDashboard },
@@ -39,12 +41,10 @@ export const NAV_ITEMS: NavItem[] = [
   { role: "principal", label: "Approvals", href: "/principal", icon: CheckCheck },
   { role: "maintenance", label: "Jobs", href: "/jobs", icon: Wrench },
   { role: "admin", label: "Admin", href: "/admin", icon: UserCog },
-  { role: "all", label: "Analytics", href: "/analytics", icon: BarChart3 },
+  { roles: ANALYTICS_ROLES, label: "Analytics", href: "/analytics", icon: BarChart3 },
   { roles: ["admin", "principal"], label: "Issues", href: "/issue-history", icon: History },
   { roles: ["admin", "principal", "hod"], label: "Announcements", href: "/announcements", icon: Megaphone },
 ];
-
-export const ANALYTICS_ROLES: Role[] = ["hod", "principal", "validator", "admin"];
 
 /** Nav roles an account can access. A `portal` claim can surface another
  *  role's dashboards on top of the account's own role (e.g. admin who logs

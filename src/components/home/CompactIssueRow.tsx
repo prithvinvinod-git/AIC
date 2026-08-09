@@ -8,7 +8,7 @@ export default function CompactIssueRow({ issue }: { issue: Issue }) {
   return (
     <Link
       href={`/issues/${issue.id}`}
-      className="group flex items-center gap-4 border-b border-silver px-5 py-3.5 last:border-0 hover:bg-paper"
+      className="group flex items-center gap-4 rounded-xl border border-silver px-5 py-3.5 transition-colors hover:border-stone hover:bg-paper"
     >
       <div className="min-w-0 flex-1">
         <p className="text-xs text-slate">{issue.issueNo}</p>

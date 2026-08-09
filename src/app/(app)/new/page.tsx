@@ -1,9 +1,12 @@
 "use client";
 
+/* eslint-disable react-hooks/set-state-in-effect */
+
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ImagePlus, Loader2, X } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
+import ProfileOnboarding from "@/components/auth/ProfileOnboarding";
 import { useToast } from "@/components/ui/Toast";
 import { api, ApiError } from "@/lib/clientApi";
 import { fileToCompressedBase64 } from "@/lib/upload";
@@ -52,6 +55,16 @@ export default function NewIssuePage() {
   useEffect(() => {
     loadCategories();
   }, [loadCategories]);
+
+  useEffect(() => {
+    const c = claims?.college as College | undefined;
+    if (c && COLLEGES.includes(c)) {
+      setCollege(c);
+      if (claims?.department && DEPARTMENTS_BY_COLLEGE[c].includes(claims.department)) {
+        setDepartment(claims.department);
+      }
+    }
+  }, [claims]);
 
   const addImage = useCallback(async (file: File) => {
     if (images.length >= MAX_IMAGES) return;
@@ -111,6 +124,18 @@ export default function NewIssuePage() {
     },
     [title, description, college, department, categoryId, priority, building, floor, locationName, images, router, claims, showError]
   );
+
+  if (claims?.role === "reporter" && !claims.college) {
+    return (
+      <div className="w-full max-w-[820px]">
+        <h1 className="font-display text-2xl font-semibold text-ink">Report an issue</h1>
+        <p className="mt-1 text-sm text-slate">Add your college and department to your profile first.</p>
+        <div className="mt-6">
+          <ProfileOnboarding required inline />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-[820px]">

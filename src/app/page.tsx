@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "@/components/auth/AuthProvider";
+import ProfileOnboarding from "@/components/auth/ProfileOnboarding";
 import { Loading } from "@/components/ui/States";
 import AppHeader from "@/components/AppHeader";
 import PublicNav from "@/components/home/PublicNav";
@@ -18,11 +19,9 @@ export default function Home() {
   if (!ready) {
     return (
       <div className="flex min-h-full flex-col">
-        <PublicNav />
         <main className="flex flex-1 items-center justify-center">
           <Loading label="Checking session…" />
         </main>
-        <SiteFooter />
       </div>
     );
   }
@@ -44,15 +43,20 @@ export default function Home() {
   return (
     <div className="flex min-h-full flex-col">
       <AppHeader />
-      <main className="mx-auto w-full max-w-[1200px] flex-1 px-4 py-8 sm:px-6 sm:py-10">
-        <div className="flex flex-col gap-6">
-          <DashboardHero />
-          <section className="grid items-start gap-6 lg:grid-cols-2">
+      <main className="mx-auto w-full max-w-[1200px] flex-1 px-4 sm:px-6">
+        <DashboardHero />
+
+        <section className="flex min-h-[100svh] flex-col gap-6 py-10 sm:py-14">
+          <p className="-mt-[10px] text-xs font-semibold uppercase tracking-widest text-action-blue">
+            Notice board
+          </p>
+          <div className="grid flex-1 grid-cols-1 items-stretch gap-6 lg:grid-cols-2">
             <IssueBoard />
             <AnnouncementBoard />
-          </section>
-        </div>
+          </div>
+        </section>
       </main>
+      <ProfileOnboarding />
     </div>
   );
 }

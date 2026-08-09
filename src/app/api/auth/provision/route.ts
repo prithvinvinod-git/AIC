@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminAuth, adminDb } from "@/lib/firebaseAdmin";
 import { json, parseBody, handleError } from "@/lib/api";
 import { adminUserSchema } from "@/lib/schemas";
+import { capitalizeName } from "@/lib/format";
 import type { Role } from "@/lib/types";
 
 const db = adminDb();
@@ -16,6 +17,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
     const body = await parseBody(req, adminUserSchema);
     const role: Role = body.role;
+    const name = capitalizeName(body.name || "");
 
     let userRecord;
     if (body.uid) {
@@ -25,7 +27,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         userRecord = await adminAuth().createUser({
           email: body.email,
           password: body.password || "demo1234",
-          displayName: body.name,
+          displayName: name,
         });
       } catch (e) {
         const err = e as { code?: string };
@@ -42,12 +44,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       portal: body.portal || null,
       department: body.department,
       college: body.college || null,
-      name: body.name,
+      name,
     });
 
     await db.doc(`users/${userRecord.uid}`).set(
       {
-        name: body.name,
+        name,
         email: body.email,
         role,
         portal: body.portal || "",
@@ -73,23 +75,24 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
     if (!body.uid) return json({ error: "uid is required." }, 400);
 
     const updates: Record<string, unknown> = {};
-    if (body.name) updates.displayName = body.name;
+    const name = body.name ? capitalizeName(body.name) : undefined;
+    if (name) updates.displayName = name;
     if (body.password) {
       await adminAuth().updateUser(body.uid, { password: body.password });
     }
-    if (body.name) await adminAuth().updateUser(body.uid, updates as never);
+    if (name) await adminAuth().updateUser(body.uid, updates as never);
     if (body.role) {
       await adminAuth().setCustomUserClaims(body.uid, {
         role: body.role,
         portal: body.portal || null,
         department: body.department || "",
         college: body.college || null,
-        name: body.name || "",
+        name: name || "",
       });
     }
 
     const userData: Record<string, unknown> = {};
-    if (body.name !== undefined) userData.name = body.name;
+    if (name !== undefined) userData.name = name;
     if (body.role !== undefined) userData.role = body.role;
     if (body.portal !== undefined) userData.portal = body.portal;
     if (body.college !== undefined) userData.college = body.college;
