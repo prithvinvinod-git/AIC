@@ -1,5 +1,7 @@
+import dynamic from "next/dynamic";
 import HeroAuthCard from "@/components/home/HeroAuthCard";
-import DotGrid from "@/components/home/DotGrid";
+
+const DotGrid = dynamic(() => import("@/components/home/DotGrid"), { ssr: false });
 
 /** Split hero — fills the first viewport; "How it works" follows below the fold. */
 export default function PublicHero() {

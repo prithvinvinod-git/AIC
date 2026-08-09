@@ -5,7 +5,7 @@ import { CheckCircle2, XCircle } from "lucide-react";
 import { useIssues } from "@/hooks/useIssues";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { api, ApiError } from "@/lib/clientApi";
-import { Loading, EmptyState } from "@/components/ui/States";
+import { Loading, EmptyState, BoardErrorState } from "@/components/ui/States";
 import { AISuggestionCard } from "@/components/issues/AISuggestionCard";
 import { AssignCard, VerifyCard } from "@/components/issues/HeadCards";
 import { MaintenanceJobCard } from "@/components/issues/MaintenanceJobCard";
@@ -14,7 +14,7 @@ import { PriorityBadge, StatusBadge } from "@/components/ui/Badge";
 import { IssuePhotos } from "@/components/ui/IssuePhotos";
 import type { Issue } from "@/lib/types";
 
-function ValidatePanel({ issue, onDone }: { issue: Issue; onDone: () => void }) {
+function ValidatePanel({ issue, onDone, onTriaged }: { issue: Issue; onDone: () => void; onTriaged: () => void }) {
   const [priority, setPriority] = useState("3");
   const [rejectReason, setRejectReason] = useState("");
   const [busy, setBusy] = useState<"validate" | "reject" | null>(null);
@@ -44,7 +44,7 @@ function ValidatePanel({ issue, onDone }: { issue: Issue; onDone: () => void }) 
 
   return (
     <div className="mt-3 flex flex-col gap-3 rounded-xl bg-paper p-4">
-      <AISuggestionCard issue={issue} />
+      <AISuggestionCard issue={issue} onTriaged={onTriaged} />
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
         <div>
           <label className="label" htmlFor={`p-${issue.id}`}>
@@ -94,7 +94,7 @@ function ValidatePanel({ issue, onDone }: { issue: Issue; onDone: () => void }) 
 
 export default function ValidatePage() {
   const { claims } = useAuth();
-  const { issues, reload } = useIssues({});
+  const { issues, error, reload } = useIssues({});
   const [openId, setOpenId] = useState<string | null>(null);
 
   if (!claims) return null;
@@ -117,10 +117,14 @@ export default function ValidatePage() {
 
       <RootCauseAnalysisCard />
 
-      <section className="flex flex-col gap-4">
-        <h2 className="font-display text-lg font-semibold text-ink">
-          Validate queue <span className="text-sm font-normal text-slate">({validateQueue.length})</span>
-        </h2>
+      {error ? (
+        <BoardErrorState message={error} onRetry={() => void reload()} />
+      ) : (
+        <>
+          <section className="flex flex-col gap-4">
+            <h2 className="font-display text-lg font-semibold text-ink">
+              Validate queue <span className="text-sm font-normal text-slate">({validateQueue.length})</span>
+            </h2>
         {validateQueue.length === 0 ? (
           <EmptyState
             icon={<CheckCircle2 className="h-8 w-8" aria-hidden />}
@@ -162,7 +166,7 @@ export default function ValidatePage() {
 
                   {issue.images.length > 0 && <IssuePhotos images={issue.images} />}
 
-                  {open && <ValidatePanel issue={issue} onDone={() => { setOpenId(null); void reload(); }} />}
+                  {open && <ValidatePanel issue={issue} onDone={() => { setOpenId(null); void reload(); }} onTriaged={() => void reload()} />}
                 </div>
               );
             })}
@@ -229,6 +233,8 @@ export default function ValidatePage() {
           </div>
         )}
       </section>
+        </>
+      )}
     </div>
   );
 }

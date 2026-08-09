@@ -3,13 +3,13 @@
 import { BarChart3 } from "lucide-react";
 import { useIssues } from "@/hooks/useIssues";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { Loading, EmptyState } from "@/components/ui/States";
+import { Loading, EmptyState, BoardErrorState } from "@/components/ui/States";
 import { EscalationCard } from "@/components/issues/EscalationCard";
 import { WeeklyInsightsCard } from "@/components/ai/WeeklyInsightsCard";
 
 export default function HodPage() {
   const { claims } = useAuth();
-  const { issues, reload } = useIssues({ status: "ESCALATED" });
+  const { issues, error, reload } = useIssues({ status: "ESCALATED" });
 
   if (!claims) return null;
   if (!issues) return <Loading label="Loading escalations…" />;
@@ -25,7 +25,9 @@ export default function HodPage() {
 
       <WeeklyInsightsCard />
 
-      {issues.length === 0 ? (
+      {error ? (
+        <BoardErrorState message={error} onRetry={() => void reload()} />
+      ) : issues.length === 0 ? (
         <EmptyState
           icon={<BarChart3 className="h-8 w-8" aria-hidden />}
           title="No escalations pending"

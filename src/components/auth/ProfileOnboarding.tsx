@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { X } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { api, ApiError } from "@/lib/clientApi";
 import { COLLEGES, DEPARTMENTS_BY_COLLEGE, type College } from "@/lib/constants";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 interface Props {
   /** Hide Skip / "Don't ask again" and force completion (used by /new). */
@@ -38,6 +39,7 @@ export default function ProfileOnboarding({ required, inline, onDone }: Props = 
   const [dontAsk, setDontAsk] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const dialogRef = useRef<HTMLDivElement | null>(null);
 
   const needsCompletion =
     !!claims && claims.role === "reporter" && !claims.college;
@@ -74,6 +76,8 @@ export default function ProfileOnboarding({ required, inline, onDone }: Props = 
       document.body.style.overflow = "";
     };
   }, [autoShow, close]);
+
+  useFocusTrap(dialogRef, !inline && !!(autoShow || (required && needsCompletion)));
 
   const confirm = useCallback(async () => {
     setBusy(true);
@@ -210,7 +214,7 @@ export default function ProfileOnboarding({ required, inline, onDone }: Props = 
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" ref={dialogRef}>
       <div className="animate-overlay-in absolute inset-0 bg-ink/40 backdrop-blur-sm" aria-hidden />
       <div className="animate-panel-in relative">{panel}</div>
     </div>

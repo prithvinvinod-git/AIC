@@ -2,7 +2,7 @@
 
 /* eslint-disable react-hooks/set-state-in-effect */
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Megaphone, Pencil, ShieldAlert, Trash2 } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { api, ApiError } from "@/lib/clientApi";
@@ -11,6 +11,7 @@ import { Loading, EmptyState } from "@/components/ui/States";
 import AnnouncementForm, { type AnnouncementFormValue } from "@/components/announcements/AnnouncementForm";
 import { ROLE_LABEL } from "@/lib/constants";
 import { formatDateTime } from "@/lib/format";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 import type { Announcement, AnnouncementAudience, Role } from "@/lib/types";
 
 const ANNOUNCER_ROLES: Role[] = ["admin", "principal", "hod"];
@@ -31,6 +32,11 @@ export default function AnnouncementsPage() {
   const [savingEdit, setSavingEdit] = useState(false);
   const [deleting, setDeleting] = useState<Announcement | null>(null);
   const [deletingBusy, setDeletingBusy] = useState(false);
+  const editDialogRef = useRef<HTMLDivElement | null>(null);
+  const deleteDialogRef = useRef<HTMLDivElement | null>(null);
+
+  useFocusTrap(editDialogRef, editing !== null);
+  useFocusTrap(deleteDialogRef, deleting !== null);
 
   const load = useCallback(async () => {
     try {
@@ -197,7 +203,7 @@ export default function AnnouncementsPage() {
       </section>
 
       {editing && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" ref={editDialogRef}>
           <div
             className="animate-overlay-in absolute inset-0 bg-ink/40 backdrop-blur-sm"
             onClick={() => !savingEdit && setEditing(null)}
@@ -236,7 +242,7 @@ export default function AnnouncementsPage() {
       )}
 
       {deleting && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="alertdialog" aria-modal="true" aria-label="Delete announcement">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="alertdialog" aria-modal="true" aria-label="Delete announcement" ref={deleteDialogRef}>
           <div
             className="animate-overlay-in absolute inset-0 bg-ink/40 backdrop-blur-sm"
             onClick={() => !deletingBusy && setDeleting(null)}

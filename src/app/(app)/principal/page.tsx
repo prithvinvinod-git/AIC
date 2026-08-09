@@ -1,20 +1,35 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect } from "react";
 import { CheckCheck } from "lucide-react";
 import { useIssues } from "@/hooks/useIssues";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { Loading, EmptyState } from "@/components/ui/States";
+import { Loading, EmptyState, BoardErrorState } from "@/components/ui/States";
 import { EscalationCard } from "@/components/issues/EscalationCard";
 import { IssueCard } from "@/components/ui/IssueCard";
 
 export default function PrincipalPage() {
   const { claims } = useAuth();
-  const { issues: escalated, reload } = useIssues({ status: "ESCALATED" });
-  const { issues: approved } = useIssues({ status: "APPROVED" });
+  const { issues: escalated, error: escalatedError, reload: reloadEscalated } = useIssues({ status: "ESCALATED" });
+  const { issues: approved, error: approvedError, reload: reloadApproved } = useIssues({ status: "APPROVED" });
 
   if (!claims) return null;
   if (!escalated || !approved) return <Loading label="Loading approvals…" />;
+
+  const refreshAll = () => {
+    void reloadEscalated();
+    void reloadApproved();
+  };
+
+  useEffect(() => {
+    const onFocus = () => {
+      void reloadEscalated();
+      void reloadApproved();
+    };
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [reloadEscalated, reloadApproved]);
 
   return (
     <div className="flex flex-col gap-8">
@@ -30,7 +45,9 @@ export default function PrincipalPage() {
             Open analytics
           </Link>
         </div>
-        {escalated.length === 0 ? (
+        {escalatedError ? (
+          <BoardErrorState message={escalatedError} onRetry={() => void reloadEscalated()} />
+        ) : escalated.length === 0 ? (
           <EmptyState
             icon={<CheckCheck className="h-8 w-8" aria-hidden />}
             title="Approval queue is clear"
@@ -38,14 +55,16 @@ export default function PrincipalPage() {
           />
         ) : (
           escalated.map((issue) => (
-            <EscalationCard key={issue.id} issue={issue} onAction={() => void reload()} />
+            <EscalationCard key={issue.id} issue={issue} onAction={refreshAll} />
           ))
         )}
       </section>
 
       <section className="flex flex-col gap-4">
         <h2 className="font-display text-lg font-semibold text-ink">Approved & in progress</h2>
-        {approved.length === 0 ? (
+        {approvedError ? (
+          <BoardErrorState message={approvedError} onRetry={() => void reloadApproved()} />
+        ) : approved.length === 0 ? (
           <EmptyState title="Nothing approved yet" body="Approved issues awaiting the department validator will appear here." />
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

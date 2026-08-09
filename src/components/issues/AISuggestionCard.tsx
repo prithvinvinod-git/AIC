@@ -5,7 +5,7 @@ import { Sparkles } from "lucide-react";
 import type { Issue } from "@/lib/types";
 import { api, ApiError } from "@/lib/clientApi";
 
-export function AISuggestionCard({ issue }: { issue: Issue }) {
+export function AISuggestionCard({ issue, onTriaged }: { issue: Issue; onTriaged?: () => void }) {
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const suggestion = issue.aiSuggestion;
@@ -15,12 +15,12 @@ export function AISuggestionCard({ issue }: { issue: Issue }) {
     setError(null);
     try {
       await api(`/api/ai/triage`, { method: "POST", body: JSON.stringify({ issueId: issue.id }) });
-      window.location.reload();
+      onTriaged?.();
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Triage failed.");
       setRunning(false);
     }
-  }, [issue.id]);
+  }, [issue.id, onTriaged]);
 
   if (!suggestion || (!suggestion.category && suggestion.aiProcessed)) {
     return (

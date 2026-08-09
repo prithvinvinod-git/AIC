@@ -13,6 +13,7 @@ import { StatusBadge, PriorityBadge } from "@/components/ui/Badge";
 import { formatDate } from "@/lib/format";
 import { DEPARTMENTS, STATUS_LABEL } from "@/lib/constants";
 import { STATUSES } from "@/lib/types";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 import type { Category, Issue, IssueStatus } from "@/lib/types";
 
 const HISTORY_ROLES = ["admin", "principal"];
@@ -63,6 +64,9 @@ export default function IssueHistoryPage() {
   const [draft, setDraft] = useState<Filters>(DEFAULT_FILTERS);
   const [open, setOpen] = useState(false);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+
+  useFocusTrap(dialogRef, open);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQuery(query), 300);
@@ -313,7 +317,7 @@ export default function IssueHistoryPage() {
       </div>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Filters">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Filters" ref={dialogRef}>
           <div className="animate-overlay-in absolute inset-0 bg-ink/40 backdrop-blur-sm" onClick={() => setOpen(false)} aria-hidden />
           <div className="animate-panel-in card relative w-full max-w-lg">
             <div className="flex items-start justify-between gap-3">

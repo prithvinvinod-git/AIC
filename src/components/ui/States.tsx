@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { AlertCircle, RefreshCw } from "lucide-react";
 
 export function Loading({ label = "Loading…" }: { label?: string }) {
   return (
@@ -15,6 +16,26 @@ export function EmptyState({ icon, title, body }: { icon?: ReactNode; title: str
       {icon && <div className="text-slate">{icon}</div>}
       <p className="font-medium text-graphite">{title}</p>
       {body && <p className="max-w-sm text-sm text-slate">{body}</p>}
+    </div>
+  );
+}
+
+export function BoardErrorState({ message, onRetry }: { message?: string; onRetry?: () => void }) {
+  return (
+    <div className="card flex flex-col items-center justify-center gap-3 py-16 text-center">
+      <AlertCircle className="h-8 w-8 text-[#c0392b]" aria-hidden />
+      <div>
+        <p className="font-medium text-graphite">Couldn&apos;t load this board</p>
+        <p className="mx-auto mt-1 max-w-sm text-sm text-slate">
+          {message ?? "Check your connection and try again."}
+        </p>
+      </div>
+      {onRetry && (
+        <button onClick={onRetry} className="btn btn-primary btn-sm">
+          <RefreshCw className="mr-1.5 inline-block h-3.5 w-3.5" aria-hidden />
+          Try again
+        </button>
+      )}
     </div>
   );
 }

@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Heart, MessageSquareText, X } from "lucide-react";
 import type { Comment } from "@/lib/types";
 import { api, ApiError } from "@/lib/clientApi";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { formatDateTime } from "@/lib/format";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 interface Props {
   issueId: string;
@@ -55,11 +56,14 @@ export function CommentsSection({ issueId, comments, onReload }: Props) {
   const userId = user?.uid;
 
   const [open, setOpen] = useState(false);
+  const dialogRef = useRef<HTMLDivElement | null>(null);
   const [items, setItems] = useState<Comment[]>(comments);
   const [comment, setComment] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [likeBusy, setLikeBusy] = useState<string | null>(null);
+
+  useFocusTrap(dialogRef, open);
 
   useEffect(() => {
     setItems(comments);
@@ -173,7 +177,7 @@ export function CommentsSection({ issueId, comments, onReload }: Props) {
       )}
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" ref={dialogRef}>
           <div className="animate-overlay-in absolute inset-0 bg-ink/40 backdrop-blur-sm" onClick={() => close()} aria-hidden />
           <div className="animate-panel-in card relative flex max-h-[80vh] w-full max-w-lg flex-col">
             <div className="flex items-start justify-between gap-3">

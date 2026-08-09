@@ -18,7 +18,7 @@ import {
   type User,
 } from "firebase/auth";
 import { getClientAuth } from "@/lib/firebase";
-import { setAuthToken } from "@/lib/clientApi";
+import { getAuthToken, setAuthToken, setTokenRefreshHandler } from "@/lib/clientApi";
 import type { Role } from "@/lib/types";
 
 export interface SessionClaims {
@@ -86,6 +86,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
     return unsub;
+  }, [refreshClaims]);
+
+  // Let `clientApi` refresh an expired ID token on 401 instead of failing.
+  useEffect(() => {
+    setTokenRefreshHandler(async () => {
+      try {
+        await refreshClaims();
+        return getAuthToken();
+      } catch {
+        return null;
+      }
+    });
+    return () => setTokenRefreshHandler(null);
   }, [refreshClaims]);
 
   const login = useCallback(

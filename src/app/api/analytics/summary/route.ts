@@ -7,10 +7,14 @@ const db = adminDb();
 
 const OPEN_STATUSES = ["NEW", "VALIDATED", "ESCALATED", "APPROVED", "ASSIGNED", "ONGOING", "PENDING"];
 
+const CACHE_TTL_MS = 60_000;
+const cache = new Map<number, { at: number; payload: unknown }>();
+
 /**
  * GET /api/analytics/summary?range=7|30 — aggregates over the requested window.
  * Computed live from the issues collection (demo-accurate without relying on
  * scheduled Cloud Functions), merged with per-day stats counters when present.
+ * Results are memoized for 60 s per instance to avoid ~3k reads per reload.
  */
 export async function GET(req: NextRequest): Promise<NextResponse> {
   try {
@@ -21,6 +25,11 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
     const range = Number(req.nextUrl.searchParams.get("range") || 7);
     const since = new Date(Date.now() - range * 24 * 3600 * 1000).toISOString();
+
+    const cached = cache.get(range);
+    if (cached && Date.now() - cached.at < CACHE_TTL_MS) {
+      return json(cached.payload);
+    }
 
     const [issueSnap, resolvedSnap, openSnap, totalSnap] = await Promise.all([
       db.collection("issues").where("createdAt", ">=", since).limit(500).get(),
@@ -94,7 +103,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       });
     }
 
-    return json({
+    const payload = {
       summary: {
         range,
         totals: {
@@ -111,7 +120,10 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         },
         trend,
       },
-    });
+    };
+
+    cache.set(range, { at: Date.now(), payload });
+    return json(payload);
   } catch (e) {
     return handleError(e);
   }

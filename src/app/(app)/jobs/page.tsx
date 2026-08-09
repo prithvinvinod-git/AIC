@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useIssues } from "@/hooks/useIssues";
-import { Loading, EmptyState } from "@/components/ui/States";
+import { Loading, EmptyState, BoardErrorState } from "@/components/ui/States";
 import { MaintenanceJobCard } from "@/components/issues/MaintenanceJobCard";
 import type { IssueStatus } from "@/lib/types";
 
@@ -10,16 +10,27 @@ const TABS: { key: IssueStatus | "all"; label: string }[] = [
   { key: "all", label: "All" },
   { key: "ASSIGNED", label: "To do" },
   { key: "ONGOING", label: "In progress" },
-  { key: "PENDING", label: "Blocked" },
+  { key: "PENDING", label: "Pending" },
   { key: "COMPLETED", label: "Done" },
   { key: "VERIFIED", label: "Verified" },
 ];
 
 export default function JobsPage() {
-  const { issues, reload } = useIssues({});
+  const { issues, error, reload } = useIssues({});
   const [tab, setTab] = useState<IssueStatus | "all">("ASSIGNED");
 
   if (!issues) return <Loading label="Loading jobs…" />;
+  if (error) {
+    return (
+      <div className="flex flex-col gap-6">
+        <div>
+          <h1 className="font-display text-2xl font-semibold text-ink">Jobs</h1>
+          <p className="mt-1 text-sm text-slate">Your team&apos;s assignments across the campus.</p>
+        </div>
+        <BoardErrorState message={error} onRetry={() => void reload()} />
+      </div>
+    );
+  }
 
   const count = (s: IssueStatus) => issues.filter((i) => i.status === s).length;
   const visible = issues.filter((i) => tab === "all" || i.status === tab);

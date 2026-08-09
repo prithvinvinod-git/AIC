@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, ImageOff, X } from "lucide-react";
 import type { ImageRef } from "@/lib/types";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 /**
  * Clickable issue photo thumbnails. Clicking any thumbnail (or the "+N" tile)
@@ -23,8 +24,11 @@ export function IssuePhotos({
   placeholder?: boolean;
 }) {
   const [openIdx, setOpenIdx] = useState<number | null>(null);
+  const lightboxRef = useRef<HTMLDivElement | null>(null);
   const visible = images.slice(0, limit);
   const extra = images.length - visible.length;
+
+  useFocusTrap(lightboxRef, openIdx !== null);
 
   useEffect(() => {
     if (openIdx === null) return;
@@ -91,6 +95,8 @@ export function IssuePhotos({
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
           role="dialog"
           aria-modal="true"
+          aria-label="Photo viewer"
+          ref={lightboxRef}
         >
           <div
             className="animate-overlay-in absolute inset-0 bg-ink/70 backdrop-blur-sm"

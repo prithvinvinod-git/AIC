@@ -135,7 +135,12 @@ const DotGrid = ({
   useEffect(() => {
     if (!circlePath) return;
 
+    const reduceMotion =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
     let rafId: number;
+    let running = !document.hidden;
     const proxSq = proximity * proximity;
 
     const draw = () => {
@@ -171,11 +176,24 @@ const DotGrid = ({
         ctx.restore();
       }
 
-      rafId = requestAnimationFrame(draw);
+      if (running) rafId = requestAnimationFrame(draw);
+    };
+
+    const onVisibility = () => {
+      running = !document.hidden;
+      if (running) {
+        cancelAnimationFrame(rafId);
+        draw();
+      }
     };
 
     draw();
-    return () => cancelAnimationFrame(rafId);
+    if (reduceMotion) return () => cancelAnimationFrame(rafId);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      cancelAnimationFrame(rafId);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, [proximity, baseColor, activeRgb, baseRgb, circlePath]);
 
   useEffect(() => {
@@ -194,6 +212,13 @@ const DotGrid = ({
   }, [buildGrid]);
 
   useEffect(() => {
+    if (
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      return;
+    }
+
     const onMove = (e: MouseEvent) => {
       const now = performance.now();
       const pr = pointerRef.current;

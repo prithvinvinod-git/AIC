@@ -284,3 +284,15 @@ body {
 .animate-scroll-pill {
   animation: scroll-pill-float 2.4s ease-in-out infinite;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-scroll-pill,
+  .animate-overlay-in,
+  .animate-panel-in,
+  .animate-toast-in {
+    animation: none;
+  }
+  .animate-bounce {
+    animation: none;
+  }
+}

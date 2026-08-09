@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Star, X } from "lucide-react";
 import type { Issue } from "@/lib/types";
 import { api, ApiError } from "@/lib/clientApi";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 interface Props {
   issue: Issue | null;
@@ -16,6 +17,9 @@ export function CloseIssueModal({ issue, onClose, onClosed }: Props) {
   const [comment, setComment] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+
+  useFocusTrap(dialogRef, issue !== null);
 
   const close = useCallback(() => {
     if (busy) return;
@@ -61,7 +65,7 @@ export function CloseIssueModal({ issue, onClose, onClosed }: Props) {
   if (!issue) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Close issue" ref={dialogRef}>
       <div
         className="animate-overlay-in absolute inset-0 bg-ink/40 backdrop-blur-sm"
         onClick={() => close()}

@@ -5,12 +5,19 @@ import { json, handleError } from "@/lib/api";
 
 const db = adminDb();
 
+const CACHE_TTL_MS = 60_000;
+let cacheAt = 0;
+let cachedTeams: unknown = null;
+
 /** GET /api/teams — active teams with member names (validator/admin). */
 export async function GET(req: NextRequest): Promise<NextResponse> {
   try {
     const user = await requireAuth(req);
     if (!["validator", "admin"].includes(user.role)) {
       return json({ error: "Not allowed." }, 403);
+    }
+    if (cachedTeams && Date.now() - cacheAt < CACHE_TTL_MS) {
+      return json(cachedTeams);
     }
     const snap = await db.collection("teams").where("isActive", "==", true).get();
     const teams = await Promise.all(
@@ -25,7 +32,10 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         return { id: d.id, ...team, members };
       })
     );
-    return json({ teams });
+    const payload = { teams };
+    cacheAt = Date.now();
+    cachedTeams = payload;
+    return json(payload);
   } catch (e) {
     return handleError(e);
   }

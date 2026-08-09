@@ -151,7 +151,7 @@ export default function IssueDetailPage() {
             )}
           </div>
 
-          <AISuggestionCard issue={issue} />
+          <AISuggestionCard issue={issue} onTriaged={() => void reload()} />
 
           <RequirementsPanel issue={issue} onChanged={() => void reload()} />
 

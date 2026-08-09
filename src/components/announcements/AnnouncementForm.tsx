@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ImagePlus, Loader2, X } from "lucide-react";
 import { api } from "@/lib/clientApi";
 import { useToast } from "@/components/ui/Toast";
@@ -88,14 +88,21 @@ export default function AnnouncementForm({ initial, submitLabel, busy, onSubmit 
       });
       setImages((prev) => prev.map((im) => (im.preview === preview ? { ...im, url: res.url, uploading: false } : im)));
     } catch (e) {
+      URL.revokeObjectURL(preview);
       setImages((prev) => prev.filter((im) => im.preview !== preview));
       showError(e, { title: "Image upload failed" });
     }
   };
 
   const removeImage = (preview: string) => {
+    URL.revokeObjectURL(preview);
     setImages((prev) => prev.filter((im) => im.preview !== preview));
   };
+
+  useEffect(() => {
+    const previews = images.map((im) => im.preview);
+    return () => previews.forEach((p) => URL.revokeObjectURL(p));
+  }, [images]);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();

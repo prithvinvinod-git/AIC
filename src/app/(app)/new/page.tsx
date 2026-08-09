@@ -66,6 +66,16 @@ export default function NewIssuePage() {
     }
   }, [claims]);
 
+  useEffect(() => {
+    const previews = images.map((im) => im.preview);
+    return () => previews.forEach((p) => URL.revokeObjectURL(p));
+  }, [images]);
+
+  const removeImage = useCallback((preview: string) => {
+    URL.revokeObjectURL(preview);
+    setImages((prev) => prev.filter((im) => im.preview !== preview));
+  }, []);
+
   const addImage = useCallback(async (file: File) => {
     if (images.length >= MAX_IMAGES) return;
     const preview = URL.createObjectURL(file);
@@ -84,6 +94,7 @@ export default function NewIssuePage() {
       setImages((prev) => prev.map((im) => (im.preview === preview ? { ...im, url: res.url, uploading: false } : im)));
     } catch (e) {
       showError(e, { title: "Image upload failed" });
+      URL.revokeObjectURL(preview);
       setImages((prev) => prev.filter((im) => im.preview !== preview));
     }
   }, [images.length, showError]);
@@ -325,7 +336,7 @@ export default function NewIssuePage() {
 
         <aside className="card mt-2.5 flex flex-col gap-4" style={{ boxShadow: "none", paddingTop: 18 }}>
           <p className="label mb-0">Photos</p>
-          {images.map((im, i) => (
+          {images.map((im) => (
             <div
               key={im.preview}
               className="relative flex items-center justify-center rounded-xl border border-silver bg-paper px-2 py-1.5"
@@ -345,7 +356,7 @@ export default function NewIssuePage() {
                 type="button"
                 aria-label="Remove image"
                 className="absolute right-1.5 top-1.5 flex h-[34px] w-[34px] items-center justify-center rounded-full bg-ink/80 text-white"
-                onClick={() => setImages((prev) => prev.filter((_, idx) => idx !== i))}
+                onClick={() => removeImage(im.preview)}
               >
                 <X className="h-3.5 w-3.5" aria-hidden />
               </button>
