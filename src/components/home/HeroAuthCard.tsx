@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useAuth, type SessionClaims } from "@/components/auth/AuthProvider";
 import { ensureReporterProvisioned } from "@/components/auth/provisionReporter";
 import { GoogleIcon } from "@/components/auth/ProviderButtons";
+import { LastUsedBadge } from "@/components/auth/LastUsedBadge";
+import { setLastAuthMethod } from "@/lib/lastAuthMethod";
 
 type HeroAuthCardProps = {
   /** Optional callback invoked with the session after a successful sign-in. */
@@ -27,6 +29,7 @@ export default function HeroAuthCard({ onSuccess }: HeroAuthCardProps = {}) {
       setBusy(true);
       try {
         const session = await login(email.trim(), password);
+        setLastAuthMethod("email");
         await onSuccess?.(session);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Sign in failed.");
@@ -43,6 +46,7 @@ export default function HeroAuthCard({ onSuccess }: HeroAuthCardProps = {}) {
     try {
       await loginWithGoogle();
       await ensureReporterProvisioned();
+      setLastAuthMethod("google");
       const session = await refreshClaims();
       await onSuccess?.(session);
     } catch (err) {
@@ -100,9 +104,12 @@ export default function HeroAuthCard({ onSuccess }: HeroAuthCardProps = {}) {
 
           {error && <p className="rounded-lg bg-[#fef2f2] px-3 py-2 text-sm text-[#c0392b]">{error}</p>}
 
-          <button type="submit" disabled={busy} className="btn btn-brand btn-lg w-full">
-            {busy ? "Signing in…" : "Sign in"}
-          </button>
+          <div className="relative">
+            <button type="submit" disabled={busy} className="btn btn-brand btn-lg w-full">
+              {busy ? "Signing in…" : "Sign in"}
+            </button>
+            <LastUsedBadge method="email" />
+          </div>
         </form>
       </div>
 
@@ -112,10 +119,13 @@ export default function HeroAuthCard({ onSuccess }: HeroAuthCardProps = {}) {
         <span className="h-px flex-1 bg-silver" aria-hidden />
       </div>
 
-      <button type="button" onClick={() => void submitGoogle()} disabled={busy} className="btn btn-secondary btn-lg mt-4 w-full">
-        <GoogleIcon />
-        Continue with Google
-      </button>
+      <div className="relative mt-4">
+        <button type="button" onClick={() => void submitGoogle()} disabled={busy} className="btn btn-secondary btn-lg w-full">
+          <GoogleIcon />
+          Continue with Google
+        </button>
+        <LastUsedBadge method="google" />
+      </div>
 
       <Link href="/signup" className="btn btn-ghost btn-lg mt-3 w-full">
         Create account

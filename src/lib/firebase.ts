@@ -4,7 +4,7 @@ import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
 import {
   getAuth,
   setPersistence,
-  browserSessionPersistence,
+  browserLocalPersistence,
   type Auth,
 } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
@@ -31,10 +31,9 @@ export function getApp(): FirebaseApp {
 export function getClientAuth(): Auth {
   if (!auth) {
     auth = getAuth(getApp());
-    // Per-tab sessions (sessionStorage): signing in as another user in a
-    // second tab must NOT hijack the session in this tab. The session still
-    // survives refreshes within the same tab.
-    void setPersistence(auth, browserSessionPersistence);
+    // Persistent sessions (localStorage): the user stays signed in across
+    // refreshes and browser restarts until they explicitly log out.
+    void setPersistence(auth, browserLocalPersistence);
   }
   return auth;
 }

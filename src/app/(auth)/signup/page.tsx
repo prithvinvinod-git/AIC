@@ -7,9 +7,11 @@ import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { getClientAuth } from "@/lib/firebase";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { GoogleIcon } from "@/components/auth/ProviderButtons";
+import { LastUsedBadge } from "@/components/auth/LastUsedBadge";
 import { ensureReporterProvisioned } from "@/components/auth/provisionReporter";
 import { api } from "@/lib/clientApi";
 import { capitalizeName } from "@/lib/format";
+import { setLastAuthMethod } from "@/lib/lastAuthMethod";
 import { COLLEGES, DEPARTMENTS_BY_COLLEGE, type College } from "@/lib/constants";
 
 export default function SignupPage() {
@@ -45,6 +47,7 @@ export default function SignupPage() {
           }),
         });
         await refreshClaims();
+        setLastAuthMethod("email");
         router.replace("/dashboard");
       } catch (err) {
         setError(err instanceof Error ? err.message : "Sign up failed.");
@@ -61,6 +64,7 @@ export default function SignupPage() {
     try {
       await loginWithGoogle();
       await ensureReporterProvisioned();
+      setLastAuthMethod("google");
       await refreshClaims();
       router.replace("/dashboard");
     } catch (err) {
@@ -179,10 +183,13 @@ export default function SignupPage() {
         <span className="h-px flex-1 bg-silver" aria-hidden />
       </div>
 
-      <button type="button" onClick={() => void submitGoogle()} disabled={busy} className="btn btn-secondary btn-lg mt-4 w-full">
-        <GoogleIcon />
-        Continue with Google
-      </button>
+      <div className="relative mt-4">
+        <button type="button" onClick={() => void submitGoogle()} disabled={busy} className="btn btn-secondary btn-lg w-full">
+          <GoogleIcon />
+          Continue with Google
+        </button>
+        <LastUsedBadge method="google" />
+      </div>
 
       <Link href="/login" className="btn btn-ghost btn-lg mt-3 w-full">
         Already registered? Sign in
