@@ -3,6 +3,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 
 import { useCallback, useEffect, useState } from "react";
+import { Trash2 } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { api, ApiError } from "@/lib/clientApi";
 import { Loading, EmptyState } from "@/components/ui/States";
@@ -113,6 +114,22 @@ function UsersTab() {
     [load]
   );
 
+  const deleteUser = useCallback(
+    async (u: AppUser) => {
+      if (!u.uid) return;
+      if (!window.confirm(`Delete ${u.name} (${u.email})? This removes their account and cannot be undone.`)) {
+        return;
+      }
+      try {
+        await api(`/api/admin/users?uid=${encodeURIComponent(u.uid)}`, { method: "DELETE" });
+        await load();
+      } catch (e) {
+        setError(e instanceof ApiError ? e.message : "Failed to delete user.");
+      }
+    },
+    [load]
+  );
+
   if (!users) return <Loading label="Loading users…" />;
 
   const visible = isFaculty
@@ -188,7 +205,7 @@ function UsersTab() {
               <th className="px-4 py-3">College</th>
               <th className="px-4 py-3">Department</th>
               <th className="px-4 py-3">Role</th>
-              <th className="px-4 py-3">Active</th>
+              <th className="px-4 py-3 text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -214,12 +231,21 @@ function UsersTab() {
                   </select>
                 </td>
                 <td className="px-4 py-3">
-                  <button
-                    className={`btn btn-sm ${u.isActive ? "btn-ghost" : "btn-primary"}`}
-                    onClick={() => void updateUser(u.uid || "", { isActive: !u.isActive })}
-                  >
-                    {u.isActive ? "Active" : "Disabled"}
-                  </button>
+                  <div className="flex items-center justify-end gap-2">
+                    <button
+                      className={`btn btn-sm ${u.isActive ? "btn-ghost" : "btn-primary"}`}
+                      onClick={() => void updateUser(u.uid || "", { isActive: !u.isActive })}
+                    >
+                      {u.isActive ? "Active" : "Disabled"}
+                    </button>
+                    <button
+                      className="btn btn-sm btn-ghost text-danger hover:bg-danger-soft"
+                      onClick={() => void deleteUser(u)}
+                      aria-label={`Delete ${u.name}`}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" aria-hidden /> Delete
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

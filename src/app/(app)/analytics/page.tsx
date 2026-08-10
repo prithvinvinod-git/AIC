@@ -73,11 +73,11 @@ export default function AnalyticsPage() {
   const categoryData = Object.entries(t.byCategory).map(([name, value]) => ({ name, value }));
 
   const kpis = [
-    { label: "Issues (window)", value: t.issues },
-    { label: "Still unresolved", value: t.open },
-    { label: "Resolved (all-time)", value: t.closed },
-    { label: "Avg resolution", value: `${t.avgResolutionHours}h` },
-    { label: "SLA compliance", value: `${t.slaCompliancePct}%` },
+    { label: "Issues (window)", value: t.issues, tone: "text-ink" },
+    { label: "Still unresolved", value: t.open, tone: "text-warning" },
+    { label: "Resolved (all-time)", value: t.closed, tone: "text-success" },
+    { label: "Avg resolution", value: `${t.avgResolutionHours}h`, tone: "text-ink" },
+    { label: "SLA compliance", value: `${t.slaCompliancePct}%`, tone: t.slaCompliancePct >= 90 ? "text-success" : "text-warning" },
   ];
 
   return (
@@ -104,7 +104,7 @@ export default function AnalyticsPage() {
         {kpis.map((k) => (
           <div key={k.label} className="kpi">
             <p className="text-xs font-medium uppercase tracking-wide text-slate">{k.label}</p>
-            <p className="mt-2 font-display text-3xl font-semibold text-ink">{k.value}</p>
+            <p className={`mt-2 font-display text-3xl font-semibold ${k.tone}`}>{k.value}</p>
           </div>
         ))}
       </div>

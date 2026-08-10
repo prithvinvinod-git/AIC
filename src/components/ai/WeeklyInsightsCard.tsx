@@ -60,7 +60,7 @@ export function WeeklyInsightsCard() {
   const periodLabel = `${format(new Date(insight.period.start), "MMM d")} – ${format(new Date(insight.period.end), "MMM d, yyyy")}`;
 
   const kpis = [
-    { label: "Reported", value: t.created, tone: "text-ink" },
+    { label: "Reported", value: t.created, tone: "text-danger" },
     { label: "Resolved", value: t.closed, tone: "text-success" },
     { label: "Still open", value: t.open, tone: "text-warning" },
     { label: "SLA compliance", value: `${t.slaCompliancePct}%`, tone: t.slaCompliancePct >= 90 ? "text-success" : "text-warning" },

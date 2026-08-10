@@ -18,12 +18,11 @@ import { format } from "date-fns";
 import type { WeeklyInsight } from "@/lib/ai/insights";
 
 const PIE_COLORS = [
-  "#d97757",
+  "#c1452e",
   "#1f1e1d",
-  "#b45309",
+  "#eab308",
   "#3e7d4b",
   "#7c3aed",
-  "#c1452e",
   "#5b7290",
   "#d9a05b",
   "#a8a29e",
@@ -98,9 +97,9 @@ export function WeeklyInsightsCharts({ insight }: { insight: WeeklyInsight }) {
                 <XAxis dataKey="day" tick={{ fontSize: 11 }} stroke="#a8a29e" tickFormatter={formatDay} />
                 <YAxis allowDecimals={false} tick={{ fontSize: 11 }} stroke="#a8a29e" />
                 <ChartTooltip labelFormatter={(label) => formatDay(String(label))} />
-                <Line type="monotone" dataKey="created" name="Reported" stroke="#d97757" strokeWidth={2} />
+                <Line type="monotone" dataKey="created" name="Reported" stroke="#c1452e" strokeWidth={2} />
                 <Line type="monotone" dataKey="closed" name="Resolved" stroke="#3e7d4b" strokeWidth={2} />
-                <Line type="monotone" dataKey="unresolved" name="Still open" stroke="#b45309" strokeWidth={2} strokeDasharray="5 3" />
+                <Line type="monotone" dataKey="unresolved" name="Still open" stroke="#eab308" strokeWidth={2} strokeDasharray="5 3" />
               </LineChart>
             </ResponsiveContainer>
           ) : (
@@ -121,7 +120,7 @@ export function WeeklyInsightsCharts({ insight }: { insight: WeeklyInsight }) {
                 <ChartTooltip
                   formatter={(value, name) => [`${value ?? 0} issue${value === 1 ? "" : "s"}`, name]}
                 />
-                <Bar dataKey="value" name="Issues" fill="#d97757" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="value" name="Issues" fill="#c1452e" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (

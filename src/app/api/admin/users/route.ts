@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { adminDb } from "@/lib/firebaseAdmin";
+import { adminAuth, adminDb } from "@/lib/firebaseAdmin";
 import { requireAdmin } from "@/lib/auth";
 import { json, handleError } from "@/lib/api";
 
@@ -48,6 +48,35 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       })
       .sort((a, b) => createdTimeMs(a.createdAt) - createdTimeMs(b.createdAt));
     return json({ users });
+  } catch (e) {
+    return handleError(e);
+  }
+}
+
+/** DELETE /api/admin/users?uid=… — permanently remove a user (admin only).
+ *  Removes the Auth account, the users/ doc and their notification feed. */
+export async function DELETE(req: NextRequest): Promise<NextResponse> {
+  try {
+    const admin = await requireAdmin(req);
+    const uid = req.nextUrl.searchParams.get("uid");
+    if (!uid) return json({ error: "uid is required." }, 400);
+    if (uid === admin.uid) return json({ error: "You cannot delete your own account." }, 400);
+
+    const doc = await db.doc(`users/${uid}`).get();
+    if (!doc.exists) return json({ error: "User not found." }, 404);
+
+    await Promise.all([
+      adminAuth().deleteUser(uid),
+      db.doc(`users/${uid}`).delete(),
+      db
+        .collection(`notifications/${uid}/items`)
+        .get()
+        .then((snap) =>
+          Promise.all(snap.docs.map((d) => d.ref.delete().catch(() => undefined)))
+        ),
+    ]);
+
+    return json({ ok: true });
   } catch (e) {
     return handleError(e);
   }
