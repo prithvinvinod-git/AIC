@@ -50,7 +50,7 @@ export async function sendMail(input: MailInput): Promise<void> {
 
   try {
     await smtp.sendMail({
-      from: `"${process.env.EMAIL_FROM_NAME || "servox-phi"}" <${from}>`,
+      from: `"${process.env.EMAIL_FROM_NAME || "Servox Φ"}" <${from}>`,
       to: to.join(", "),
       subject: input.subject,
       html: input.html,
