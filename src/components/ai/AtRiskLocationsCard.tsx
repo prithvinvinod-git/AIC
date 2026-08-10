@@ -33,7 +33,7 @@ export function AtRiskLocationsCard() {
         </button>
       </div>
       
-      {error && <p className="mt-2 text-sm text-[#c0392b]">{error}</p>}
+      {error && <p className="mt-2 text-sm text-danger">{error}</p>}
       
       {result && result.locations.length > 0 ? (
         <div className="mt-3 space-y-2">
@@ -41,10 +41,10 @@ export function AtRiskLocationsCard() {
             {result.locations.map((loc, i) => {
               const riskTone =
                 loc.risk === "High"
-                  ? "bg-[#fee2e2] text-[#b91c1c]"
+                  ? "bg-danger-soft text-danger"
                   : loc.risk === "Medium"
-                    ? "bg-[#fffbeb] text-[#d97706]"
-                    : "bg-[#ecfdf5] text-[#2e7d32]";
+                    ? "bg-warning-soft text-warning"
+                    : "bg-success-soft text-success";
               return (
                 <div key={i} className="flex items-start gap-3 py-2 border-b border-silver last:border-0">
                   <span className={`mt-0.5 shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${riskTone}`}>

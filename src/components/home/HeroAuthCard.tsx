@@ -102,7 +102,7 @@ export default function HeroAuthCard({ onSuccess }: HeroAuthCardProps = {}) {
             />
           </div>
 
-          {error && <p className="rounded-lg bg-[#fef2f2] px-3 py-2 text-sm text-[#c0392b]">{error}</p>}
+          {error && <p className="rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger">{error}</p>}
 
           <div className="relative">
             <button type="submit" disabled={busy} className="btn btn-brand btn-lg w-full">

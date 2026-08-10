@@ -66,7 +66,7 @@ export default function NotificationBell() {
       >
         <Bell className="h-[21px] w-[21px]" aria-hidden />
         {unread > 0 && (
-          <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center whitespace-nowrap rounded-full bg-[#c0392b] px-1 text-[10px] font-semibold leading-none text-white ring-2 ring-white">
+          <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center whitespace-nowrap rounded-full bg-danger px-1 text-[10px] font-semibold leading-none text-white ring-2 ring-white">
             {unread > 9 ? "9+" : unread}
           </span>
         )}
@@ -82,7 +82,7 @@ export default function NotificationBell() {
             <button
               type="button"
               onClick={() => void markAllRead()}
-              className="inline-flex items-center gap-1 text-xs font-medium text-[#2563eb] transition-colors hover:underline"
+              className="inline-flex items-center gap-1 text-xs font-medium text-accent transition-colors hover:underline"
             >
               <CheckCheck className="h-3.5 w-3.5" aria-hidden />
               Mark all read
@@ -114,7 +114,7 @@ export default function NotificationBell() {
                       <span className="block truncate text-xs text-slate">{n.body}</span>
                       <span className="mt-0.5 block text-[11px] text-slate/70">{timeAgo(n.at)}</span>
                     </span>
-                    {!n.isRead && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-[#2563eb]" />}
+                    {!n.isRead && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-accent" />}
                   </button>
                 );
               })
@@ -126,7 +126,7 @@ export default function NotificationBell() {
               href="/notifications"
               role="menuitem"
               onClick={() => setOpen(false)}
-              className="block rounded-xl px-3 py-2.5 text-center text-sm font-medium text-[#2563eb] transition-colors hover:bg-paper"
+              className="block rounded-xl px-3 py-2.5 text-center text-sm font-medium text-accent transition-colors hover:bg-paper"
             >
               View all
             </Link>

@@ -27,14 +27,14 @@ export function AISuggestionCard({ issue, onTriaged }: { issue: Issue; onTriaged
       <div className="card">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <Sparkles className="h-16 w-16 text-action-blue" aria-hidden />
+            <Sparkles className="h-16 w-16 text-accent" aria-hidden />
             <p className="font-medium text-graphite">AI triage</p>
           </div>
           <button onClick={() => void runTriage()} disabled={running} className="btn btn-ghost btn-sm">
             {running ? "Running…" : "Run triage"}
           </button>
         </div>
-        {error && <p className="mt-2 text-sm text-[#c0392b]">{error}</p>}
+        {error && <p className="mt-2 text-sm text-danger">{error}</p>}
       </div>
     );
   }
@@ -42,12 +42,12 @@ export function AISuggestionCard({ issue, onTriaged }: { issue: Issue; onTriaged
   return (
     <div className="card">
       <div className="flex items-center gap-2">
-        <Sparkles className="h-16 w-16 text-action-blue" aria-hidden />
+        <Sparkles className="h-16 w-16 text-accent" aria-hidden />
         <p className="font-medium text-graphite">AI suggestion</p>
       </div>
 
       {suggestion.isSpam && (
-        <div className="mt-3 rounded-lg bg-[#fef2f2] px-3 py-2.5 text-sm text-[#be123c]">
+        <div className="mt-3 rounded-lg bg-danger-soft px-3 py-2.5 text-sm text-danger">
           <p className="font-medium">Likely spam</p>
           {suggestion.spamReasons && suggestion.spamReasons.length > 0 && (
             <p className="mt-0.5 text-xs opacity-90">{suggestion.spamReasons.join(" · ")}</p>
@@ -77,7 +77,7 @@ export function AISuggestionCard({ issue, onTriaged }: { issue: Issue; onTriaged
         {suggestion.duplicateOf && (
           <div className="col-span-2">
             <dt className="text-xs uppercase tracking-wide text-slate">Possible duplicate</dt>
-            <dd className="mt-0.5 font-medium text-[#d97706]">
+            <dd className="mt-0.5 font-medium text-warning">
               Matches {suggestion.duplicateIssueNo || suggestion.duplicateOf} ({(suggestion.matchScore ?? 0) * 100}%)
             </dd>
           </div>
@@ -87,7 +87,7 @@ export function AISuggestionCard({ issue, onTriaged }: { issue: Issue; onTriaged
       {suggestion.safetyFlags && suggestion.safetyFlags.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-2">
           {suggestion.safetyFlags.map((f) => (
-            <span key={f} className="tag bg-[#fef2f2] text-[#c0392b]">
+            <span key={f} className="tag bg-danger-soft text-danger">
               {f}
             </span>
           ))}

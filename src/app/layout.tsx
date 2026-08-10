@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Poppins } from "next/font/google";
+import { Fraunces, Inter } from "next/font/google";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { ToastProvider } from "@/components/ui/Toast";
 import "./globals.css";
@@ -10,9 +10,8 @@ const inter = Inter({
   display: "swap",
 });
 
-const poppins = Poppins({
+const fraunces = Fraunces({
   variable: "--font-display",
-  weight: ["500", "600"],
   subsets: ["latin"],
   display: "swap",
 });
@@ -28,7 +27,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       data-scroll-behavior="smooth"
-      className={`${inter.variable} ${poppins.variable} h-full antialiased`}
+      className={`${inter.variable} ${fraunces.variable} h-full antialiased`}
     >
       <body className="min-h-full">
         <ToastProvider>

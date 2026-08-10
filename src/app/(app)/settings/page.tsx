@@ -124,8 +124,8 @@ export default function SettingsPage() {
           </button>
         </div>
 
-        {error && <p className="mt-4 rounded-lg bg-[#fef2f2] px-3 py-2 text-sm text-[#c0392b]">{error}</p>}
-        {notice && <p className="mt-4 rounded-lg bg-[#ecfdf5] px-3 py-2 text-sm text-[#047857]">{notice}</p>}
+        {error && <p className="mt-4 rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger">{error}</p>}
+        {notice && <p className="mt-4 rounded-lg bg-success-soft px-3 py-2 text-sm text-success">{notice}</p>}
       </div>
     </div>
   );

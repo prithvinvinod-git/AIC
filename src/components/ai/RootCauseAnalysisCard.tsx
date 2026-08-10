@@ -33,7 +33,7 @@ export function RootCauseAnalysisCard() {
         </button>
       </div>
       
-      {error && <p className="mt-2 text-sm text-[#c0392b]">{error}</p>}
+      {error && <p className="mt-2 text-sm text-danger">{error}</p>}
       
       {result && (
         <div className="mt-3 space-y-2">

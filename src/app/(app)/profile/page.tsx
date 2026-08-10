@@ -199,8 +199,8 @@ export default function ProfilePage() {
             Role and email are managed by your administrator and can&apos;t be changed here.
           </p>
 
-          {error && <p className="rounded-lg bg-[#fef2f2] px-3 py-2 text-sm text-[#c0392b]">{error}</p>}
-          {notice && <p className="rounded-lg bg-[#ecfdf5] px-3 py-2 text-sm text-[#047857]">{notice}</p>}
+          {error && <p className="rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger">{error}</p>}
+          {notice && <p className="rounded-lg bg-success-soft px-3 py-2 text-sm text-success">{notice}</p>}
 
           <div className="flex justify-end">
             <button type="submit" disabled={busy} className="btn btn-primary">

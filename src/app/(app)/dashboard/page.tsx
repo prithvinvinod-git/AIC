@@ -32,9 +32,9 @@ export default function DashboardPage() {
   const resolved = issues.filter((i) => ["VERIFIED", "CLOSED"].includes(i.status)).length;
 
   const kpis = [
-    { label: "Open", value: open, icon: TriangleAlert, tone: "text-[#c0392b]" },
-    { label: "In progress", value: ongoing, icon: Clock, tone: "text-[#f59e0b]" },
-    { label: "Resolved", value: resolved, icon: CircleCheck, tone: "text-[#16a34a]" },
+    { label: "Open", value: open, icon: TriangleAlert, tone: "text-danger" },
+    { label: "In progress", value: ongoing, icon: Clock, tone: "text-warning" },
+    { label: "Resolved", value: resolved, icon: CircleCheck, tone: "text-success" },
   ];
 
   return (

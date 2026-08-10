@@ -8,12 +8,12 @@ const STEPS = [
 
 export default function FeatureSection() {
   return (
-    <section id="how-it-works" className="mx-auto w-full max-w-[1200px] scroll-mt-24 px-4 py-12 sm:px-6">
+    <section id="how-it-works" className="mx-auto w-full max-w-page scroll-mt-24 px-4 py-12 sm:px-6">
       <h2 className="font-display text-2xl font-semibold text-ink">How it works</h2>
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {STEPS.map((s) => (
           <div key={s.n} className="card">
-            <p className="font-display text-sm font-semibold text-action-blue">{s.n}</p>
+            <p className="font-display text-sm font-semibold text-accent">{s.n}</p>
             <h3 className="mt-2 font-medium text-graphite">{s.t}</h3>
             <p className="mt-1 text-xs leading-relaxed text-slate">{s.d}</p>
           </div>

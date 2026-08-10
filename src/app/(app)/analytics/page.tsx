@@ -114,13 +114,13 @@ export default function AnalyticsPage() {
         <div className="mt-4 h-64">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data.summary.trend}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="day" tick={{ fontSize: 11 }} stroke="#898989" />
-              <YAxis allowDecimals={false} tick={{ fontSize: 11 }} stroke="#898989" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#e6e2d8" />
+              <XAxis dataKey="day" tick={{ fontSize: 11 }} stroke="#a8a29e" />
+              <YAxis allowDecimals={false} tick={{ fontSize: 11 }} stroke="#a8a29e" />
               <Tooltip />
-              <Line type="monotone" dataKey="created" name="Created" stroke="#101010" strokeWidth={2} />
-              <Line type="monotone" dataKey="closed" name="Resolved" stroke="#0099ff" strokeWidth={2} />
-              <Line type="monotone" dataKey="unresolved" name="Still unresolved" stroke="#f59e0b" strokeWidth={2} strokeDasharray="5 3" />
+              <Line type="monotone" dataKey="created" name="Created" stroke="#1f1e1d" strokeWidth={2} />
+              <Line type="monotone" dataKey="closed" name="Resolved" stroke="#d97757" strokeWidth={2} />
+              <Line type="monotone" dataKey="unresolved" name="Still unresolved" stroke="#b45309" strokeWidth={2} strokeDasharray="5 3" />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -134,11 +134,11 @@ export default function AnalyticsPage() {
           <div className="mt-4 h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={statusData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="name" tick={{ fontSize: 11 }} stroke="#898989" />
-                <YAxis allowDecimals={false} tick={{ fontSize: 11 }} stroke="#898989" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e6e2d8" />
+                <XAxis dataKey="name" tick={{ fontSize: 11 }} stroke="#a8a29e" />
+                <YAxis allowDecimals={false} tick={{ fontSize: 11 }} stroke="#a8a29e" />
                 <Tooltip />
-                <Bar dataKey="value" name="Issues" fill="#0099ff" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="value" name="Issues" fill="#d97757" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -148,11 +148,11 @@ export default function AnalyticsPage() {
           <div className="mt-4 h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={categoryData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="name" tick={{ fontSize: 11 }} stroke="#898989" />
-                <YAxis allowDecimals={false} tick={{ fontSize: 11 }} stroke="#898989" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e6e2d8" />
+                <XAxis dataKey="name" tick={{ fontSize: 11 }} stroke="#a8a29e" />
+                <YAxis allowDecimals={false} tick={{ fontSize: 11 }} stroke="#a8a29e" />
                 <Tooltip />
-                <Bar dataKey="value" name="Issues" fill="#101010" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="value" name="Issues" fill="#1f1e1d" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

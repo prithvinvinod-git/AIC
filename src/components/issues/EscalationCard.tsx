@@ -109,7 +109,7 @@ export function EscalationCard({
         <button className="btn btn-ghost btn-sm" disabled={busy} onClick={() => setRejectOpen((v) => !v)}>
           Reject escalation
         </button>
-        {error && <p className="text-sm text-[#c0392b]">{error}</p>}
+        {error && <p className="text-sm text-danger">{error}</p>}
       </div>
       {rejectOpen && (
         <form

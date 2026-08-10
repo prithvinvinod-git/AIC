@@ -106,12 +106,12 @@ export function AssignCard({ issue, onRefresh }: { issue: Issue; onRefresh: () =
             ))}
           </select>
           <button className="btn btn-ghost btn-sm" onClick={() => void suggest()} disabled={suggesting}>
-            <Sparkles className="h-3.5 w-3.5 text-action-blue" aria-hidden />
+            <Sparkles className="h-3.5 w-3.5 text-accent" aria-hidden />
             {suggesting ? "Suggesting…" : "AI suggest"}
           </button>
         </div>
         {teamsError && (
-          <p className="flex items-center gap-2 text-xs text-[#c0392b]">
+          <p className="flex items-center gap-2 text-xs text-danger">
             {teamsError}
             <button className="link-blue" onClick={() => void loadTeams()}>
               Retry
@@ -142,7 +142,7 @@ export function AssignCard({ issue, onRefresh }: { issue: Issue; onRefresh: () =
           </div>
         )}
         {selectedTeam && selectedTeam.members.length === 0 && (
-          <p className="text-xs text-[#d97706]">This team has no members — add staff to the team in Admin.</p>
+          <p className="text-xs text-warning">This team has no members — add staff to the team in Admin.</p>
         )}
 
         <div className="flex items-center gap-2">
@@ -158,7 +158,7 @@ export function AssignCard({ issue, onRefresh }: { issue: Issue; onRefresh: () =
           ) : (
             <span className="text-xs text-slate">Select at least one staff member.</span>
           )}
-          {error && <span className="text-xs text-[#c0392b]">{error}</span>}
+          {error && <span className="text-xs text-danger">{error}</span>}
         </div>
       </div>
     </div>
@@ -249,7 +249,7 @@ export function VerifyCard({ issue, onRefresh }: { issue: Issue; onRefresh: () =
             </button>
           </div>
         </div>
-        {error && <p className="text-sm text-[#c0392b]">{error}</p>}
+        {error && <p className="text-sm text-danger">{error}</p>}
       </div>
     </div>
   );

@@ -44,9 +44,9 @@ export function IssueCard({ issue, onClose }: { issue: Issue; onClose?: () => vo
             <span
               className={
                 deadline.tone === "over"
-                  ? "font-medium text-[#c0392b]"
+                  ? "font-medium text-danger"
                   : deadline.tone === "warn"
-                    ? "font-medium text-[#d97706]"
+                    ? "font-medium text-warning"
                     : "text-slate"
               }
             >

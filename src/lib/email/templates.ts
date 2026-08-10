@@ -4,14 +4,25 @@ import { PRIORITY_LABEL } from "../constants";
 import type { Issue } from "../types";
 
 const FONT = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+const SERIF = "Georgia, 'Times New Roman', serif";
 
-const ACCENT = "#10a37f";
-const BG_OUTER = "#1e1e21";
-const BG_CARD = "#2f2f37";
-const BG_PANEL = "#26262e";
-const BORDER = "#44444f";
-const TEXT = "#e6e6ec";
-const MUTED = "#9a9aa8";
+/* Warm "Claude" palette — mirrors src/app/globals.css */
+const INK = "#1f1e1d";
+const ACCENT = "#d97757";
+const ACCENT_STRONG = "#ff6b4a";
+const BG_OUTER = "#faf9f5";
+const CARD = "#ffffff";
+const PANEL = "#faf9f5";
+const BORDER = "#e6e2d8";
+const BORDER_SOFT = "#f0eee6";
+const TEXT = "#403c37";
+const MUTED = "#78716c";
+const FAINT = "#a8a29e";
+const DANGER = "#c1452e";
+const DANGER_SOFT = "#f9eae4";
+const WARN = "#b45309";
+const WARN_SOFT = "#faefdd";
+const OK = "#3e7d4b";
 
 export function appUrl(): string {
   return (process.env.APP_URL || "https://servox-phi.vercel.app").replace(/\/+$/, "");
@@ -67,23 +78,27 @@ function remaining(deadlineIso: string): { text: string; tone: "danger" | "warn"
 }
 
 const TONE_COLOR: Record<"danger" | "warn" | "ok", string> = {
-  danger: "#f87171",
-  warn: "#fbbf24",
-  ok: "#34d399",
+  danger: DANGER,
+  warn: WARN,
+  ok: OK,
 };
 
 function severityBadge(priority: number): string {
   const urgent = priority > 0 && priority <= 2;
   const spec = urgent
-    ? { text: "#f87171", bg: "rgba(248,113,113,0.16)", border: "rgba(248,113,113,0.5)" }
+    ? { text: DANGER, bg: DANGER_SOFT, border: "#eccfc6" }
     : priority === 3
-      ? { text: "#93c5fd", bg: "rgba(96,165,250,0.16)", border: "rgba(96,165,250,0.5)" }
-      : { text: "#b6b6c4", bg: "rgba(156,163,175,0.14)", border: "rgba(156,163,175,0.4)" };
+      ? { text: WARN, bg: WARN_SOFT, border: "#ecd9bd" }
+      : { text: FAINT, bg: BORDER_SOFT, border: BORDER };
   return `<span style="display:inline-block;padding:5px 14px;border-radius:9999px;font-size:12px;font-weight:700;letter-spacing:0.3px;color:${spec.text};background:${spec.bg};border:1px solid ${spec.border};">${urgent ? "CRITICAL · " : ""}P${priority || "–"} ${esc(PRIORITY_LABEL[priority] || "Unrated")}</span>`;
 }
 
+function heading(text: string): string {
+  return `<h1 style="margin:0 0 10px;font-family:${SERIF};font-size:22px;font-weight:700;color:${INK};line-height:1.25;letter-spacing:-0.3px;">${esc(text)}</h1>`;
+}
+
 function cta(href: string, label: string): string {
-  return `<p style="margin:28px 0 8px;"><a href="${href}" style="display:inline-block;background:${ACCENT};color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;padding:13px 28px;border-radius:9999px;box-shadow:0 6px 18px rgba(16,163,127,0.35);">${esc(label)}</a></p>`;
+  return `<p style="margin:28px 0 8px;"><a href="${href}" style="display:inline-block;background:${ACCENT};color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;padding:13px 28px;border-radius:9999px;box-shadow:0 6px 18px rgba(217,119,87,0.28);">${esc(label)}</a></p>`;
 }
 
 function shell(body: string): string {
@@ -94,9 +109,12 @@ function shell(body: string): string {
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${BG_OUTER};padding:32px 12px;">
     <tr>
       <td align="center">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:${BG_CARD};border-radius:20px;overflow:hidden;border:1px solid ${BORDER};box-shadow:0 12px 40px rgba(0,0,0,0.5);">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:${CARD};border-radius:18px;overflow:hidden;border:1px solid ${BORDER};box-shadow:0 12px 40px rgba(41,38,27,0.08);">
           <tr>
-            <td style="padding:26px 32px;border-bottom:1px solid ${BORDER};">
+            <td style="height:4px;font-size:0;line-height:0;background:linear-gradient(90deg, ${ACCENT_STRONG}, ${ACCENT});"></td>
+          </tr>
+          <tr>
+            <td style="padding:26px 32px;border-bottom:1px solid ${BORDER_SOFT};">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td style="vertical-align:middle;">
@@ -106,7 +124,7 @@ function shell(body: string): string {
                           <span style="display:inline-block;width:34px;height:34px;border-radius:10px;background:${ACCENT};color:#ffffff;font-family:${FONT};font-size:16px;font-weight:700;text-align:center;line-height:34px;">SP</span>
                         </td>
                         <td style="vertical-align:middle;">
-                          <span style="font-family:${FONT};font-size:20px;font-weight:800;color:#ffffff;">servox-phi</span>
+                          <span style="font-family:${SERIF};font-size:20px;font-weight:700;color:${INK};">servox-phi</span>
                           <span style="font-family:${FONT};font-size:12px;font-weight:700;color:${ACCENT};text-transform:uppercase;letter-spacing:1.5px;margin-left:10px;">Maintenance</span>
                         </td>
                       </tr>
@@ -117,11 +135,11 @@ function shell(body: string): string {
             </td>
           </tr>
           <tr>
-            <td style="padding:34px 32px;font-family:${FONT};color:${TEXT};font-size:14px;line-height:1.65;">${body}</td>
+            <td style="padding:32px 32px;font-family:${FONT};color:${TEXT};font-size:15px;line-height:1.6;">${body}</td>
           </tr>
           <tr>
-            <td style="padding:22px 32px;background:${BG_PANEL};border-top:1px solid ${BORDER};">
-              <p style="margin:0;font-family:${FONT};font-size:12px;color:${MUTED};">This is an automated notification from servox-phi. Please do not reply to this email.</p>
+            <td style="padding:20px 32px;background:${BORDER_SOFT};border-top:1px solid ${BORDER};">
+              <p style="margin:0;font-family:${FONT};font-size:12px;color:${FAINT};">This is an automated notification from servox-phi. Please do not reply to this email.</p>
             </td>
           </tr>
         </table>
@@ -134,7 +152,7 @@ function shell(body: string): string {
 
 function issueMeta(issue: Issue): string {
   return `
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${BG_PANEL};border:1px solid ${BORDER};border-radius:14px;margin:18px 0;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${PANEL};border:1px solid ${BORDER};border-radius:12px;margin:18px 0;overflow:hidden;">
     ${[
       ["Issue", `${issue.issueNo}`],
       ["Department", issue.department],
@@ -144,7 +162,7 @@ function issueMeta(issue: Issue): string {
     ]
       .map(
         ([k, v]) =>
-          `<tr><td style="padding:11px 16px;border-bottom:1px solid ${BORDER};font-size:12px;color:${MUTED};width:110px;vertical-align:top;font-weight:600;">${k}</td><td style="padding:11px 16px;border-bottom:1px solid ${BORDER};font-size:13px;color:${TEXT};">${esc(v)}</td></tr>`
+          `<tr><td style="padding:10px 16px;border-bottom:1px solid ${BORDER_SOFT};font-size:11px;color:${FAINT};width:110px;vertical-align:top;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;">${k}</td><td style="padding:10px 16px;border-bottom:1px solid ${BORDER_SOFT};font-size:13px;color:${TEXT};">${esc(v)}</td></tr>`
       )
       .join("")}
   </table>`;
@@ -156,10 +174,10 @@ export function reportedTemplate(issue: Issue, priority: number): { html: string
     ? `Critical issue reported — ${issue.issueNo}`
     : `New issue reported — ${issue.issueNo}`;
   const body = `
-    <h1 style="margin:0 0 10px;font-size:20px;color:#ffffff;line-height:1.3;">${headline}</h1>
+    ${heading(headline)}
     <p style="margin:0 0 18px;color:${MUTED};">${esc(issue.title)}</p>
     ${severityBadge(priority)}
-    <p style="margin:20px 0 4px;color:${TEXT};font-size:15px;"><strong>${esc(issue.title)}</strong></p>
+    <p style="margin:20px 0 4px;color:${TEXT};font-size:16px;"><strong>${esc(issue.title)}</strong></p>
     <p style="margin:0 0 18px;color:${MUTED};">${esc(issue.description)}</p>
     ${issueMeta(issue)}
     ${cta(issueLink(issue), "Track this issue")}
@@ -170,7 +188,7 @@ export function reportedTemplate(issue: Issue, priority: number): { html: string
 
 export function approvedTemplate(issue: Issue): { html: string; text: string } {
   const body = `
-    <h1 style="margin:0 0 10px;font-size:20px;color:#ffffff;line-height:1.3;">Issue approved — ${esc(issue.issueNo)}</h1>
+    ${heading(`Issue approved — ${issue.issueNo}`)}
     <p style="margin:0 0 18px;color:${MUTED};">${esc(issue.title)} has been approved and is being routed to maintenance.</p>
     ${severityBadge(issue.priority)}
     ${issueMeta(issue)}
@@ -192,9 +210,9 @@ function slaCard(issue: Issue): string {
   const calHref = calendarLink(issue, sla.resolutionDeadline);
 
   return `
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${BG_PANEL};border:1px solid ${BORDER};border-radius:14px;margin:18px 0;border-left:4px solid ${barColor};">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${PANEL};border:1px solid ${BORDER};border-radius:12px;margin:18px 0;border-left:4px solid ${barColor};overflow:hidden;">
     <tr><td style="padding:18px;">
-      <p style="margin:0 0 10px;font-size:12px;font-weight:700;color:${MUTED};text-transform:uppercase;letter-spacing:0.5px;">SLA · P${priority} (${esc(PRIORITY_LABEL[priority] || "Unrated")})</p>
+      <p style="margin:0 0 10px;font-size:11px;font-weight:700;color:${MUTED};text-transform:uppercase;letter-spacing:0.6px;">SLA · P${priority} (${esc(PRIORITY_LABEL[priority] || "Unrated")})</p>
       ${sla.responseDeadline ? `<p style="margin:0 0 4px;font-size:13px;color:${TEXT};"><strong>Respond by</strong> ${fmt(sla.responseDeadline)} — <span style="color:${TONE_COLOR[response?.tone || "ok"]};font-weight:700;">${response?.text}</span></p>` : ""}
       ${sla.resolutionDeadline ? `<p style="margin:0;font-size:13px;color:${TEXT};"><strong>Resolve by</strong> ${fmt(sla.resolutionDeadline)} — <span style="color:${TONE_COLOR[resolution?.tone || "ok"]};font-weight:700;">${resolution?.text}</span></p>` : ""}
       <p style="margin:14px 0 0;"><a href="${calHref}" style="font-size:12px;font-weight:700;color:${ACCENT};text-decoration:underline;">Add to calendar</a></p>
@@ -206,8 +224,8 @@ export function jobAssignmentTemplate(issue: Issue): { html: string; text: strin
   const urgent = issue.priority > 0 && issue.priority <= 2;
   const headline = urgent ? `URGENT job assigned — ${issue.issueNo}` : `New job assigned — ${issue.issueNo}`;
   const body = `
-    <h1 style="margin:0 0 10px;font-size:20px;color:#ffffff;line-height:1.3;">${headline}</h1>
-    <p style="margin:0 0 4px;color:${TEXT};font-size:15px;"><strong>${esc(issue.title)}</strong></p>
+    ${heading(headline)}
+    <p style="margin:0 0 4px;color:${TEXT};font-size:16px;"><strong>${esc(issue.title)}</strong></p>
     <p style="margin:0 0 18px;color:${MUTED};">A maintenance job has been routed to your team.</p>
     ${severityBadge(issue.priority)}
     ${issueMeta(issue)}

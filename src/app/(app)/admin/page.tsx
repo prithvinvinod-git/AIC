@@ -121,7 +121,7 @@ function UsersTab() {
 
   return (
     <div className="flex flex-col gap-4">
-      {error && <p className="rounded-lg bg-[#fef2f2] px-3 py-2 text-sm text-[#c0392b]">{error}</p>}
+      {error && <p className="rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger">{error}</p>}
 
       <div className="flex flex-wrap gap-2">
         {USER_TABS.map((t) => (
@@ -285,7 +285,7 @@ function TeamsTab() {
 
   return (
     <div className="flex flex-col gap-4">
-      {error && <p className="rounded-lg bg-[#fef2f2] px-3 py-2 text-sm text-[#c0392b]">{error}</p>}
+      {error && <p className="rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger">{error}</p>}
 
       <form onSubmit={create} className="card flex flex-col gap-3">
         <div className="grid gap-3 sm:grid-cols-2">
@@ -345,7 +345,7 @@ function TeamsTab() {
                 <td className="px-4 py-3 text-slate">{t.categoryId}</td>
                 <td className="px-4 py-3 text-slate">{(t.members || []).length} staff</td>
                 <td className="px-4 py-3">
-                  <span className={`tag ${t.isActive ? "" : "bg-[#fef2f2] text-[#c0392b]"}`}>
+                  <span className={`tag ${t.isActive ? "" : "bg-danger-soft text-danger"}`}>
                     {t.isActive ? "Active" : "Inactive"}
                   </span>
                 </td>
@@ -403,7 +403,7 @@ function CategoriesTab() {
 
   return (
     <div className="flex flex-col gap-4">
-      {error && <p className="rounded-lg bg-[#fef2f2] px-3 py-2 text-sm text-[#c0392b]">{error}</p>}
+      {error && <p className="rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger">{error}</p>}
       <form onSubmit={create} className="card flex gap-3">
         <input className="input flex-1" placeholder="Category name (e.g. HVAC)" required value={name} onChange={(e) => setName(e.target.value)} />
         <button type="submit" className="btn btn-primary btn-sm">
@@ -427,7 +427,7 @@ function CategoriesTab() {
                 <td className="px-4 py-3 text-slate">{c.slaResponseHours}</td>
                 <td className="px-4 py-3 text-slate">{c.slaResolutionHours}</td>
                 <td className="px-4 py-3">
-                  <span className={`tag ${c.isActive ? "" : "bg-[#fef2f2] text-[#c0392b]"}`}>
+                  <span className={`tag ${c.isActive ? "" : "bg-danger-soft text-danger"}`}>
                     {c.isActive ? "Active" : "Inactive"}
                   </span>
                 </td>
@@ -488,7 +488,7 @@ function ConfigTab() {
 
   return (
     <form onSubmit={save} className="card flex max-w-xl flex-col gap-4">
-      {error && <p className="rounded-lg bg-[#fef2f2] px-3 py-2 text-sm text-[#c0392b]">{error}</p>}
+      {error && <p className="rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger">{error}</p>}
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="label" htmlFor="grace">
@@ -526,7 +526,7 @@ function ConfigTab() {
         />
         Enable AI assistance
       </label>
-      {saved && <p className="text-sm text-[#2e7d32]">Configuration saved.</p>}
+      {saved && <p className="text-sm text-success">Configuration saved.</p>}
       <div>
         <button type="submit" className="btn btn-primary btn-sm">
           Save configuration

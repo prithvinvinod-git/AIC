@@ -43,11 +43,11 @@ export default function Home() {
   return (
     <div className="flex min-h-full flex-col">
       <AppHeader />
-      <main className="mx-auto w-full max-w-[1200px] flex-1 px-4 sm:px-6">
+      <main className="mx-auto w-full max-w-page flex-1 px-4 sm:px-6">
         <DashboardHero />
 
         <section className="flex min-h-[100svh] flex-col gap-6 py-10 sm:py-14">
-          <p className="-mt-[10px] text-xs font-semibold uppercase tracking-widest text-action-blue">
+          <p className="-mt-[10px] text-xs font-semibold uppercase tracking-widest text-accent">
             Notice board
           </p>
           <div className="grid flex-1 grid-cols-1 items-stretch gap-6 lg:grid-cols-2">

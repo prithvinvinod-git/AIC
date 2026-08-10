@@ -130,7 +130,7 @@ export default function AnnouncementsPage() {
 
       <section className="card flex flex-col gap-4">
         <div className="flex items-center gap-2">
-          <Megaphone className="h-4 w-4 text-[#7c3aed]" aria-hidden />
+          <Megaphone className="h-4 w-4 text-violet" aria-hidden />
           <h2 className="font-display text-lg font-semibold text-ink">New announcement</h2>
         </div>
         <AnnouncementForm submitLabel="Publish" busy={publishing} onSubmit={publish} />
@@ -139,7 +139,7 @@ export default function AnnouncementsPage() {
       <section className="flex flex-col gap-4">
         <h2 className="font-display text-lg font-semibold text-ink">Live announcements</h2>
 
-        {loadError && <p className="rounded-lg bg-[#fef2f2] px-3 py-2 text-sm text-[#c0392b]">{loadError}</p>}
+        {loadError && <p className="rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger">{loadError}</p>}
         {items === null ? (
           <Loading label="Loading announcements…" />
         ) : items.length === 0 ? (
@@ -179,7 +179,7 @@ export default function AnnouncementsPage() {
                       </button>
                       <button
                         type="button"
-                        className="btn btn-ghost btn-sm text-[#c0392b]"
+                        className="btn btn-ghost btn-sm text-danger"
                         onClick={() => setDeleting(a)}
                       >
                         <Trash2 className="h-3.5 w-3.5" aria-hidden />

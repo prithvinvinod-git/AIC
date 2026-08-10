@@ -209,7 +209,7 @@ export default function NewIssuePage() {
               ))}
             </select>
             {categoriesError && (
-              <p className="mt-1 flex items-center gap-2 text-xs text-[#c0392b]">
+              <p className="mt-1 flex items-center gap-2 text-xs text-danger">
                 {categoriesError}
                 <button type="button" className="link-blue" onClick={() => void loadCategories()}>
                   Retry

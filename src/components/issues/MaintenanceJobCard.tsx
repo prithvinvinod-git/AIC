@@ -180,7 +180,7 @@ export function MaintenanceJobCard({
                 {readOnly ? (
                   <span
                     className={`flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full border-2 ${
-                      r.resolved ? "border-[#66bb6a] bg-[#66bb6a] text-white" : "border-slate bg-white"
+                      r.resolved ? "border-success bg-success text-white" : "border-slate bg-white"
                     }`}
                     aria-label={r.resolved ? "Resolved" : "Unresolved"}
                     title={r.resolved ? "Resolved" : "Unresolved"}
@@ -193,7 +193,7 @@ export function MaintenanceJobCard({
                     onClick={() => void toggleRequirement(r)}
                     className={`flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
                       r.resolved
-                        ? "border-[#66bb6a] bg-[#66bb6a] text-white"
+                        ? "border-success bg-success text-white"
                         : "border-slate bg-white hover:border-ink"
                     }`}
                     aria-label={r.resolved ? "Mark as unresolved" : "Mark as resolved"}
@@ -207,7 +207,7 @@ export function MaintenanceJobCard({
                   {r.needsApproval && (
                     <span
                       className={`ml-1 rounded px-1.5 py-0.5 text-[10px] font-medium ${
-                        r.resolved ? "bg-[#ecfdf5] text-[#2e7d32]" : "bg-[#fffbeb] text-[#d97706]"
+                        r.resolved ? "bg-success-soft text-success" : "bg-warning-soft text-warning"
                       }`}
                     >
                       approval
@@ -218,7 +218,7 @@ export function MaintenanceJobCard({
             ))}
           </ul>
           {unresolvedApproval > 0 && (
-            <p className="mt-2 text-xs text-[#d97706]">
+            <p className="mt-2 text-xs text-warning">
               Tick the box next to each approval-flagged item once it&apos;s been obtained, or add a waiver note
               in the closure report.
             </p>
@@ -247,7 +247,7 @@ export function MaintenanceJobCard({
             + Requirement
           </button>
           <button className="btn btn-ghost btn-sm" onClick={() => void draftRequirements()} disabled={drafting}>
-            <Sparkles className="h-3.5 w-3.5 text-action-blue" aria-hidden />
+            <Sparkles className="h-3.5 w-3.5 text-accent" aria-hidden />
             {drafting ? "Drafting…" : "AI draft"}
           </button>
         </div>
@@ -272,7 +272,7 @@ export function MaintenanceJobCard({
             onChange={(e) => setNote(e.target.value)}
           />
           {unresolvedApproval > 0 && (
-            <p className="text-xs text-[#d97706]">
+            <p className="text-xs text-warning">
               {unresolvedApproval} approval-flagged requirement(s) unresolved — you can still submit with a
               waiver note in the report.
             </p>
@@ -361,19 +361,19 @@ export function MaintenanceJobCard({
       )}
 
       {isBlocked && (
-        <p className="rounded-lg bg-[#fffbeb] px-3 py-2 text-xs text-[#d97706]">
+        <p className="rounded-lg bg-warning-soft px-3 py-2 text-xs text-warning">
           Blocked while awaiting parts or permissions. The department validator can reassign.
         </p>
       )}
 
       {issue.status === "COMPLETED" && (
-        <p className="rounded-lg bg-[#fffbeb] px-3 py-2 text-xs text-[#d97706]">
+        <p className="rounded-lg bg-warning-soft px-3 py-2 text-xs text-warning">
           Awaiting verification by the department validator.
         </p>
       )}
 
       {issue.status === "VERIFIED" && issue.verification && (
-        <div className="rounded-lg bg-[#ecfdf5] px-3 py-2 text-xs text-[#2e7d32]">
+        <div className="rounded-lg bg-success-soft px-3 py-2 text-xs text-success">
           <p className="font-medium">Verified by {issue.verification.verifiedBy.name}</p>
           {issue.verification.note && <p className="mt-1">{issue.verification.note}</p>}
           <p className="mt-1 text-slate">on {formatDateTime(issue.verification.verifiedAt)}</p>
@@ -381,12 +381,12 @@ export function MaintenanceJobCard({
       )}
 
       {issue.status === "PENDING" && issue.verification?.sendBackReason && (
-        <p className="rounded-lg bg-[#fee2e2] px-3 py-2 text-xs text-[#b91c1c]">
+        <p className="rounded-lg bg-danger-soft px-3 py-2 text-xs text-danger">
           Sent back: {issue.verification.sendBackReason}
         </p>
       )}
 
-      {error && <p className="text-sm text-[#c0392b]">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
     </div>
   );
 }

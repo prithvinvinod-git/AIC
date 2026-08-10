@@ -2,17 +2,17 @@ import type { IssueStatus } from "@/lib/types";
 import { PRIORITY_COLOR, PRIORITY_LABEL, STATUS_LABEL } from "@/lib/constants";
 
 const STATUS_TONE: Record<IssueStatus, string> = {
-  NEW: "bg-[#eff6fe] text-[#2563eb]",
-  VALIDATED: "bg-[#eff6fe] text-[#2563eb]",
-  ESCALATED: "bg-[#fffbeb] text-[#d97706]",
-  APPROVED: "bg-[#eff6fe] text-[#2563eb]",
-  ASSIGNED: "bg-[#eff6fe] text-[#2563eb]",
-  ONGOING: "bg-[#eff6fe] text-[#2563eb]",
-  PENDING: "bg-[#fffbeb] text-[#d97706]",
-  COMPLETED: "bg-[#ecfdf5] text-[#2e7d32]",
-  VERIFIED: "bg-[#ecfdf5] text-[#2e7d32]",
-  REJECTED: "bg-[#fef2f2] text-[#c0392b]",
-  CLOSED: "bg-[#ecfdf5] text-[#2e7d32]",
+  NEW: "bg-accent-soft text-accent",
+  VALIDATED: "bg-accent-soft text-accent",
+  ESCALATED: "bg-warning-soft text-warning",
+  APPROVED: "bg-accent-soft text-accent",
+  ASSIGNED: "bg-accent-soft text-accent",
+  ONGOING: "bg-accent-soft text-accent",
+  PENDING: "bg-warning-soft text-warning",
+  COMPLETED: "bg-success-soft text-success",
+  VERIFIED: "bg-success-soft text-success",
+  REJECTED: "bg-danger-soft text-danger",
+  CLOSED: "bg-success-soft text-success",
 };
 
 export function StatusBadge({ status }: { status: IssueStatus }) {

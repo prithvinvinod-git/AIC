@@ -18,10 +18,10 @@ import { STATUS_LABEL } from "@/lib/constants";
 import type { TimelineEntry } from "@/lib/types";
 
 const dotClass = (t: TimelineEntry): string => {
-  if (!t.from) return "bg-[#c0392b]";
-  if (t.to === "APPROVED") return "bg-[#f59e0b]";
-  if (t.to === "CLOSED") return "bg-[#16a34a]";
-  return t.isAuto ? "bg-action-blue" : "bg-ink";
+  if (!t.from) return "bg-danger";
+  if (t.to === "APPROVED") return "bg-warning";
+  if (t.to === "CLOSED") return "bg-success";
+  return t.isAuto ? "bg-accent" : "bg-ink";
 };
 
 export default function IssueDetailPage() {
@@ -88,9 +88,9 @@ export default function IssueDetailPage() {
           <div
             className={`kpi min-w-[160px] ${
               slaDeadline.tone === "over"
-                ? "!bg-[#fef2f2]"
+                ? "bg-danger-soft!"
                 : slaDeadline.tone === "warn"
-                  ? "!bg-[#fffbeb]"
+                  ? "bg-warning-soft!"
                   : ""
             }`}
           >
@@ -99,7 +99,7 @@ export default function IssueDetailPage() {
             </p>
             <p
               className={`mt-1.5 font-display text-lg font-semibold ${
-                slaDeadline.tone === "over" ? "text-[#c0392b]" : slaDeadline.tone === "warn" ? "text-[#d97706]" : "text-ink"
+                slaDeadline.tone === "over" ? "text-danger" : slaDeadline.tone === "warn" ? "text-warning" : "text-ink"
               }`}
             >
               {slaDeadline.text}
@@ -188,7 +188,7 @@ export default function IssueDetailPage() {
                       <span className="font-medium text-graphite">
                         {t.from ? STATUS_LABEL[t.from] : "Reported"} → {STATUS_LABEL[t.to]}
                       </span>
-                      {t.isAuto && <span className="ml-1 text-xs text-action-blue">auto</span>}
+                      {t.isAuto && <span className="ml-1 text-xs text-accent">auto</span>}
                     </p>
                     <p className="mt-0.5 text-xs text-slate">
                       {t.by?.name} · {formatDateTime(t.at)}
@@ -208,7 +208,7 @@ export default function IssueDetailPage() {
                   <Star
                     key={r}
                     className={`h-5 w-5 ${
-                      r <= issue.feedback!.rating ? "fill-[#f59e0b] text-[#f59e0b]" : "text-silver"
+                      r <= issue.feedback!.rating ? "fill-warning text-warning" : "text-silver"
                     }`}
                     aria-hidden
                   />

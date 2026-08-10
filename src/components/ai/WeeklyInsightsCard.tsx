@@ -39,7 +39,7 @@ export function WeeklyInsightsCard() {
   if (error) {
     return (
       <div className="card">
-        <p className="text-sm text-[#c0392b]">{error}</p>
+        <p className="text-sm text-danger">{error}</p>
       </div>
     );
   }
@@ -48,7 +48,7 @@ export function WeeklyInsightsCard() {
     return (
       <div className="card">
         <div className="flex items-center gap-2">
-          <TrendingUp className="h-4 w-4 text-action-blue" aria-hidden />
+          <TrendingUp className="h-4 w-4 text-accent" aria-hidden />
           <p className="font-medium text-graphite">Weekly insights</p>
         </div>
         <p className="mt-3 text-sm text-slate">Loading this week&apos;s governance picture…</p>
@@ -61,18 +61,18 @@ export function WeeklyInsightsCard() {
 
   const kpis = [
     { label: "Reported", value: t.created, tone: "text-ink" },
-    { label: "Resolved", value: t.closed, tone: "text-[#10b981]" },
-    { label: "Still open", value: t.open, tone: "text-[#f59e0b]" },
-    { label: "SLA compliance", value: `${t.slaCompliancePct}%`, tone: t.slaCompliancePct >= 90 ? "text-[#10b981]" : "text-[#d97706]" },
+    { label: "Resolved", value: t.closed, tone: "text-success" },
+    { label: "Still open", value: t.open, tone: "text-warning" },
+    { label: "SLA compliance", value: `${t.slaCompliancePct}%`, tone: t.slaCompliancePct >= 90 ? "text-success" : "text-warning" },
     { label: "Avg resolution", value: `${t.avgResolutionHours}h`, tone: "text-ink" },
-    { label: "SLA breaches", value: t.breached, tone: t.breached > 0 ? "text-[#ef4444]" : "text-[#10b981]" },
+    { label: "SLA breaches", value: t.breached, tone: t.breached > 0 ? "text-danger" : "text-success" },
   ];
 
   return (
     <div className="card">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <TrendingUp className="h-4 w-4 text-action-blue" aria-hidden />
+          <TrendingUp className="h-4 w-4 text-accent" aria-hidden />
           <div>
             <p className="font-medium text-graphite">Weekly insights</p>
             <p className="text-xs text-slate">{periodLabel}</p>
@@ -98,7 +98,7 @@ export function WeeklyInsightsCard() {
       </div>
 
       {t.breached > 0 && (
-        <div className="mt-4 flex items-start gap-2 rounded-lg bg-[#fef2f2] px-4 py-3 text-sm text-[#be123c]">
+        <div className="mt-4 flex items-start gap-2 rounded-lg bg-danger-soft px-4 py-3 text-sm text-danger">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
           <p>
             {t.breached} issue{t.breached === 1 ? "" : "s"} missed {t.breached === 1 ? "its" : "their"} resolution
@@ -117,7 +117,7 @@ export function WeeklyInsightsCard() {
               <ul className="mt-2 flex flex-col gap-1.5 text-sm text-slate">
                 {insight.topConcerns.map((c, i) => (
                   <li key={i} className="flex items-start gap-2">
-                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-action-blue" aria-hidden />
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden />
                     {c}
                   </li>
                 ))}
@@ -133,7 +133,7 @@ export function WeeklyInsightsCard() {
               <ul className="mt-2 flex flex-col gap-1.5 text-sm text-slate">
                 {insight.recommendations.map((r, i) => (
                   <li key={i} className="flex items-start gap-2">
-                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#10b981]" aria-hidden />
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden />
                     {r}
                   </li>
                 ))}
@@ -149,7 +149,7 @@ export function WeeklyInsightsCard() {
               {insight.slaBreaches.map((b, i) => (
                 <li
                   key={i}
-                  className={`flex items-start gap-2 ${b.toLowerCase().includes("no sla") ? "text-[#10b981]" : "text-[#d97706]"}`}
+                  className={`flex items-start gap-2 ${b.toLowerCase().includes("no sla") ? "text-success" : "text-warning"}`}
                 >
                   <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-current" aria-hidden />
                   {b}

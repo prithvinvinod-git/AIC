@@ -87,7 +87,7 @@ function ValidatePanel({ issue, onDone, onTriaged }: { issue: Issue; onDone: () 
           {busy === "reject" ? "Rejecting…" : "Reject"}
         </button>
       </div>
-      {error && <p className="text-sm text-[#c0392b]">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
     </div>
   );
 }

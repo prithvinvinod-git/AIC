@@ -23,7 +23,7 @@ export function EmptyState({ icon, title, body }: { icon?: ReactNode; title: str
 export function BoardErrorState({ message, onRetry }: { message?: string; onRetry?: () => void }) {
   return (
     <div className="card flex flex-col items-center justify-center gap-3 py-16 text-center">
-      <AlertCircle className="h-8 w-8 text-[#c0392b]" aria-hidden />
+      <AlertCircle className="h-8 w-8 text-danger" aria-hidden />
       <div>
         <p className="font-medium text-graphite">Couldn&apos;t load this board</p>
         <p className="mx-auto mt-1 max-w-sm text-sm text-slate">

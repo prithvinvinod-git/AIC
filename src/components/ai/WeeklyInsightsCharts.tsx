@@ -18,15 +18,15 @@ import { format } from "date-fns";
 import type { WeeklyInsight } from "@/lib/ai/insights";
 
 const PIE_COLORS = [
-  "#0099ff",
-  "#101010",
-  "#f59e0b",
-  "#10b981",
-  "#8b5cf6",
-  "#ef4444",
-  "#06b6d4",
-  "#f97316",
-  "#64748b",
+  "#d97757",
+  "#1f1e1d",
+  "#b45309",
+  "#3e7d4b",
+  "#7c3aed",
+  "#c1452e",
+  "#5b7290",
+  "#d9a05b",
+  "#a8a29e",
 ];
 
 function formatDay(iso: string): string {
@@ -94,13 +94,13 @@ export function WeeklyInsightsCharts({ insight }: { insight: WeeklyInsight }) {
           {insight.trend.some((d) => d.created > 0 || d.closed > 0 || d.unresolved > 0) ? (
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={insight.trend}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="day" tick={{ fontSize: 11 }} stroke="#898989" tickFormatter={formatDay} />
-                <YAxis allowDecimals={false} tick={{ fontSize: 11 }} stroke="#898989" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e6e2d8" />
+                <XAxis dataKey="day" tick={{ fontSize: 11 }} stroke="#a8a29e" tickFormatter={formatDay} />
+                <YAxis allowDecimals={false} tick={{ fontSize: 11 }} stroke="#a8a29e" />
                 <ChartTooltip labelFormatter={(label) => formatDay(String(label))} />
-                <Line type="monotone" dataKey="created" name="Reported" stroke="#0099ff" strokeWidth={2} />
-                <Line type="monotone" dataKey="closed" name="Resolved" stroke="#10b981" strokeWidth={2} />
-                <Line type="monotone" dataKey="unresolved" name="Still open" stroke="#f59e0b" strokeWidth={2} strokeDasharray="5 3" />
+                <Line type="monotone" dataKey="created" name="Reported" stroke="#d97757" strokeWidth={2} />
+                <Line type="monotone" dataKey="closed" name="Resolved" stroke="#3e7d4b" strokeWidth={2} />
+                <Line type="monotone" dataKey="unresolved" name="Still open" stroke="#b45309" strokeWidth={2} strokeDasharray="5 3" />
               </LineChart>
             </ResponsiveContainer>
           ) : (
@@ -115,13 +115,13 @@ export function WeeklyInsightsCharts({ insight }: { insight: WeeklyInsight }) {
           {insight.byPriority.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={insight.byPriority}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="name" tick={{ fontSize: 11 }} stroke="#898989" />
-                <YAxis allowDecimals={false} tick={{ fontSize: 11 }} stroke="#898989" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e6e2d8" />
+                <XAxis dataKey="name" tick={{ fontSize: 11 }} stroke="#a8a29e" />
+                <YAxis allowDecimals={false} tick={{ fontSize: 11 }} stroke="#a8a29e" />
                 <ChartTooltip
                   formatter={(value, name) => [`${value ?? 0} issue${value === 1 ? "" : "s"}`, name]}
                 />
-                <Bar dataKey="value" name="Issues" fill="#0099ff" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="value" name="Issues" fill="#d97757" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (

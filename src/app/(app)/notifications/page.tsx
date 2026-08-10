@@ -92,7 +92,7 @@ export default function NotificationsPage() {
                       if (n.link) router.push(n.link);
                     }}
                     className={`flex w-full items-start gap-3 px-4 py-3.5 text-left transition-colors hover:bg-paper ${
-                      !n.isRead ? "bg-[#f8fafc]" : ""
+                      !n.isRead ? "bg-paper" : ""
                     }`}
                   >
                     <span className={`mt-0.5 shrink-0 ${meta.iconClass}`}>
@@ -102,7 +102,7 @@ export default function NotificationsPage() {
                       <span className="flex items-center gap-2">
                         <span className="truncate text-sm font-medium text-graphite">{n.title}</span>
                         {!n.isRead && (
-                          <span className="h-2 w-2 shrink-0 rounded-full bg-[#2563eb]" aria-label="Unread" />
+                          <span className="h-2 w-2 shrink-0 rounded-full bg-accent" aria-label="Unread" />
                         )}
                       </span>
                       <span className="mt-0.5 block text-sm text-slate">{n.body}</span>

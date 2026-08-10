@@ -99,7 +99,7 @@ export function CloseIssueModal({ issue, onClose, onClosed }: Props) {
               >
                 <Star
                   className={`h-9 w-9 ${
-                    r <= rating ? "fill-[#f59e0b] text-[#f59e0b]" : "text-stone"
+                    r <= rating ? "fill-warning text-warning" : "text-stone"
                   }`}
                   aria-hidden
                 />
@@ -133,7 +133,7 @@ export function CloseIssueModal({ issue, onClose, onClosed }: Props) {
           />
         </div>
 
-        {error && <p className="mt-3 text-sm text-[#c0392b]">{error}</p>}
+        {error && <p className="mt-3 text-sm text-danger">{error}</p>}
 
         <div className="mt-5 flex justify-end gap-2">
           <button type="button" className="btn btn-ghost" onClick={() => close()} disabled={busy}>

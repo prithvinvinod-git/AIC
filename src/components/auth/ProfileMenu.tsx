@@ -107,7 +107,7 @@ export default function ProfileMenu() {
             role="menuitem"
             type="button"
             onClick={() => void logout()}
-            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-[#c0392b] transition-colors hover:bg-[#fdf0ef]"
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-danger transition-colors hover:bg-danger-soft"
           >
             <LogOut className="h-3.5 w-3.5" aria-hidden />
             Sign out

@@ -53,7 +53,7 @@ export function IssueActions({ issue, onChanged }: Props) {
             >
               {busy ? "Escalating…" : "Escalate again"}
             </button>
-            {error && <p className="mt-2 text-sm text-[#c0392b]">{error}</p>}
+            {error && <p className="mt-2 text-sm text-danger">{error}</p>}
           </div>
         </div>
       );
@@ -78,7 +78,7 @@ export function IssueActions({ issue, onChanged }: Props) {
           >
             {busy ? "Approving…" : "Approve & route to validator"}
           </button>
-          {error && <span className="text-sm text-[#c0392b]">{error}</span>}
+          {error && <span className="text-sm text-danger">{error}</span>}
         </div>
       </div>
     );
@@ -94,14 +94,14 @@ export function IssueActions({ issue, onChanged }: Props) {
     if (issue.status === "COMPLETED") {
       return (
         <div className="card">
-          <p className="text-sm text-[#d97706]">Awaiting verification by the department validator.</p>
+          <p className="text-sm text-warning">Awaiting verification by the department validator.</p>
         </div>
       );
     }
     if (issue.status === "VERIFIED" && issue.verification) {
       return (
         <div className="card">
-          <p className="text-sm text-[#2e7d32]">Verified by {issue.verification.verifiedBy.name}.</p>
+          <p className="text-sm text-success">Verified by {issue.verification.verifiedBy.name}.</p>
           {issue.verification.note && <p className="mt-1 text-sm text-slate">{issue.verification.note}</p>}
         </div>
       );
@@ -169,7 +169,7 @@ function ValidatorActions({ issue, onChanged }: { issue: Issue; onChanged: () =>
           Reject
         </button>
       </div>
-      {error && <p className="text-sm text-[#c0392b]">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
     </div>
   );
 }
@@ -215,7 +215,7 @@ function VerifyPanel({ issue, onChanged }: { issue: Issue; onChanged: () => void
           </button>
         </div>
       </div>
-      {error && <p className="mt-2 text-sm text-[#c0392b]">{error}</p>}
+      {error && <p className="mt-2 text-sm text-danger">{error}</p>}
     </div>
   );
 }
@@ -270,7 +270,7 @@ function MaintenanceComplete({ issue, onChanged }: { issue: Issue; onChanged: ()
         placeholder="Closure report: what was fixed and how… (required)"
       />
       {unresolvedApproval > 0 && (
-        <p className="text-xs text-[#d97706]">
+        <p className="text-xs text-warning">
           {unresolvedApproval} approval-flagged requirement(s) unresolved — add a waiver note to the report.
         </p>
       )}
@@ -320,7 +320,7 @@ function MaintenanceComplete({ issue, onChanged }: { issue: Issue; onChanged: ()
           </div>
         </form>
       )}
-      {error && <p className="text-sm text-[#c0392b]">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
     </div>
   );
 }
@@ -359,7 +359,7 @@ function AssignedActions({ issue, onChanged }: { issue: Issue; onChanged: () => 
         <button className="btn btn-ghost btn-sm" disabled={busy} onClick={() => setBlockOpen((v) => !v)}>
           Set blocked
         </button>
-        {error && <span className="text-sm text-[#c0392b]">{error}</span>}
+        {error && <span className="text-sm text-danger">{error}</span>}
       </div>
       {blockOpen && (
         <form
@@ -460,12 +460,12 @@ function AssignPanel({ issue, onChanged }: { issue: Issue; onChanged: () => void
       <div className="flex items-center justify-between">
         <p className="font-medium text-graphite">{issue.status === "PENDING" ? "Reassign this job" : "Assign this job"}</p>
         <button className="btn btn-ghost btn-sm" disabled={suggesting} onClick={() => void suggest()}>
-          <Sparkles className="h-3.5 w-3.5 text-action-blue" aria-hidden />
+          <Sparkles className="h-3.5 w-3.5 text-accent" aria-hidden />
           {suggesting ? "Suggesting…" : "AI suggest"}
         </button>
       </div>
       {teamsError && (
-        <p className="flex items-center gap-2 text-xs text-[#c0392b]">
+        <p className="flex items-center gap-2 text-xs text-danger">
           {teamsError}
           <button className="link-blue" onClick={() => void loadTeams()}>
             Retry
@@ -506,7 +506,7 @@ function AssignPanel({ issue, onChanged }: { issue: Issue; onChanged: () => void
         </div>
       )}
       {selectedTeam && selectedTeam.members.length === 0 && (
-        <p className="text-xs text-[#d97706]">This team has no members — add staff to the team in Admin.</p>
+        <p className="text-xs text-warning">This team has no members — add staff to the team in Admin.</p>
       )}
       <div className="flex items-center gap-2">
         <button
@@ -517,7 +517,7 @@ function AssignPanel({ issue, onChanged }: { issue: Issue; onChanged: () => void
           {busy ? "Assigning…" : issue.status === "PENDING" ? "Reassign" : "Assign"}
         </button>
         {staff.length === 0 && <span className="text-xs text-slate">Select at least one staff member.</span>}
-        {error && <span className="text-sm text-[#c0392b]">{error}</span>}
+        {error && <span className="text-sm text-danger">{error}</span>}
       </div>
     </div>
   );
@@ -579,7 +579,7 @@ export function RequirementsPanel({ issue, onChanged }: { issue: Issue; onChange
                   type="button"
                   className={`flex h-[21px] w-[21px] shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
                     r.resolved
-                      ? "border-[#66bb6a] bg-[#66bb6a] text-white"
+                      ? "border-success bg-success text-white"
                       : "border-slate bg-white hover:border-ink"
                   }`}
                   aria-label={r.resolved ? "Mark as unresolved" : "Mark as resolved"}
@@ -591,7 +591,7 @@ export function RequirementsPanel({ issue, onChanged }: { issue: Issue; onChange
               ) : (
                 <span
                   className={`flex h-[21px] w-[21px] shrink-0 items-center justify-center rounded-full border-2 ${
-                    r.resolved ? "border-[#66bb6a] bg-[#66bb6a]" : "border-slate"
+                    r.resolved ? "border-success bg-success" : "border-slate"
                   }`}
                 />
               )}
@@ -600,7 +600,7 @@ export function RequirementsPanel({ issue, onChanged }: { issue: Issue; onChange
                 {r.needsApproval && (
                   <span
                     className={`ml-1 rounded px-1.5 py-0.5 text-[10px] font-medium ${
-                      r.resolved ? "bg-[#ecfdf5] text-[#2e7d32]" : "bg-[#fffbeb] text-[#d97706]"
+                      r.resolved ? "bg-success-soft text-success" : "bg-warning-soft text-warning"
                     }`}
                   >
                     approval
@@ -628,7 +628,7 @@ export function RequirementsPanel({ issue, onChanged }: { issue: Issue; onChange
           </div>
         </form>
       )}
-      {error && <p className="mt-2 text-sm text-[#c0392b]">{error}</p>}
+      {error && <p className="mt-2 text-sm text-danger">{error}</p>}
     </div>
   );
 }

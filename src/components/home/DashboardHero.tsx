@@ -22,13 +22,13 @@ export default function DashboardHero() {
     <section className="flex min-h-[calc(100svh-70px)] items-center py-10 sm:py-14">
       <div className="grid w-full items-stretch gap-10 lg:grid-cols-[0.95fr_1.05fr]">
         <div className="flex flex-col justify-center gap-1">
-          <span className="tag self-start border border-action-blue !bg-transparent !text-action-blue">
+          <span className="tag self-start border border-accent !bg-transparent text-accent!">
             {ROLE_LABEL[claims?.role ?? "reporter"]}
           </span>
           <h1 className="mt-4 font-valve text-6xl leading-tight tracking-tight text-ink sm:text-7xl">
             Welcome back,
             <br />
-            <span className="text-action-blue">{firstName}.</span>
+            <span className="text-accent">{firstName}.</span>
           </h1>
 
           <div className="mt-6">

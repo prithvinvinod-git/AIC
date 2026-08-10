@@ -27,8 +27,8 @@ interface ToastContextValue {
 const ToastContext = createContext<ToastContextValue | null>(null);
 
 const ICONS: Record<ToastType, { Icon: typeof TriangleAlert; color: string }> = {
-  error: { Icon: TriangleAlert, color: "text-[#c0392b]" },
-  info: { Icon: Info, color: "text-action-blue" },
+  error: { Icon: TriangleAlert, color: "text-danger" },
+  info: { Icon: Info, color: "text-accent" },
   success: { Icon: CircleCheck, color: "text-emerald-600" },
 };
 

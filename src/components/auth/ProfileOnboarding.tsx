@@ -171,7 +171,7 @@ export default function ProfileOnboarding({ required, inline, onDone }: Props = 
         </div>
       </div>
 
-      {error && <p className="mt-3 text-sm text-[#c0392b]">{error}</p>}
+      {error && <p className="mt-3 text-sm text-danger">{error}</p>}
 
       <div className="mt-5 flex items-center justify-between gap-3">
         {!required && (

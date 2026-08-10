@@ -11,8 +11,8 @@ export default function PublicHero() {
         <DotGrid
           dotSize={8}
           gap={18}
-          baseColor="#e2e2e7"
-          activeColor="#0099ff"
+          baseColor="#e6e2d8"
+          activeColor="#d97757"
           proximity={120}
           shockRadius={220}
           shockStrength={4}
@@ -20,9 +20,9 @@ export default function PublicHero() {
           returnDuration={1.4}
         />
       </div>
-      <div className="mx-auto grid w-full max-w-[1200px] -mt-[200px] items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
+      <div className="mx-auto grid w-full max-w-page -mt-[200px] items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
         <div>
-          <h1 className="font-valve text-6xl leading-tight tracking-tight text-ink sm:text-7xl">
+          <h1 className="font-brand text-6xl leading-tight tracking-tight text-ink sm:text-7xl">
             Report it once.
             <br />
             Watch it close.

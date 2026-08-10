@@ -38,7 +38,7 @@ export default function AppHeader() {
           key={item.href}
           href={item.href}
           className={`inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-medium transition-colors lg:px-7 lg:text-[15px] ${
-            active(item.href) ? "bg-ink text-white" : "text-slate hover:bg-paper hover:text-graphite"
+            active(item.href) ? "bg-accent-soft text-accent" : "text-slate hover:bg-smoke hover:text-graphite"
           }`}
         >
           <item.icon className="h-3.5 w-3.5 shrink-0" aria-hidden />
@@ -50,7 +50,7 @@ export default function AppHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-silver bg-white/90 backdrop-blur">
-      <div className="mx-auto flex h-[48px] w-full max-w-[1200px] items-center gap-2 pl-0 pr-2 sm:h-[70px] sm:gap-5 sm:pl-0 sm:pr-3">
+      <div className="mx-auto flex h-[48px] w-full max-w-page items-center gap-2 pl-0 pr-2 sm:h-[70px] sm:gap-5 sm:pl-0 sm:pr-3">
         <Link
           href={homeFor(claims)}
           className="flex min-w-0 shrink-0 items-center gap-2 font-brand text-lg leading-none text-ink sm:text-xl lg:-ml-[150px]"
@@ -77,14 +77,14 @@ export default function AppHeader() {
 
       {menuOpen && (
         <nav className="border-t border-silver bg-white md:hidden">
-          <div className="mx-auto flex max-w-[1200px] flex-col gap-1 px-4 py-3 sm:px-6">
+          <div className="mx-auto flex max-w-page flex-col gap-1 px-4 py-3 sm:px-6">
             {items.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 onClick={() => setMenuOpen(false)}
                 className={`flex items-center justify-between rounded-lg px-4 py-3 text-[15px] font-medium transition-colors ${
-                  active(item.href) ? "bg-ink text-white" : "text-graphite hover:bg-paper"
+                  active(item.href) ? "bg-accent-soft text-accent" : "text-graphite hover:bg-paper"
                 }`}
               >
                 <span className="flex items-center gap-2.5">

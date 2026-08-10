@@ -38,7 +38,7 @@ function CommentItem({
         disabled={busy}
         aria-label={liked ? "Unlike comment" : "Like comment"}
         className={`mt-2 flex items-center gap-1 text-xs transition-colors disabled:opacity-50 ${
-          liked ? "text-[#e0245e]" : "text-slate hover:text-[#e0245e]"
+          liked ? "text-danger" : "text-slate hover:text-danger"
         }`}
       >
         <Heart
@@ -170,7 +170,7 @@ export function CommentsSection({ issueId, comments, onReload }: Props) {
           </ul>
           <button
             type="button"
-            className="mt-3 w-full rounded-xl border border-silver bg-paper px-3 py-2 text-sm font-medium text-action-blue transition-colors hover:bg-paper/60"
+            className="mt-3 w-full rounded-xl border border-silver bg-paper px-3 py-2 text-sm font-medium text-accent transition-colors hover:bg-paper/60"
             onClick={() => setOpen(true)}
           >
             View all {items.length} comments
@@ -221,7 +221,7 @@ export function CommentsSection({ issueId, comments, onReload }: Props) {
                 {busy ? "Posting…" : "Post"}
               </button>
             </form>
-            {error && <p className="mt-2 text-sm text-[#c0392b]">{error}</p>}
+            {error && <p className="mt-2 text-sm text-danger">{error}</p>}
           </div>
         </div>
       )}

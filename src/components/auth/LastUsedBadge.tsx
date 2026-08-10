@@ -17,7 +17,7 @@ export function LastUsedBadge({ method }: { method: AuthMethod }) {
   if (last !== method) return null;
 
   return (
-    <span className="absolute -top-2.5 right-2 z-10 rounded-md border border-silver bg-white px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-action-blue shadow-sm">
+    <span className="absolute -top-2.5 right-2 z-10 rounded-md border border-silver bg-white px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-accent shadow-sm">
       Last used
     </span>
   );

@@ -253,7 +253,7 @@ export default function AnnouncementForm({ initial, submitLabel, busy, onSubmit 
           {busy ? "Saving…" : submitLabel}
         </button>
         {kind === "roles" && roles.length === 0 && (
-          <p className="text-xs text-[#c0392b]">Pick at least one role.</p>
+          <p className="text-xs text-danger">Pick at least one role.</p>
         )}
       </div>
     </form>

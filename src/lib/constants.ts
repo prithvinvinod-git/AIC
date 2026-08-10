@@ -46,11 +46,11 @@ export const PRIORITY_LABEL: Record<number, string> = {
 };
 
 export const PRIORITY_COLOR: Record<number, string> = {
-  1: "#c0392b",
-  2: "#d97706",
-  3: "#2563eb",
-  4: "#6b7280",
-  5: "#a3a3a3",
+  1: "#c1452e",
+  2: "#b45309",
+  3: "#d97757",
+  4: "#78716c",
+  5: "#a8a29e",
 };
 
 export const ROLE_LABEL: Record<Role, string> = {
@@ -67,13 +67,13 @@ export const NOTIFICATION_META: Record<
   string,
   { label: string; icon: LucideIcon; iconClass: string }
 > = {
-  issue: { label: "Issue update", icon: ClipboardList, iconClass: "text-[#2563eb]" },
-  escalation: { label: "Escalation", icon: TriangleAlert, iconClass: "text-[#d97706]" },
-  assignment: { label: "Assignment", icon: Wrench, iconClass: "text-[#2e7d32]" },
-  verification: { label: "Verification", icon: CheckCheck, iconClass: "text-[#2e7d32]" },
-  pending: { label: "Pending", icon: Clock, iconClass: "text-[#d97706]" },
-  spam: { label: "Flagged", icon: ShieldAlert, iconClass: "text-[#c0392b]" },
-  announcement: { label: "Announcement", icon: Megaphone, iconClass: "text-[#7c3aed]" },
+  issue: { label: "Issue update", icon: ClipboardList, iconClass: "text-accent" },
+  escalation: { label: "Escalation", icon: TriangleAlert, iconClass: "text-warning" },
+  assignment: { label: "Assignment", icon: Wrench, iconClass: "text-success" },
+  verification: { label: "Verification", icon: CheckCheck, iconClass: "text-success" },
+  pending: { label: "Pending", icon: Clock, iconClass: "text-warning" },
+  spam: { label: "Flagged", icon: ShieldAlert, iconClass: "text-danger" },
+  announcement: { label: "Announcement", icon: Megaphone, iconClass: "text-violet" },
 };
 
 export const NOTIFICATION_FALLBACK_META = {

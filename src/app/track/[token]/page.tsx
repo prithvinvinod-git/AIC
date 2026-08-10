@@ -97,8 +97,8 @@ function TrackContent({ data }: { data: TrackData }) {
   return (
     <div className="space-y-4">
       {issue.status === "REJECTED" && (
-        <div className="card border-l-4 !border-l-[#c0392b]">
-          <p className="text-sm font-medium text-[#c0392b]">
+        <div className="card border-l-4 border-l-danger!">
+          <p className="text-sm font-medium text-danger">
             This issue was not accepted for maintenance.
           </p>
         </div>
@@ -121,7 +121,7 @@ function TrackContent({ data }: { data: TrackData }) {
                 {i > 0 && (
                   <span
                     className={`absolute left-[-50%] right-1/2 top-[9px] h-0.5 ${
-                      done ? "bg-[#2e7d32]" : "bg-silver"
+                      done ? "bg-success" : "bg-silver"
                     }`}
                     aria-hidden
                   />
@@ -129,9 +129,9 @@ function TrackContent({ data }: { data: TrackData }) {
                 <span
                   className={`relative z-10 flex h-[18px] w-[18px] items-center justify-center rounded-full text-[10px] font-bold ${
                     active
-                      ? "bg-action-orange text-white ring-2 ring-[#fed7aa]"
+                      ? "bg-accent text-white ring-2 ring-warning-soft"
                       : done
-                        ? "bg-[#2e7d32] text-white"
+                        ? "bg-success text-white"
                         : "bg-silver text-slate"
                   }`}
                 >
@@ -196,7 +196,7 @@ function TrackContent({ data }: { data: TrackData }) {
                   )}
                   <span
                     className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${
-                      t.isAuto ? "bg-action-blue" : "bg-ink"
+                      t.isAuto ? "bg-accent" : "bg-ink"
                     }`}
                     aria-hidden
                   />
@@ -205,7 +205,7 @@ function TrackContent({ data }: { data: TrackData }) {
                       <span className="font-medium text-graphite">
                         {t.from ? STATUS_LABEL[t.from] : "Reported"} → {STATUS_LABEL[t.to]}
                       </span>
-                      {t.isAuto && <span className="ml-1 text-xs text-action-blue">auto</span>}
+                      {t.isAuto && <span className="ml-1 text-xs text-accent">auto</span>}
                     </p>
                     <p className="mt-0.5 text-xs text-slate">
                       {t.by?.name} · {formatDateTime(t.at)}
@@ -225,7 +225,7 @@ function TrackContent({ data }: { data: TrackData }) {
                   <Star
                     key={r}
                     className={`h-5 w-5 ${
-                      r <= issue.feedback!.rating ? "fill-[#f59e0b] text-[#f59e0b]" : "text-silver"
+                      r <= issue.feedback!.rating ? "fill-warning text-warning" : "text-silver"
                     }`}
                     aria-hidden
                   />
@@ -245,7 +245,7 @@ function TrackContent({ data }: { data: TrackData }) {
 function SlaStat({ label, iso }: { label: string; iso: string }) {
   const d = deadlineLabel(iso);
   const toneClass =
-    d.tone === "over" ? "text-[#c0392b]" : d.tone === "warn" ? "text-[#d97706]" : "text-[#2e7d32]";
+    d.tone === "over" ? "text-danger" : d.tone === "warn" ? "text-warning" : "text-success";
   return (
     <div className="rounded-xl bg-paper p-4">
       <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-slate">
