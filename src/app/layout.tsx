@@ -17,7 +17,7 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "servox-phi — Campus Maintenance Collaboration",
+  title: "Servox Φ",
   description:
     "Closed-loop complaint management for a professional integrated campus. Report, route, execute, verify and close maintenance issues with AI assistance.",
 };

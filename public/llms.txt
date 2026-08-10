@@ -1,0 +1,15 @@
+# Servox Phi
+
+Servox Phi is a closed-loop campus maintenance complaint management system. Users report issues, department validators screen them, HOD/Principal confirm critical severities, maintenance teams execute the work, validators verify it, and reporters rate the outcome. Every step is audited on a timeline with AI-assisted routing, triage, duplicate detection and weekly governance insights.
+
+## Key pages
+
+- [Home](https://servox-phi.vercel.app/): Public landing page, campus notice board and role-aware dashboard.
+- [Login](https://servox-phi.vercel.app/login): Sign in to the portal.
+- [Sign up](https://servox-phi.vercel.app/signup): Create an account.
+- [Track an issue](https://servox-phi.vercel.app/track): Public issue status tracking via a secure token link.
+
+## Notes
+
+- Role-based dashboards (Board, Escalations, Approvals, Jobs, Admin, Analytics) require authentication and are not indexable.
+- All data is stored in Firebase and accessed through authenticated API routes.
