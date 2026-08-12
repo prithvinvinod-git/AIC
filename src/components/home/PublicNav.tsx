@@ -4,14 +4,14 @@ import Link from "next/link";
 export default function PublicNav() {
   return (
     <header className="sticky top-0 z-50 border-b border-silver bg-white">
-      <div className="mx-auto flex h-[70px] w-full max-w-page items-center justify-between px-2 sm:px-3">
-        <div className="flex items-center gap-2 -ml-30">
+      <div className="mx-auto flex h-[70px] w-full max-w-page items-center justify-between gap-4 px-3 sm:px-4">
+        <div className="flex shrink-0 items-center gap-2">
           <span className="font-brand text-2xl leading-none tracking-wide text-ink">Servox</span>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/servoxlogo.png" alt="Servox" className="h-[34px] w-auto sm:h-[38px]" />
         </div>
 
-        <nav className="ml-[800px] hidden items-center gap-[52px] text-sm font-medium text-slate md:flex">
+        <nav className="hidden flex-1 items-center justify-center gap-[52px] text-sm font-medium text-slate lg:flex">
           <a href="#how-it-works" className="transition-colors hover:text-ink">
             How it works
           </a>
@@ -23,7 +23,7 @@ export default function PublicNav() {
           </a>
         </nav>
 
-        <nav className="flex items-center gap-3 mr-[-100px]">
+        <nav className="flex shrink-0 items-center gap-2 sm:gap-3">
           <Link href="/login" className="btn btn-primary btn-sm">
             Sign in
           </Link>

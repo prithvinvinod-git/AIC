@@ -50,20 +50,20 @@ export default function AppHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-silver bg-white/90 backdrop-blur">
-      <div className="mx-auto flex h-[48px] w-full max-w-page items-center gap-2 pl-0 pr-2 sm:h-[70px] sm:gap-5 sm:pl-0 sm:pr-3">
+      <div className="mx-auto flex h-[48px] w-full max-w-page items-center gap-2 pl-3 pr-2 sm:h-[70px] sm:gap-5 sm:pl-4 sm:pr-3">
         <Link
           href={homeFor(claims)}
-          className="flex min-w-0 shrink-0 items-center gap-2 font-brand text-lg leading-none text-ink sm:text-xl lg:-ml-[150px]"
+          className="flex min-w-0 shrink-0 items-center gap-2 font-brand text-lg leading-none text-ink sm:text-xl"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/servoxlogo.png" alt="Servox" className="h-[32px] w-auto shrink-0 sm:h-[36px]" />
         </Link>
 
-        <nav className="hidden items-center gap-1.5 lg:ml-[150px] md:flex">{navLinks()}</nav>
+        <nav className="hidden flex-1 items-center justify-center gap-1.5 lg:flex">{navLinks()}</nav>
 
         <div className="ml-auto flex items-center gap-2 sm:gap-3">
           <button
-            className="btn btn-ghost btn-sm md:hidden!"
+            className="btn btn-ghost btn-sm lg:hidden!"
             onClick={() => setMenuOpen((v) => !v)}
             aria-label="Toggle menu"
             aria-expanded={menuOpen}
@@ -76,7 +76,7 @@ export default function AppHeader() {
       </div>
 
       {menuOpen && (
-        <nav className="border-t border-silver bg-white md:hidden">
+        <nav className="border-t border-silver bg-white lg:hidden">
           <div className="mx-auto flex max-w-page flex-col gap-1 px-4 py-3 sm:px-6">
             {items.map((item) => (
               <Link
@@ -93,7 +93,7 @@ export default function AppHeader() {
                 </span>
               </Link>
             ))}
-            <div className="mt-1 border-t border-silver pt-2 md:hidden">
+            <div className="mt-1 border-t border-silver pt-2 lg:hidden">
               <button
                 onClick={() => void logout()}
                 className="flex w-full items-center gap-2 rounded-lg px-4 py-3 text-left text-[15px] font-medium text-graphite hover:bg-paper"

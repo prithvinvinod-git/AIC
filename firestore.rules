@@ -16,7 +16,7 @@ service cloud.firestore {
                  || (request.auth.token.role == 'hod'          && resource.data.status == 'ESCALATED')
                  || (request.auth.token.role in ['principal']  && resource.data.status == 'ESCALATED')
                  || (request.auth.token.role == 'maintenance'  && resource.data.status in ['ASSIGNED', 'ONGOING'])
-                 || (request.auth.token.role == 'head'         && resource.data.status in ['COMPLETED', 'PENDING', 'ASSIGNED'])
+                 || (request.auth.token.role == 'validator'    && resource.data.status in ['COMPLETED', 'PENDING', 'ASSIGNED'])
                  || (request.auth.token.role == 'admin'));
       allow read: if request.auth != null;
     }
@@ -64,7 +64,7 @@ service cloud.firestore {
     }
 
     match /stats/{doc} {
-      allow read: if request.auth != null && request.auth.token.role in ['admin', 'head', 'hod', 'principal'];
+      allow read: if request.auth != null && request.auth.token.role in ['admin', 'validator', 'hod', 'principal'];
       allow write: if false;
     }
   }

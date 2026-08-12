@@ -42,7 +42,7 @@ export default function ProfileMenu() {
   if (!user || !claims) return null;
 
   return (
-    <div ref={ref} className="relative mr-[-100px] shrink-0">
+    <div ref={ref} className="relative shrink-0">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}

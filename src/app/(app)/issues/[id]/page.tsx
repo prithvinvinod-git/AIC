@@ -164,7 +164,7 @@ export default function IssueDetailPage() {
           {issue.status === "VERIFIED" && claims?.role === "reporter" && issue.reporter?.uid === user?.uid && (
             <button
               type="button"
-              className="btn btn-primary -mt-[40px]"
+              className="btn btn-primary lg:-mt-[40px]"
               onClick={() => setCloseOpen(true)}
             >
               <CircleCheckBig className="h-3.5 w-3.5" aria-hidden /> Close issue

@@ -26,7 +26,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-full">
       <AppHeader />
-      <main className="mx-auto w-full max-w-page px-4 py-8 sm:px-6 sm:py-10">{children}</main>
+      <main className="mx-auto w-full max-w-page px-[20px] py-6 sm:px-6 sm:py-10">{children}</main>
       <ProfileOnboarding />
     </div>
   );

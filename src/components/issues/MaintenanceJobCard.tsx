@@ -179,7 +179,7 @@ export function MaintenanceJobCard({
               <li key={`${(r as Requirement & { id?: string }).id || i}`} className="flex items-center gap-3 text-sm">
                 {readOnly ? (
                   <span
-                    className={`flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full border-2 ${
+                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 sm:h-3.5 sm:w-3.5 ${
                       r.resolved ? "border-success bg-success text-white" : "border-slate bg-white"
                     }`}
                     aria-label={r.resolved ? "Resolved" : "Unresolved"}
@@ -191,7 +191,7 @@ export function MaintenanceJobCard({
                   <button
                     type="button"
                     onClick={() => void toggleRequirement(r)}
-                    className={`flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors sm:h-3.5 sm:w-3.5 ${
                       r.resolved
                         ? "border-success bg-success text-white"
                         : "border-slate bg-white hover:border-ink"
@@ -324,9 +324,9 @@ export function MaintenanceJobCard({
             void addRequirement(e);
           }}
         >
-          <div className="grid grid-cols-5 gap-2">
+          <div className="grid grid-cols-[1fr_64px] gap-2">
             <input
-              className="input col-span-4"
+              className="input"
               required
               minLength={2}
               value={reqItem}
@@ -334,7 +334,7 @@ export function MaintenanceJobCard({
               onChange={(e) => setReqItem(e.target.value)}
             />
             <input
-              className="input col-span-1"
+              className="input"
               type="number"
               min={0}
               value={reqQty}

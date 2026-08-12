@@ -6,7 +6,7 @@ const DotGrid = dynamic(() => import("@/components/home/DotGrid"), { ssr: false 
 /** Split hero — fills the first viewport; "How it works" follows below the fold. */
 export default function PublicHero() {
   return (
-    <section className="relative flex min-h-[100svh] w-full items-center overflow-hidden px-4 pb-14 pt-[112px] sm:px-6">
+    <section className="relative flex min-h-[100svh] w-full items-center overflow-hidden px-[20px] pb-14 pt-[112px] sm:px-6">
       <div className="absolute inset-0 -z-10">
         <DotGrid
           dotSize={8}
@@ -20,9 +20,9 @@ export default function PublicHero() {
           returnDuration={1.4}
         />
       </div>
-      <div className="mx-auto grid w-full max-w-page -mt-[200px] items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
+      <div className="mx-auto grid w-full max-w-page items-center gap-10 lg:-mt-[200px] lg:grid-cols-[1.1fr_0.9fr]">
         <div>
-          <h1 className="font-brand text-6xl leading-tight tracking-tight text-ink sm:text-7xl">
+          <h1 className="font-brand text-5xl leading-tight tracking-tight text-ink sm:text-7xl">
             Report it once.
             <br />
             Watch it close.
@@ -43,7 +43,7 @@ export default function PublicHero() {
         </div>
       </div>
 
-      <div className="absolute bottom-[106px] left-1/2 -translate-x-1/2">
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 lg:bottom-[106px]">
         <div className="animate-scroll-pill flex items-center gap-2.5 rounded-full border border-silver bg-white/80 px-[34px] py-3 text-sm font-medium text-slate backdrop-blur">
           Scroll down
           <svg

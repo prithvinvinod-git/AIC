@@ -577,7 +577,7 @@ export function RequirementsPanel({ issue, onChanged }: { issue: Issue; onChange
               {canEdit ? (
                 <button
                   type="button"
-                  className={`flex h-[21px] w-[21px] shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 transition-colors sm:h-[21px] sm:w-[21px] ${
                     r.resolved
                       ? "border-success bg-success text-white"
                       : "border-slate bg-white hover:border-ink"
@@ -590,7 +590,7 @@ export function RequirementsPanel({ issue, onChanged }: { issue: Issue; onChange
                 </button>
               ) : (
                 <span
-                  className={`flex h-[21px] w-[21px] shrink-0 items-center justify-center rounded-full border-2 ${
+                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 sm:h-[21px] sm:w-[21px] ${
                     r.resolved ? "border-success bg-success" : "border-slate"
                   }`}
                 />
@@ -613,7 +613,7 @@ export function RequirementsPanel({ issue, onChanged }: { issue: Issue; onChange
       )}
       {canEdit && (
         <form onSubmit={(e) => void add(e)} className="mt-3 flex flex-col gap-2 border-t border-silver pt-3">
-          <div className="grid grid-cols-5 gap-2">
+          <div className="grid grid-cols-[1fr_64px] gap-2">
             <input className="input col-span-4" placeholder="e.g. LED tube replacement" required minLength={2} value={item} onChange={(e) => setItem(e.target.value)} />
             <input className="input col-span-1" type="number" min={0} value={qty} onChange={(e) => setQty(e.target.value)} />
           </div>

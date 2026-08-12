@@ -19,13 +19,13 @@ export default function DashboardHero() {
   const feed = feedFor(activeRole, claims?.department);
 
   return (
-    <section className="flex min-h-[calc(100svh-70px)] items-center py-10 sm:py-14">
-      <div className="grid w-full items-stretch gap-10 lg:grid-cols-[0.95fr_1.05fr]">
+    <section className="flex min-h-[calc(100svh-48px)] items-center py-8 sm:py-14 lg:min-h-[calc(100svh-70px)]">
+      <div className="grid w-full items-stretch gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:gap-10">
         <div className="flex flex-col justify-center gap-1">
           <span className="tag self-start border border-accent !bg-transparent text-accent!">
             {ROLE_LABEL[claims?.role ?? "reporter"]}
           </span>
-          <h1 className="mt-4 font-valve text-6xl leading-tight tracking-tight text-ink sm:text-7xl">
+          <h1 className="mt-4 font-valve text-5xl leading-tight tracking-tight text-ink sm:text-6xl lg:text-7xl">
             Welcome back,
             <br />
             <span className="text-accent">{firstName}.</span>
@@ -40,11 +40,11 @@ export default function DashboardHero() {
 
           <div className="mt-8 flex flex-wrap gap-3">
             {canReport && (
-              <Link href="/new" className="btn btn-primary">
+              <Link href="/new" className="btn btn-primary flex-1 sm:flex-none">
                 <CirclePlus className="h-3.5 w-3.5" aria-hidden /> Report new issue
               </Link>
             )}
-            <Link href={feed.ctaHref} className="btn btn-secondary">
+            <Link href={feed.ctaHref} className="btn btn-secondary flex-1 sm:flex-none">
               <ListChecks className="h-3.5 w-3.5" aria-hidden /> {feed.ctaLabel}
             </Link>
           </div>

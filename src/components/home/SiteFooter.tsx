@@ -26,7 +26,7 @@ export default function SiteFooter() {
   const year = new Date().getFullYear();
   return (
     <footer id="footer" className="scroll-mt-24 border-t border-silver bg-white">
-      <div className="mx-auto w-full max-w-page px-4 py-12 sm:px-6">
+      <div className="mx-auto w-full max-w-page px-[20px] py-12 sm:px-6">
         <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>
             <div className="flex items-center gap-2 font-brand text-lg leading-none text-ink">
@@ -97,7 +97,7 @@ export default function SiteFooter() {
       </div>
 
       <div className="border-t border-silver">
-        <div className="mx-auto flex w-full max-w-page flex-col items-center justify-between gap-3 px-4 py-5 text-sm text-slate sm:flex-row sm:px-6">
+        <div className="mx-auto flex w-full max-w-page flex-col items-center justify-between gap-3 px-[20px] py-5 text-sm text-slate sm:flex-row sm:px-6">
           <p>© {year} servox-phi · All rights reserved.</p>
         </div>
       </div>

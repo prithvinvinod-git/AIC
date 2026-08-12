@@ -8,7 +8,7 @@ const STEPS = [
 
 export default function FeatureSection() {
   return (
-    <section id="how-it-works" className="mx-auto w-full max-w-page scroll-mt-24 px-4 py-12 sm:px-6">
+    <section id="how-it-works" className="mx-auto w-full max-w-page scroll-mt-24 px-[20px] py-12 sm:px-6">
       <h2 className="font-display text-2xl font-semibold text-ink">How it works</h2>
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {STEPS.map((s) => (

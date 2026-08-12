@@ -43,7 +43,7 @@ export default function IssueBoard() {
     : false;
 
   return (
-    <div className="card flex min-h-[70svh] flex-col overflow-hidden lg:min-h-0">
+    <div className="card flex min-h-[55svh] flex-col overflow-hidden lg:min-h-[70svh]">
       <div className="flex items-center justify-between px-5 py-4">
         <div className="flex items-center gap-2.5">
           <span className="flex h-9 w-9 -mt-[5px] items-center justify-center text-graphite">

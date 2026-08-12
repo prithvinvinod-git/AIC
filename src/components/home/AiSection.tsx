@@ -45,7 +45,7 @@ const AI_FEATURES = [
 export default function AiSection() {
   return (
     <section id="ai" className="scroll-mt-24 border-y border-silver bg-paper/60">
-      <div className="mx-auto w-full max-w-page px-4 py-12 sm:px-6">
+      <div className="mx-auto w-full max-w-page px-[20px] py-12 sm:px-6">
         <div className="flex items-center gap-2">
           <Brain className="h-4 w-4 text-accent" aria-hidden />
           <span className="text-xs font-semibold uppercase tracking-widest text-accent">

@@ -20,8 +20,8 @@ export default function TrackEntryPage() {
     <div className="flex min-h-full flex-col">
       <header className="mx-auto flex w-full max-w-[1100px] items-center justify-between px-6 py-6">
         <Link href="/" className="flex items-center gap-2 font-brand text-lg leading-none text-ink sm:text-xl">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <span className="tracking-wide">Servox</span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/servoxlogo.png" alt="Servox" className="h-[20px] w-auto sm:h-[24px]" />
         </Link>
         <Link

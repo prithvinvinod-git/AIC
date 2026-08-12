@@ -46,8 +46,8 @@ export default function TrackPage() {
     <div className="flex min-h-full flex-col">
       <header className="mx-auto flex w-full max-w-[1100px] items-center justify-between px-6 py-6">
         <Link href="/" className="flex items-center gap-2 font-brand text-lg leading-none text-ink sm:text-xl">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <span className="tracking-wide">Servox</span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/servoxlogo.png" alt="Servox" className="h-[20px] w-auto sm:h-[24px]" />
         </Link>
         <Link
@@ -112,12 +112,15 @@ function TrackContent({ data }: { data: TrackData }) {
 
       <div className="card">
         <h2 className="sr-only">Progress</h2>
-        <ol className="flex">
+        <ol className="flex snap-x overflow-x-auto sm:overflow-visible">
           {steps.map((s, i) => {
             const done = i < currentIdx;
             const active = i === currentIdx;
             return (
-              <li key={s} className="relative flex flex-1 flex-col items-center gap-1.5">
+              <li
+                key={s}
+                className="relative flex min-w-[54px] flex-1 snap-start flex-col items-center gap-1.5 sm:min-w-0"
+              >
                 {i > 0 && (
                   <span
                     className={`absolute left-[-50%] right-1/2 top-[9px] h-0.5 ${
@@ -127,7 +130,7 @@ function TrackContent({ data }: { data: TrackData }) {
                   />
                 )}
                 <span
-                  className={`relative z-10 flex h-[18px] w-[18px] items-center justify-center rounded-full text-[10px] font-bold ${
+                  className={`relative z-10 flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[10px] font-bold sm:h-[18px] sm:w-[18px] ${
                     active
                       ? "bg-accent text-white ring-2 ring-warning-soft"
                       : done

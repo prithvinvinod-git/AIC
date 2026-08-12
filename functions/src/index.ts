@@ -108,7 +108,7 @@ export const checkSlaBreaches = onSchedule(
 
         const link = `/issues/${issueId}`;
         await notifyRoles(
-          ["head", "admin"],
+          ["validator", "admin"],
           "sla",
           "SLA breach",
           `${issueNo} missed its resolution deadline — investigate now.`,

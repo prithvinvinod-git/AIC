@@ -25,9 +25,9 @@ export function AISuggestionCard({ issue, onTriaged }: { issue: Issue; onTriaged
   if (!suggestion || (!suggestion.category && suggestion.aiProcessed)) {
     return (
       <div className="card">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <Sparkles className="h-16 w-16 text-accent" aria-hidden />
+            <Sparkles className="h-10 w-10 text-accent lg:h-16 lg:w-16" aria-hidden />
             <p className="font-medium text-graphite">AI triage</p>
           </div>
           <button onClick={() => void runTriage()} disabled={running} className="btn btn-ghost btn-sm">
@@ -42,7 +42,7 @@ export function AISuggestionCard({ issue, onTriaged }: { issue: Issue; onTriaged
   return (
     <div className="card">
       <div className="flex items-center gap-2">
-        <Sparkles className="h-16 w-16 text-accent" aria-hidden />
+        <Sparkles className="h-10 w-10 text-accent lg:h-16 lg:w-16" aria-hidden />
         <p className="font-medium text-graphite">AI suggestion</p>
       </div>
 
