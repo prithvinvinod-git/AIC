@@ -24,7 +24,7 @@ export default function PublicNav() {
         </nav>
 
         <nav className="flex shrink-0 items-center gap-2 sm:gap-3">
-          <Link href="/login" className="btn btn-primary btn-sm">
+          <Link href="/login" className="btn btn-light btn-sm">
             Sign in
           </Link>
           <Link href="/signup" className="btn btn-brand btn-sm">

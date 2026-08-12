@@ -22,7 +22,7 @@ export default function PublicHero() {
       </div>
       <div className="mx-auto grid w-full max-w-page items-center gap-10 lg:-mt-[200px] lg:grid-cols-[1.1fr_0.9fr]">
         <div>
-          <h1 className="font-brand text-5xl leading-tight tracking-tight text-ink sm:text-7xl">
+          <h1 className="font-valve text-5xl leading-tight tracking-tight text-ink sm:text-7xl">
             Report it once.
             <br />
             Watch it close.

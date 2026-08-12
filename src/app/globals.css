@@ -173,6 +173,20 @@ body {
   cursor: not-allowed;
 }
 
+.btn-light {
+  background: var(--color-paper);
+  color: var(--color-graphite);
+  border-color: var(--color-silver);
+}
+.btn-light:hover {
+  background: var(--color-smoke);
+  border-color: var(--color-stone);
+}
+.btn-light:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .btn-danger {
   background: var(--color-danger);
   color: #fff;
