@@ -8,8 +8,7 @@ import { Loading, EmptyState, BoardErrorState } from "@/components/ui/States";
 import { DispatchCard } from "@/components/issues/DispatchCard";
 import type { IssueStatus } from "@/lib/types";
 
-const TABS: { key: IssueStatus | "all"; label: string }[] = [
-  { key: "all", label: "All" },
+const TABS: { key: IssueStatus; label: string }[] = [
   { key: "ROUTED", label: "To dispatch" },
   { key: "PENDING_ASSIGN", label: "To assign" },
   { key: "ASSIGNED", label: "Assigned" },
@@ -30,8 +29,8 @@ export default function DispatchPage() {
 
   const isMaintHead = role === "maintenance_head";
   const defaultTab: IssueStatus = isMaintHead ? "ROUTED" : "PENDING_ASSIGN";
-  const activeTab = tab === "all" ? tab : tab;
-  const queue = issues.filter((i) => (activeTab === "all" ? true : i.status === activeTab));
+  const activeTab: IssueStatus = tab === "all" ? defaultTab : tab;
+  const queue = issues.filter((i) => i.status === activeTab);
 
   return (
     <div className="flex flex-col gap-6">
@@ -48,7 +47,7 @@ export default function DispatchPage() {
 
       <div className="flex flex-wrap gap-2">
         <button
-          className={`btn btn-sm ${tab === defaultTab ? "btn-primary" : "btn-ghost"}`}
+          className={`btn btn-sm ${tab === "all" || tab === defaultTab ? "btn-primary" : "btn-ghost"}`}
           onClick={() => setTab(defaultTab)}
         >
           {isMaintHead ? "To dispatch" : "To assign"}{" "}
@@ -72,7 +71,7 @@ export default function DispatchPage() {
       ) : queue.length === 0 ? (
         <EmptyState
           icon={<CornerDownRight className="h-8 w-8" aria-hidden />}
-          title={`No ${tab === "all" ? "issues" : (TABS.find((t) => t.key === tab)?.label || "").toLowerCase()}`}
+          title={`No ${(TABS.find((t) => t.key === tab)?.label || "issues").toLowerCase()}`}
           body={
             isMaintHead
               ? "Validated P3–5 issues will land here for you to forward to a category team."

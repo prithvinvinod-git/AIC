@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   Megaphone,
   ShieldCheck,
+  ShoppingCart,
   TriangleAlert,
   UserCog,
   Wrench,
@@ -21,6 +22,7 @@ export const ROLE_HOME: Record<Role, string> = {
   maintenance_head: "/",
   category_head: "/",
   maintenance: "/",
+  purchase: "/",
   admin: "/",
 };
 
@@ -45,6 +47,7 @@ export const NAV_ITEMS: NavItem[] = [
   { role: "principal", label: "Approvals", href: "/approvals", icon: CheckCheck },
   { role: "maintenance", label: "Jobs", href: "/jobs", icon: Wrench },
   { roles: HEAD_ROLES, label: "Dispatch", href: "/dispatch", icon: Wrench },
+  { role: "purchase", label: "Purchases", href: "/purchase", icon: ShoppingCart },
   { role: "admin", label: "Admin", href: "/admin", icon: UserCog },
   { roles: ANALYTICS_ROLES, label: "Analytics", href: "/analytics", icon: BarChart3 },
   { roles: ["admin", "principal"], label: "Issues", href: "/issue-history", icon: History },

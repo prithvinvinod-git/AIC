@@ -24,6 +24,7 @@ export function DispatchCard({
 
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [categoryId, setCategoryId] = useState(issue.routing?.categoryId || "");
+  const [note, setNote] = useState("");
   const [teams, setTeams] = useState<TeamWithMembers[]>([]);
   const [teamId, setTeamId] = useState("");
   const [staff, setStaff] = useState<string[]>([]);
@@ -33,7 +34,12 @@ export function DispatchCard({
 
   useEffect(() => {
     void api<{ categories: { id: string; name: string }[] }>("/api/categories")
-      .then((res) => setCategories(res.categories.filter((c) => c.id !== issue.routing?.categoryId)))
+      .then((res) => {
+        setCategories(res.categories);
+        const aiMatch = res.categories.find((c) => c.name === issue.aiSuggestion?.category);
+        const preferred = aiMatch?.id || issue.routing?.categoryId || "";
+        if (preferred) setCategoryId(preferred);
+      })
       .catch(() => undefined);
     void api<{ teams: TeamWithMembers[] }>("/api/teams")
       .then((res) => {
@@ -43,7 +49,7 @@ export function DispatchCard({
         setTeams(scoped);
       })
       .catch(() => undefined);
-  }, [issue.routing?.categoryId]);
+  }, [issue.routing?.categoryId, issue.aiSuggestion?.category]);
 
   const forward = useCallback(async () => {
     if (!categoryId) return;
@@ -52,7 +58,7 @@ export function DispatchCard({
     try {
       await api(`/api/issues/${issue.id}/forward`, {
         method: "POST",
-        body: JSON.stringify({ categoryId }),
+        body: JSON.stringify({ categoryId, note }),
       });
       setDialog(null);
       onRefresh();
@@ -60,7 +66,7 @@ export function DispatchCard({
       setError(e instanceof ApiError ? e.message : "Forward failed.");
       setBusy(false);
     }
-  }, [issue.id, categoryId, onRefresh]);
+  }, [issue.id, categoryId, note, onRefresh]);
 
   const assign = useCallback(async () => {
     setBusy(true);
@@ -81,21 +87,34 @@ export function DispatchCard({
   const selectedTeam = teams.find((t) => t.id === teamId);
 
   const forwardPanel = isForward && (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-3">
       <p className="text-xs text-slate">Forward to a category head, who will assign a team and workers.</p>
-      <div className="flex gap-2">
-        <select className="input flex-1" value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
-          <option value="">Choose category…</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-        <button className="btn btn-primary btn-sm" disabled={busy || !categoryId} onClick={() => void forward()}>
-          {busy ? "Forwarding…" : "Forward"}
-        </button>
+      <div className="flex flex-col gap-2">
+        <label className="text-xs font-medium text-slate">
+          Category
+          <select className="input mt-1 w-full" value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
+            <option value="">Choose category…</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="text-xs font-medium text-slate">
+          Note <span className="font-normal text-slate/70">(optional)</span>
+          <input
+            className="input mt-1 w-full"
+            placeholder="Add a note for the category head…"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+          />
+        </label>
       </div>
+      <button className="btn btn-primary btn-sm self-start" disabled={busy || !categoryId} onClick={() => void forward()}>
+        <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+        {busy ? "Routing…" : "Route to Category Head"}
+      </button>
       {error && <p className="text-sm text-danger">{error}</p>}
     </div>
   );
@@ -180,7 +199,7 @@ export function DispatchCard({
         <div className="mt-auto flex flex-wrap items-center gap-2">
           {isForward && (
             <button className="btn btn-primary btn-sm" onClick={() => setDialog("forward")}>
-              <ArrowRight className="h-3.5 w-3.5" aria-hidden /> Forward to category
+              <ArrowRight className="h-3.5 w-3.5" aria-hidden /> Route to category head
             </button>
           )}
           {issue.status === "PENDING_ASSIGN" && (
@@ -194,7 +213,7 @@ export function DispatchCard({
       <Modal
         open={dialog === "forward"}
         onClose={() => setDialog(null)}
-        title="Forward to category"
+        title="Route to category head"
       >
         {forwardPanel}
       </Modal>

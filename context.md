@@ -50,18 +50,19 @@ firestore.rules, firestore.indexes.json, vercel.json, next.config.ts
 
 ## 3. Roles & auth
 
-**Roles** (`src/lib/types.ts`): `reporter | validator | hod | principal | maintenance | admin`.
+**Roles** (`src/lib/types.ts`): `reporter | validator | hod | principal | maintenance | purchase | admin`.
 
 - The old **`head` role was removed**; its duties merged into the department-scoped **validator** (validators route/assign and verify; HOD/Principal approve).
+- **`purchase` (Purchase Team):** not department-scoped. Sees every issue that has `pendingPurchaseCount > 0` (requirements flagged for approval). Approves flagged requirements with a unit price (auto-marks them resolved) or rejects them with a reason.
 - **`portal` claim:** an `admin` with `portal: "principal"` gets Principal + HOD + Admin nav (`src/lib/nav.ts` `portalRoles`). `admin@gmail.com` lands on the Principal portal.
 - **Auth flow:** Firebase Auth (email/password + Google popup), `browserLocalPersistence` (`src/lib/firebase.ts`). `AuthProvider` (`src/components/auth/AuthProvider.tsx`) listens to `onAuthStateChanged`, refreshes the ID token, and extracts claims (`role`, `portal`, `department`, `college`, `name`, `profilePromptDismissed`). It also registers a **token-refresh handler** so `api()` retries a 401 once after refreshing.
 - **Server side:** every request verifies the Bearer ID token via `requireAuth` / `requireAdmin` (`src/lib/auth.ts`), pulling role/name/department from **custom claims** (mirrored onto `users/{uid}` by the provisioning flow).
 - **Client side:** `src/lib/clientApi.ts` `api<T>(path, init)` attaches the cached token; throws `ApiError` with `status` + `details`.
 - New sign-ups default to `reporter`; role provisioning happens via `POST /api/auth/provision` and the admin user manager.
 
-**Demo accounts** (password `123456`): `prithvinvinod@gmail.com` (admin), `admin@gmail.com` (admin + portal principal), `principal@gmail.com`, `hod@gmail.com`, `validator@gmail.com` (Engineering), `mainten@gmail.com` (maintenance). Any new sign-up → reporter.
+**Demo accounts** (password `123456`): `prithvinvinod@gmail.com` (admin), `admin@gmail.com` (admin + portal principal), `principal@gmail.com`, `hod@gmail.com`, `validator@gmail.com` (Engineering), `mainten@gmail.com` (maintenance), `purchase@gmail.com` (Purchase Team). Any new sign-up → reporter.
 
-**Navigation** (`src/lib/nav.ts` `NAV_ITEMS`): reporter → Dashboard `/dashboard` + Submit `/new`; validator → Board `/validate`; hod → Escalations `/hod`; principal → Approvals `/principal`; maintenance → Jobs `/jobs`; admin → Admin `/admin`; `ANALYTICS_ROLES = [hod, principal, validator, admin]` → Analytics `/analytics`; [admin, principal] → Issue history `/issue-history`; [admin, principal, hod] → Announcements `/announcements`. `ROLE_HOME` currently maps every role to `/` (the landing page decides).
+**Navigation** (`src/lib/nav.ts` `NAV_ITEMS`): reporter → Dashboard `/dashboard` + Submit `/new`; validator → Board `/validate`; hod → Escalations `/hod`; principal → Approvals `/principal`; maintenance → Jobs `/jobs`; purchase → Purchases `/purchase`; admin → Admin `/admin`; `ANALYTICS_ROLES = [hod, principal, validator, admin]` → Analytics `/analytics`; [admin, principal] → Issue history `/issue-history`; [admin, principal, hod] → Announcements `/announcements`. `ROLE_HOME` currently maps every role to `/` (the landing page decides).
 
 ---
 
@@ -92,7 +93,7 @@ NEW → VALIDATED → ESCALATED → APPROVED → ASSIGNED → ONGOING → COMPLE
 | ASSIGNED | ONGOING | maintenance | must be an assigned staff member (or team) |
 | ASSIGNED / ONGOING | PENDING | maintenance, validator, admin | blocker note ≥ 3 chars |
 | PENDING | ASSIGNED | validator, admin | `teamId` required |
-| ONGOING | COMPLETED | maintenance, validator, admin | closure report ≥ 5 chars; `needsApproval` requirements resolved or waived (waiver = a note in the closure report) |
+| ONGOING | COMPLETED | maintenance, validator, admin | closure report ≥ 5 chars; all `needsApproval` requirements must be resolved (approved by the purchase team) — no waiver |
 | COMPLETED | VERIFIED | validator, admin | verdict ≥ 2 chars |
 | COMPLETED | ONGOING | validator, admin | sendBackReason ≥ 3 chars (records `verification.verdict = "send_back"`) |
 | VERIFIED | CLOSED | reporter | rating 1–5, or `isAuto` (auto-close) |
@@ -142,7 +143,8 @@ issues/{issueId}
   prioritySetBy/At, escalation{required,status,reviewedBy?,reviewedAt?,note?}
   location{name,building,floor?}                      ← snapshot, no JOIN
   routing{categoryId,categoryName,teamId,staff[]}     ← denormalized display
-  requirements[{item,qty,needsApproval,resolved,addedBy,at}]
+  requirements[{item,qty,needsApproval,resolved,approvalStatus?,price?,approvalBy?,approvalAt?,rejectReason?,addedBy,at}]
+  pendingPurchaseCount                       ← count of `needsApproval && !resolved && approvalStatus !== "rejected"` (drives the purchase queue)
   involveTeams[{teamId,completed}]
   sla{startedAt,responseDeadline,resolutionDeadline,pausedAt,totalPausedMs,breachedFlags{response,resolution}}
   rejection{reason,by,at} | completion{report,completedAt} | verification{...} | feedback{rating,comment,givenAt,autoClosed}
@@ -180,6 +182,7 @@ GET    /api/issues/[id]                  detail (+timeline, comments)
 POST   /api/issues/[id]/validate|reject|escalate|approve|assign|pending|complete|verify|sendback|feedback
 POST   /api/issues/[id]/status           generic transition (the ONE door)
 POST   /api/issues/[id]/requirements · [reqId]     add/resolve requirement
+POST   /api/issues/[id]/requirements/[reqId]/approve · /reject   (purchase/admin: price or reason)
 POST   /api/issues/[id]/comments · [commentId]/like
 PATCH  /api/issues/[id]/board-visibility           hide from the public board
 GET    /api/notifications                in-app feed; read/unread
@@ -197,7 +200,7 @@ POST /api/ai/draft-closure · /api/ai/root-cause
 GET  /api/ai/weekly-insights · /api/ai/at-risk
 ```
 
-**Issue list scoping** (`GET /api/issues`): reporter → `reporter.uid`; validator → `department`; maintenance → `routing.teamId in (member teams)`; HOD/principal/admin → all. `scope=board` ignores role and returns the newest P1–P3 across all departments (minus `boardHidden`), capped at 10.
+**Issue list scoping** (`GET /api/issues`): reporter → `reporter.uid`; validator → `department`; maintenance → `routing.teamId in (member teams)`; purchase → `pendingPurchaseCount > 0`; HOD/principal/admin → all. `scope=board` ignores role and returns the newest P1–P3 across all departments (minus `boardHidden`), capped at 10.
 
 **Public tracking:** `GET /api/track/[token]` + `src/app/track/[token]/page.tsx` — non-logged-in recipients can follow an issue via its `trackingToken` (status rail, SLA countdown, timeline). Email CTAs prefer this link; fall back to `/issues/[id]` for legacy docs.
 

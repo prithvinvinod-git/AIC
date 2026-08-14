@@ -136,7 +136,13 @@ export function IssueActions({ issue, onChanged }: Props) {
 }
 
 function ValidatorActions({ issue, onChanged }: { issue: Issue; onChanged: () => void }) {
-  const [priority, setPriority] = useState("3");
+  const defaultPriority =
+    issue.priority >= 1 && issue.priority <= 5
+      ? String(issue.priority)
+      : issue.aiSuggestion?.suggestedPriority && issue.aiSuggestion.suggestedPriority >= 1 && issue.aiSuggestion.suggestedPriority <= 5
+        ? String(issue.aiSuggestion.suggestedPriority)
+        : "3";
+  const [priority, setPriority] = useState(defaultPriority);
   const [rejectReason, setRejectReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -295,7 +301,8 @@ function MaintenanceComplete({ issue, onChanged }: { issue: Issue; onChanged: ()
       />
       {unresolvedApproval > 0 && (
         <p className="text-xs text-warning">
-          {unresolvedApproval} approval-flagged requirement(s) unresolved — add a waiver note to the report.
+          {unresolvedApproval} approval-flagged requirement(s) unresolved — the job can&apos;t be completed until the
+          purchase team approves them.
         </p>
       )}
       <div className="flex gap-2">
@@ -626,7 +633,7 @@ export function RequirementsPanel({ issue, onChanged }: { issue: Issue; onChange
   const [qty, setQty] = useState("1");
   const [needsApproval, setNeedsApproval] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const canEdit = claims && ["maintenance", "validator", "admin"].includes(claims.role);
+  const canEdit = claims && ["maintenance", "admin"].includes(claims.role);
 
   const add = useCallback(
     async (e: React.FormEvent) => {
@@ -662,6 +669,21 @@ export function RequirementsPanel({ issue, onChanged }: { issue: Issue; onChange
     [issue.id, onChanged]
   );
 
+  const resubmit = useCallback(
+    async (r: Requirement) => {
+      try {
+        await api(`/api/issues/${issue.id}/requirements/${(r as Requirement & { id?: string }).id}`, {
+          method: "PATCH",
+          body: JSON.stringify({ item: r.item, qty: r.qty }),
+        });
+        onChanged();
+      } catch {
+        setError("Failed to resubmit requirement.");
+      }
+    },
+    [issue.id, onChanged]
+  );
+
   return (
     <div className="card">
       <p className="font-medium text-graphite">Requirements</p>
@@ -669,43 +691,68 @@ export function RequirementsPanel({ issue, onChanged }: { issue: Issue; onChange
         <p className="mt-2 text-sm text-slate">No requirements logged yet.</p>
       ) : (
         <ul className="mt-3 flex flex-col gap-1.5">
-          {issue.requirements.map((r, i) => (
-            <li key={`${(r as Requirement & { id?: string }).id || i}`} className="flex items-center gap-2 text-sm">
-              {canEdit ? (
-                <button
-                  type="button"
-                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 transition-colors sm:h-[21px] sm:w-[21px] ${
-                    r.resolved
-                      ? "border-success bg-success text-white"
-                      : "border-slate bg-white hover:border-ink"
-                  }`}
-                  aria-label={r.resolved ? "Mark as unresolved" : "Mark as resolved"}
-                  title={r.resolved ? "Mark as unresolved" : "Mark as resolved"}
-                  onClick={() => void toggle(r)}
-                >
-                  {r.resolved && <span className="text-sm leading-none">✓</span>}
-                </button>
-              ) : (
-                <span
-                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 sm:h-[21px] sm:w-[21px] ${
-                    r.resolved ? "border-success bg-success" : "border-slate"
-                  }`}
-                />
-              )}
-              <span className={r.resolved ? "text-slate line-through" : "text-graphite"}>
-                {r.item} ×{r.qty}
-                {r.needsApproval && (
-                  <span
-                    className={`ml-1 rounded px-1.5 py-0.5 text-[10px] font-medium ${
-                      r.resolved ? "bg-success-soft text-success" : "bg-warning-soft text-warning"
+          {issue.requirements.map((r, i) => {
+            const isApproval = !!r.needsApproval;
+            const isApprovalApproved = isApproval && r.approvalStatus === "approved";
+            const isApprovalRejected = isApproval && r.approvalStatus === "rejected";
+            const toggleable = canEdit && !isApproval;
+            return (
+              <li key={`${(r as Requirement & { id?: string }).id || i}`} className="flex items-center gap-2 text-sm">
+                {toggleable ? (
+                  <button
+                    type="button"
+                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 transition-colors sm:h-[21px] sm:w-[21px] ${
+                      r.resolved
+                        ? "border-success bg-success text-white"
+                        : "border-slate bg-white hover:border-ink"
                     }`}
+                    aria-label={r.resolved ? "Mark as unresolved" : "Mark as resolved"}
+                    title={r.resolved ? "Mark as unresolved" : "Mark as resolved"}
+                    onClick={() => void toggle(r)}
                   >
-                    approval
+                    {r.resolved && <span className="text-sm leading-none">✓</span>}
+                  </button>
+                ) : (
+                  <span
+                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 sm:h-[21px] sm:w-[21px] ${
+                      r.resolved ? "border-success bg-success text-white" : "border-slate bg-white"
+                    }`}
+                    title={r.resolved ? "Resolved" : "Unresolved"}
+                  >
+                    {r.resolved && <span className="text-sm leading-none">✓</span>}
                   </span>
                 )}
-              </span>
-            </li>
-          ))}
+                <span className={r.resolved ? "text-slate line-through" : "text-graphite"}>
+                  {r.item} ×{r.qty}
+                  {isApproval &&
+                    (isApprovalApproved ? (
+                      <span
+                        className="ml-1 rounded bg-success-soft px-1.5 py-0.5 text-[10px] font-medium text-success"
+                        title={r.approvalBy?.name ? `Approved by ${r.approvalBy.name}` : "Approved"}
+                      >
+                        Approved · ₹{r.price ?? 0}
+                      </span>
+                    ) : isApprovalRejected ? (
+                      <span
+                        className="ml-1 rounded bg-danger-soft px-1.5 py-0.5 text-[10px] font-medium text-danger"
+                        title={r.rejectReason || "Rejected"}
+                      >
+                        Rejected
+                      </span>
+                    ) : (
+                      <span className="ml-1 rounded bg-warning-soft px-1.5 py-0.5 text-[10px] font-medium text-warning">
+                        Awaiting approval
+                      </span>
+                    ))}
+                </span>
+                {isApprovalRejected && canEdit && (
+                  <button type="button" className="text-xs font-medium text-accent hover:underline" onClick={() => void resubmit(r)}>
+                    Resubmit
+                  </button>
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
       {canEdit && (

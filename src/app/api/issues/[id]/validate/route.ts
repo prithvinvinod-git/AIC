@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { adminDb } from "@/lib/firebaseAdmin";
 import { runTransition } from "@/lib/transition";
+import { resolveMaintenanceHead } from "@/lib/issueMachine";
 import { parseBody, handleError } from "@/lib/api";
 
 const schema = z.object({
@@ -26,14 +27,8 @@ export async function POST(
 
     const issueSnap = await adminDb().doc(`issues/${id}`).get();
     if (issueSnap.exists && (body.priority ?? issueSnap.data()?.priority) > 2) {
-      const heads = await adminDb()
-        .collection("users")
-        .where("role", "==", "maintenance_head")
-        .where("department", "==", issueSnap.data()?.department)
-        .where("isActive", "==", true)
-        .limit(1)
-        .get();
-      if (!heads.empty) preParsed.maintenanceHeadUid = heads.docs[0].id;
+      const headId = await resolveMaintenanceHead(adminDb(), issueSnap.data() ?? {});
+      if (headId) preParsed.maintenanceHeadUid = headId;
     }
 
     return runTransition(req, id, schema, "VALIDATED", preParsed);

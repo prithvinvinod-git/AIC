@@ -58,6 +58,22 @@ export const resolveRequirementSchema = z.object({
   resolved: z.boolean(),
 });
 
+/** Edit a requirement (item/qty) — used to resubmit a rejected approval request. */
+export const editRequirementSchema = z.object({
+  item: z.string().min(2).optional(),
+  qty: z.number().int().min(0).optional(),
+});
+
+/** Purchase team approving a needsApproval requirement with a unit price. */
+export const approveRequirementSchema = z.object({
+  price: z.number().min(0, "Price cannot be negative"),
+});
+
+/** Purchase team rejecting a needsApproval requirement with a reason. */
+export const rejectRequirementSchema = z.object({
+  reason: z.string().min(3, "A rejection reason is required"),
+});
+
 export const commentSchema = z.object({
   body: z.string().min(1, "Comment cannot be empty").max(1000),
 });
@@ -72,8 +88,8 @@ export const adminUserSchema = z.object({
   name: z.string().min(1),
   email: z.string().email().or(z.literal("")).default(""),
   password: z.string().min(6).optional(),
-  role: z.enum(["reporter", "validator", "hod", "principal", "maintenance_head", "category_head", "maintenance", "admin"]),
-  portal: z.enum(["reporter", "validator", "hod", "principal", "maintenance_head", "category_head", "maintenance", "admin"]).optional(),
+  role: z.enum(["reporter", "validator", "hod", "principal", "maintenance_head", "category_head", "maintenance", "purchase", "admin"]),
+  portal: z.enum(["reporter", "validator", "hod", "principal", "maintenance_head", "category_head", "maintenance", "purchase", "admin"]).optional(),
   college: z.string().optional(),
   department: z.string(),
   phone: z.string().optional(),

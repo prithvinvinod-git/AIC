@@ -87,6 +87,15 @@ export function feedFor(role: Role, department?: string): RoleFeed {
         emptyTitle: "Nothing to assign",
         emptyBody: "Forwarded issues will land here for you to assign a team and workers.",
       };
+    case "purchase":
+      return {
+        title: "Purchase approvals",
+        subtitle: "Latest requirements waiting for price confirmation.",
+        ctaLabel: "Purchases",
+        ctaHref: "/purchase",
+        emptyTitle: "No purchase requests",
+        emptyBody: "Approval-flagged requirements added by maintenance teams will appear here.",
+      };
     default:
       return {
         title: "Latest campus issues",

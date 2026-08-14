@@ -67,6 +67,11 @@
       ] },
     { "collectionGroup": "issues", "queryScope": "COLLECTION",
       "fields": [
+        { "fieldPath": "routing.maintenanceHeadUid", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ] },
+    { "collectionGroup": "issues", "queryScope": "COLLECTION",
+      "fields": [
         { "fieldPath": "routing.staff", "order": "ASCENDING" },
         { "fieldPath": "status", "order": "ASCENDING" }
       ] },

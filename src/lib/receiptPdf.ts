@@ -186,7 +186,19 @@ function buildDefinition(issue: Issue, timeline: TimelineEntry[]): TDocumentDefi
           ...requirements.map((r) => [
             { text: r.item, fontSize: 8.5 },
             { text: String(r.qty), fontSize: 8.5, alignment: "center" },
-            { text: r.resolved ? "Resolved" : r.needsApproval ? "Needs approval" : "Pending", fontSize: 8.5, color: MUTED },
+            {
+              text: r.approvalStatus === "approved"
+                ? `Approved · ₹${r.price ?? 0}`
+                : r.approvalStatus === "rejected"
+                  ? "Rejected"
+                  : r.resolved
+                    ? "Resolved"
+                    : r.needsApproval
+                      ? "Awaiting approval"
+                      : "Pending",
+              fontSize: 8.5,
+              color: MUTED,
+            },
           ]),
         ],
       },

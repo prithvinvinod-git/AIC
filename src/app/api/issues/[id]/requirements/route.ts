@@ -3,8 +3,10 @@ import { adminDb } from "@/lib/firebaseAdmin";
 import { requireAuth } from "@/lib/auth";
 import { json, parseBody, handleError } from "@/lib/api";
 import { requirementSchema } from "@/lib/schemas";
+import { notifyRole } from "@/lib/notifications";
+import type { Issue } from "@/lib/types";
 
-const ALLOWED_ROLES = ["maintenance", "validator", "admin"];
+const ALLOWED_ROLES = ["maintenance", "admin"];
 
 /** POST /api/issues/[id]/requirements — log a requirements entry. */
 export async function POST(
@@ -15,33 +17,48 @@ export async function POST(
     const { id } = await ctx.params;
     const user = await requireAuth(req);
     if (!ALLOWED_ROLES.includes(user.role)) {
-      return json({ error: "Only maintenance staff or the department validator can log requirements." }, 403);
+      return json({ error: "Only maintenance staff can log requirements." }, 403);
     }
     const body = await parseBody(req, requirementSchema);
 
     const db = adminDb();
     const ref = db.doc(`issues/${id}`);
-    const snap = await ref.get();
-    if (!snap.exists) return json({ error: "Issue not found." }, 404);
 
     const now = new Date().toISOString();
     const requirement = {
       id: db.collection("ids").doc().id,
       ...body,
+      approvalStatus: body.needsApproval ? "pending" : undefined,
       addedBy: { uid: user.uid, name: user.name },
       at: now,
     };
 
-    await ref.update({
-      requirements: [
-        ...(snap.data()?.requirements || []),
-        requirement,
-      ],
-      updatedAt: now,
+    await db.runTransaction(async (tx) => {
+      const snap = await tx.get(ref);
+      if (!snap.exists) throw new Error("issue-missing");
+      const data = snap.data() as Issue;
+      await tx.update(ref, {
+        requirements: [...(data.requirements || []), requirement],
+        pendingPurchaseCount:
+          body.needsApproval ? (data.pendingPurchaseCount || 0) + 1 : data.pendingPurchaseCount || 0,
+        updatedAt: now,
+      });
     });
+
+    if (body.needsApproval) {
+      void notifyRole(["purchase"], {
+        type: "purchase",
+        title: "Purchase approval needed",
+        body: `Approval requested for ${requirement.item} ×${requirement.qty}.`,
+        link: `/issues/${id}`,
+      });
+    }
 
     return json({ requirement }, 201);
   } catch (e) {
+    if (e instanceof Error && e.message === "issue-missing") {
+      return json({ error: "Issue not found." }, 404);
+    }
     return handleError(e);
   }
 }

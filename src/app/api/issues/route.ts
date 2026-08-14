@@ -157,10 +157,12 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
     if (user.role === "reporter" || mine) {
       query = query.where("reporter.uid", "==", user.uid);
+    } else if (user.role === "purchase") {
+      query = query.where("pendingPurchaseCount", ">", 0);
     } else if (user.role === "validator") {
       query = query.where("department", "==", user.department);
     } else if (user.role === "maintenance_head") {
-      query = query.where("department", "==", user.department);
+      query = query.where("routing.maintenanceHeadUid", "==", user.uid);
     } else if (user.role === "category_head") {
       const catSnap = await db.collection("categories").where("headUid", "==", user.uid).get();
       const categoryIds = catSnap.docs.map((d) => d.id);

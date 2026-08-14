@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebaseAdmin";
 import { requireAuth } from "@/lib/auth";
-import { json, parseBody, handleError } from "@/lib/api";
-import { resolveRequirementSchema } from "@/lib/schemas";
+import { json, handleError } from "@/lib/api";
+import { resolveRequirementSchema, editRequirementSchema } from "@/lib/schemas";
+import { notifyRole } from "@/lib/notifications";
+import type { Issue, Requirement } from "@/lib/types";
 
-const ALLOWED_ROLES = ["maintenance", "validator", "admin"];
+const ALLOWED_ROLES = ["maintenance", "admin"];
 
-/** PATCH /api/issues/[id]/requirements/[reqId] — resolve / un-resolve. */
+const pendingCount = (reqs: Requirement[]) =>
+  reqs.filter((r) => r.needsApproval && !r.resolved && r.approvalStatus !== "rejected").length;
+
+/** PATCH /api/issues/[id]/requirements/[reqId] — resolve/un-resolve, or edit & resubmit a rejected approval request. */
 export async function PATCH(
   req: NextRequest,
   ctx: RouteContext<"/api/issues/[id]/requirements/[reqId]">
@@ -17,33 +22,125 @@ export async function PATCH(
     if (!ALLOWED_ROLES.includes(user.role)) {
       return json({ error: "Not allowed." }, 403);
     }
-    const body = await parseBody(req, resolveRequirementSchema);
+
+    let raw: unknown;
+    try {
+      raw = await req.json();
+    } catch {
+      return json({ error: "Invalid JSON body." }, 400);
+    }
+    if (!raw || typeof raw !== "object") return json({ error: "Invalid body." }, 400);
+
+    const hasResolved = "resolved" in (raw as object);
+    const hasEdit = "item" in (raw as object) || "qty" in (raw as object);
+    if (hasResolved === hasEdit) return json({ error: "Provide either resolved or item/qty, not both." }, 400);
+
+    const rawObj = raw as { resolved?: unknown; item?: unknown; qty?: unknown };
+    const editInfo = hasEdit ? { item: String(rawObj.item ?? ""), qty: Number(rawObj.qty ?? 1) } : null;
 
     const db = adminDb();
     const ref = db.doc(`issues/${id}`);
-    const snap = await ref.get();
-    if (!snap.exists) return json({ error: "Issue not found." }, 404);
+    const now = new Date().toISOString();
 
-    const issueData = snap.data();
-    const rawRequirements = issueData?.requirements;
-    const requirements: Array<{ id?: string } & Record<string, unknown>> = Array.isArray(rawRequirements)
-      ? [...(rawRequirements as Array<{ id?: string } & Record<string, unknown>>)]
-      : [];
-    const idx = requirements.findIndex((r) => r.id === reqId);
-    if (idx === -1) return json({ error: "Requirement not found." }, 404);
+    await db.runTransaction(async (tx) => {
+      const snap = await tx.get(ref);
+      if (!snap.exists) throw new Error("issue-missing");
+      const data = snap.data() as Issue;
+      const requirements: Requirement[] = Array.isArray(data.requirements) ? [...data.requirements] : [];
+      const idx = requirements.findIndex((r) => r.id === reqId);
+      if (idx === -1) throw new Error("requirement-missing");
 
-    // Firestore cannot address array elements with dotted paths (it treats
-    // `requirements.0.resolved` as a map key, corrupting the array). Write the
-    // whole modified array back instead.
-    requirements[idx] = { ...requirements[idx], resolved: body.resolved };
+      const current = requirements[idx];
+      let next: Requirement;
 
-    await ref.update({
-      requirements,
-      updatedAt: new Date().toISOString(),
+      if (hasResolved) {
+        const body = resolveRequirementSchema.parse({ resolved: rawObj.resolved });
+        if (current.needsApproval) {
+          throw new Error("approval-locked");
+        }
+        next = { ...current, resolved: body.resolved };
+      } else {
+        const body = editRequirementSchema.parse(editInfo ?? {});
+        if (current.approvalStatus === "approved") {
+          throw new Error("already-approved");
+        }
+        next = { ...current, ...body };
+        if (current.needsApproval && current.approvalStatus === "rejected") {
+          next = {
+            ...next,
+            approvalStatus: "pending",
+            resolved: false,
+            rejectReason: undefined,
+          };
+        }
+      }
+
+      requirements[idx] = next;
+
+      await tx.update(ref, {
+        requirements,
+        pendingPurchaseCount: pendingCount(requirements),
+        updatedAt: now,
+      });
+    });
+
+    if (hasEdit) {
+      void notifyRole(["purchase"], {
+        type: "purchase",
+        title: "Purchase approval requested again",
+        body: `Resubmitted for approval: ${editInfo?.item ?? "item"} ×${editInfo?.qty ?? "?"}.`,
+        link: `/issues/${id}`,
+      });
+    }
+
+    return json({ ok: true });
+  } catch (e) {
+    if (e instanceof Error && e.message === "issue-missing") return json({ error: "Issue not found." }, 404);
+    if (e instanceof Error && e.message === "requirement-missing") return json({ error: "Requirement not found." }, 404);
+    if (e instanceof Error && e.message === "approval-locked")
+      return json({ error: "Approval-flagged requirements are resolved by the purchase team only." }, 403);
+    if (e instanceof Error && e.message === "already-approved")
+      return json({ error: "This requirement was already approved — it cannot be edited." }, 400);
+    return handleError(e);
+  }
+}
+
+/** DELETE /api/issues/[id]/requirements/[reqId] — remove a requirement. */
+export async function DELETE(
+  req: NextRequest,
+  ctx: RouteContext<"/api/issues/[id]/requirements/[reqId]">
+): Promise<NextResponse> {
+  try {
+    const { id, reqId } = await ctx.params;
+    const user = await requireAuth(req);
+    if (!ALLOWED_ROLES.includes(user.role)) {
+      return json({ error: "Not allowed." }, 403);
+    }
+
+    const db = adminDb();
+    const ref = db.doc(`issues/${id}`);
+    const now = new Date().toISOString();
+
+    await db.runTransaction(async (tx) => {
+      const snap = await tx.get(ref);
+      if (!snap.exists) throw new Error("issue-missing");
+      const data = snap.data() as Issue;
+      const requirements: Requirement[] = Array.isArray(data.requirements) ? [...data.requirements] : [];
+      const idx = requirements.findIndex((r) => r.id === reqId);
+      if (idx === -1) throw new Error("requirement-missing");
+      requirements.splice(idx, 1);
+
+      await tx.update(ref, {
+        requirements,
+        pendingPurchaseCount: pendingCount(requirements),
+        updatedAt: now,
+      });
     });
 
     return json({ ok: true });
   } catch (e) {
+    if (e instanceof Error && e.message === "issue-missing") return json({ error: "Issue not found." }, 404);
+    if (e instanceof Error && e.message === "requirement-missing") return json({ error: "Requirement not found." }, 404);
     return handleError(e);
   }
 }

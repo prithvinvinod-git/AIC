@@ -15,7 +15,13 @@ import { IssuePhotos } from "@/components/ui/IssuePhotos";
 import type { Issue } from "@/lib/types";
 
 function ValidatePanel({ issue, onDone, onTriaged }: { issue: Issue; onDone: () => void; onTriaged: () => void }) {
-  const [priority, setPriority] = useState("3");
+  const defaultPriority =
+    issue.priority >= 1 && issue.priority <= 5
+      ? String(issue.priority)
+      : issue.aiSuggestion?.suggestedPriority && issue.aiSuggestion.suggestedPriority >= 1 && issue.aiSuggestion.suggestedPriority <= 5
+        ? String(issue.aiSuggestion.suggestedPriority)
+        : "3";
+  const [priority, setPriority] = useState(defaultPriority);
   const [rejectReason, setRejectReason] = useState("");
   const [busy, setBusy] = useState<"validate" | "reject" | null>(null);
   const [error, setError] = useState<string | null>(null);

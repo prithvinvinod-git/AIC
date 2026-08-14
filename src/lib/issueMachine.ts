@@ -251,13 +251,10 @@ export const TRANSITION_RULES: Record<IssueStatus, TransitionRule[]> = {
         if (!input.note || input.note.trim().length < 5)
           return "A closure report is required.";
         const unresolved = (Array.isArray(issue.requirements) ? issue.requirements : []).filter(
-          (r) => !r.resolved && r.needsApproval
+          (r) => r.needsApproval && !r.resolved
         );
-        // The closure report note doubles as the waiver (the UI tells staff
-        // they may add a waiver note to the report), so an explicit verdict
-        // is not required when a report is present.
-        if (unresolved.length > 0 && !input.verdict && !input.note)
-          return `${unresolved.length} approval-flagged requirement(s) are still unresolved. Resolve or add a waiver note to the closure report.`;
+        if (unresolved.length > 0)
+          return `${unresolved.length} approval-flagged requirement(s) have not been approved by the purchase team yet. Approve or resubmit them before completing this job.`;
         return null;
       },
     },
@@ -384,6 +381,32 @@ export async function resolveTeamForCategory(
     return { teamId: teams.docs[0].id, categoryName: cat.name || categoryId };
   }
   return { teamId: "", categoryName: cat.name || categoryId };
+}
+
+/**
+ * Resolve the maintenance head responsible for dispatching an issue.
+ * Preference: an active head for the issue's department (per-department
+ * model), then an active head for the issue's college, then any active head.
+ * Returns null only when no maintenance head exists.
+ */
+export async function resolveMaintenanceHead(
+  db: Firestore,
+  issue: { department?: string; college?: string }
+): Promise<string | null> {
+  const base = () =>
+    db
+      .collection("users")
+      .where("role", "==", "maintenance_head")
+      .where("isActive", "==", true);
+  const attempts: Array<[string, string]> = [];
+  if (issue.department) attempts.push(["department", issue.department]);
+  if (issue.college) attempts.push(["college", issue.college]);
+  for (const [field, value] of attempts) {
+    const snap = await base().where(field, "==", value).limit(1).get();
+    if (!snap.empty) return snap.docs[0].id;
+  }
+  const any = await base().limit(1).get();
+  return any.empty ? null : any.docs[0].id;
 }
 
 /**

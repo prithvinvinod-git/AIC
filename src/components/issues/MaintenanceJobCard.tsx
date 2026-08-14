@@ -134,10 +134,29 @@ export function MaintenanceJobCard({
     [issue.id, onRefresh]
   );
 
+  const resubmitRequirement = useCallback(
+    async (r: Requirement) => {
+      setBusy(true);
+      setError(null);
+      try {
+        await api(`/api/issues/${issue.id}/requirements/${(r as Requirement & { id?: string }).id}`, {
+          method: "PATCH",
+          body: JSON.stringify({ item: r.item, qty: r.qty }),
+        });
+        onRefresh();
+      } catch (e) {
+        setError(e instanceof ApiError ? e.message : "Resubmit failed.");
+      } finally {
+        setBusy(false);
+      }
+    },
+    [issue.id, onRefresh]
+  );
+
   const isAssigned = issue.status === "ASSIGNED";
   const isOngoing = issue.status === "ONGOING";
   const isBlocked = issue.status === "PENDING";
-  const unresolvedApproval = issue.requirements.filter((r) => !r.resolved && r.needsApproval).length;
+  const unresolvedApproval = issue.requirements.filter((r) => r.needsApproval && !r.resolved).length;
 
   const completeForm = (
     <form
@@ -159,8 +178,8 @@ export function MaintenanceJobCard({
       />
       {unresolvedApproval > 0 && (
         <p className="text-xs text-warning">
-          {unresolvedApproval} approval-flagged requirement(s) unresolved — you can still submit with a waiver
-          note in the report.
+          {unresolvedApproval} approval-flagged requirement(s) unresolved — the job can&apos;t be completed until the
+          purchase team approves them.
         </p>
       )}
       <div className="flex gap-2">
@@ -332,9 +351,14 @@ export function MaintenanceJobCard({
           {issue.requirements.length === 0 && (
             <li className="text-xs text-stone">No requirements logged yet.</li>
           )}
-            {issue.requirements.map((r, i) => (
+            {issue.requirements.map((r, i) => {
+            const isApproval = !!r.needsApproval;
+            const isApprovalRejected = isApproval && r.approvalStatus === "rejected";
+            const isApprovalApproved = isApproval && r.approvalStatus === "approved";
+            const toggleable = !isApproval;
+            return (
               <li key={`${(r as Requirement & { id?: string }).id || i}`} className="flex items-center gap-3 text-sm">
-                {readOnly ? (
+                {readOnly || !toggleable ? (
                   <span
                     className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 sm:h-3.5 sm:w-3.5 ${
                       r.resolved ? "border-success bg-success text-white" : "border-slate bg-white"
@@ -361,23 +385,46 @@ export function MaintenanceJobCard({
                 )}
                 <span className={r.resolved ? "text-slate line-through" : "text-graphite"}>
                   {r.item} ×{r.qty}
-                  {r.needsApproval && (
-                    <span
-                      className={`ml-1 rounded px-1.5 py-0.5 text-[10px] font-medium ${
-                        r.resolved ? "bg-success-soft text-success" : "bg-warning-soft text-warning"
-                      }`}
-                    >
-                      approval
-                    </span>
-                  )}
                 </span>
+                {isApproval && (
+                  isApprovalApproved ? (
+                    <span
+                      className="rounded bg-success-soft px-1.5 py-0.5 text-[10px] font-medium text-success"
+                      title={r.approvalBy?.name ? `Approved by ${r.approvalBy.name}` : "Approved"}
+                    >
+                      Approved · ₹{r.price ?? 0}
+                    </span>
+                  ) : isApprovalRejected ? (
+                    <span
+                      className="rounded bg-danger-soft px-1.5 py-0.5 text-[10px] font-medium text-danger"
+                      title={r.rejectReason || "Rejected"}
+                    >
+                      Rejected
+                    </span>
+                  ) : (
+                    <span className="rounded bg-warning-soft px-1.5 py-0.5 text-[10px] font-medium text-warning">
+                      Awaiting approval
+                    </span>
+                  )
+                )}
+                {isApprovalRejected && !readOnly && (
+                  <button
+                    type="button"
+                    onClick={() => void resubmitRequirement(r)}
+                    disabled={busy}
+                    className="text-xs font-medium text-accent hover:underline"
+                  >
+                    Resubmit
+                  </button>
+                )}
               </li>
-            ))}
+            );
+          })}
           </ul>
           {unresolvedApproval > 0 && (
             <p className="mt-2 text-xs text-warning">
-              Tick the box next to each approval-flagged item once it&apos;s been obtained, or add a waiver note
-              in the closure report.
+              {unresolvedApproval} approval-flagged item(s) awaiting purchase team approval. The job can&apos;t be
+              completed until they&apos;re approved.
             </p>
           )}
         </div>

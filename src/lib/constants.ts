@@ -5,6 +5,7 @@ import {
   Clock,
   Megaphone,
   ShieldAlert,
+  ShoppingCart,
   TriangleAlert,
   Wrench,
   type LucideIcon,
@@ -65,6 +66,7 @@ export const ROLE_LABEL: Record<Role, string> = {
   maintenance_head: "Maintenance Head",
   category_head: "Category Head",
   maintenance: "Maintenance",
+  purchase: "Purchase Team",
   admin: "Admin",
 };
 
@@ -79,6 +81,7 @@ export const NOTIFICATION_META: Record<
   verification: { label: "Verification", icon: CheckCheck, iconClass: "text-success" },
   pending: { label: "Pending", icon: Clock, iconClass: "text-warning" },
   spam: { label: "Flagged", icon: ShieldAlert, iconClass: "text-danger" },
+  purchase: { label: "Purchase", icon: ShoppingCart, iconClass: "text-accent" },
   announcement: { label: "Announcement", icon: Megaphone, iconClass: "text-violet" },
 };
 

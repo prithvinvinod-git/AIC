@@ -85,7 +85,7 @@ exports.checkSlaBreaches = (0, scheduler_1.onSchedule)({ schedule: "every 10 min
         });
         await pushTimeline(issueId, data.status, data.status, `Resolution SLA breached for ${issueNo}.`, SYSTEM_ACTOR);
         const link = `/issues/${issueId}`;
-        await notifyRoles(["head", "admin"], "sla", "SLA breach", `${issueNo} missed its resolution deadline — investigate now.`, link);
+        await notifyRoles(["validator", "admin"], "sla", "SLA breach", `${issueNo} missed its resolution deadline — investigate now.`, link);
         await notifyUser(data.reporter?.uid, "sla", "SLA breach", `Your issue ${issueNo} crossed its resolution deadline.`, link);
         breached += 1;
     }));

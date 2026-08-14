@@ -52,10 +52,11 @@ The app is organized around role-specific dashboards so each stakeholder lands o
 **Role enum** (`src/lib/types.ts`):
 
 ```
-reporter | validator | hod | principal | maintenance | admin
+reporter | validator | hod | principal | maintenance | purchase | admin
 ```
 
 - The old **`head` role was removed** and its duties merged into the **department-scoped `validator`** (validators route/assign and verify — see §4).
+- **`purchase` (Purchase Team):** not department-scoped. Queued on issues with `pendingPurchaseCount > 0`; approves flagged requirements with a unit price (auto-resolves them) or rejects with a reason. Demo: `purchase@gmail.com` / `123456`.
 - **`portal` claim:** an `admin` with `portal: "principal"` gets Principal + HOD + Admin navigation (`src/lib/nav.ts` `portalRoles`/`homeFor`). `admin@gmail.com` demo account lands on the Principal portal.
 - Every ID token is verified per request (`src/lib/auth.ts` `requireAuth`); a `portal` claim can surface another role's dashboards on top of the account's own role.
 - Analytics is visible to `hod | principal | validator | admin` (`ANALYTICS_ROLES`).
@@ -69,6 +70,7 @@ reporter | validator | hod | principal | maintenance | admin
 | hod | Escalations `/hod` |
 | principal | Approvals `/principal` |
 | maintenance | Jobs `/jobs` |
+| purchase | Purchases `/purchase` |
 | admin | Admin `/admin` |
 | all | Analytics `/analytics` |
 | admin, principal | Issue history `/issue-history` |
@@ -101,7 +103,7 @@ NEW → VALIDATED → ESCALATED → APPROVED → ASSIGNED → ONGOING → COMPLE
 | `ASSIGNED` | `ONGOING` | maintenance | must be assigned staff (or team) |
 | `ASSIGNED` / `ONGOING` | `PENDING` | maintenance, validator, admin | blocker note ≥ 3 chars |
 | `PENDING` | `ASSIGNED` | validator, admin | `teamId` required |
-| `ONGOING` | `COMPLETED` | maintenance, validator, admin | closure report ≥ 5 chars; `needsApproval` requirements resolved/waived |
+| `ONGOING` | `COMPLETED` | maintenance, validator, admin | closure report ≥ 5 chars; all `needsApproval` requirements must be approved (resolved) by the purchase team — no waiver |
 | `COMPLETED` | `VERIFIED` | validator, admin | verdict ≥ 2 chars |
 | `COMPLETED` | `ONGOING` | validator, admin | send-back reason ≥ 3 chars |
 | `VERIFIED` | `CLOSED` | reporter | rating 1–5 (or `isAuto`) |
@@ -134,7 +136,8 @@ issues/{issueId}
   prioritySetBy/At, escalation{required,status,...}
   location{name,building,floor?}            ← snapshot
   routing{categoryId,categoryName,teamId,staff[]}   ← snapshot, denormalized display
-  requirements[{item,qty,needsApproval,resolved,addedBy,at}]
+  requirements[{item,qty,needsApproval,resolved,approvalStatus?,price?,approvalBy?,approvalAt?,rejectReason?,addedBy,at}]
+  pendingPurchaseCount                      ← needsApproval && !resolved && approvalStatus !== "rejected"
   involveTeams[{teamId,completed}]
   sla{startedAt,responseDeadline,resolutionDeadline,pausedAt,totalPausedMs,breachedFlags}
   rejection{reason,by,at} | completion{report,completedAt} | verification{...} | feedback{rating,comment,givenAt,autoClosed}
@@ -179,6 +182,7 @@ POST   /api/issues/[id]/sendback        → ONGOING (send back)
 POST   /api/issues/[id]/feedback        → CLOSED
 POST   /api/issues/[id]/requirements    add/resolve requirement
 POST   /api/issues/[id]/requirements/[reqId]
+POST   /api/issues/[id]/requirements/[reqId]/approve · /reject   purchase/admin: price or reason
 POST   /api/issues/[id]/comments        comment
 GET    /api/notifications               in-app notifications
 GET    /api/profile · PATCH /api/profile

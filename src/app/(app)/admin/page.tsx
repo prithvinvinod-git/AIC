@@ -21,6 +21,7 @@ const ALL_ROLES: Role[] = [
   "maintenance_head",
   "category_head",
   "maintenance",
+  "purchase",
   "admin",
 ];
 
@@ -34,6 +35,7 @@ const FACULTY_ROLES: Role[] = [
   "maintenance_head",
   "category_head",
   "maintenance",
+  "purchase",
   "admin",
 ];
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { adminDb } from "@/lib/firebaseAdmin";
 import { runTransition } from "@/lib/transition";
+import { resolveMaintenanceHead } from "@/lib/issueMachine";
 import { json, parseBody, handleError } from "@/lib/api";
 
 const schema = z.object({
@@ -37,14 +38,8 @@ export async function POST(
     const issue = issueSnap.data()!;
 
     if (body.to === "ROUTED") {
-      const heads = await adminDb()
-        .collection("users")
-        .where("role", "==", "maintenance_head")
-        .where("department", "==", issue.department)
-        .where("isActive", "==", true)
-        .limit(1)
-        .get();
-      if (!heads.empty) preParsed.maintenanceHeadUid = heads.docs[0].id;
+      const headId = await resolveMaintenanceHead(adminDb(), issue);
+      if (headId) preParsed.maintenanceHeadUid = headId;
     } else {
       const categoryId = body.categoryId || issue.routing?.categoryId;
       if (!categoryId) return json({ error: "Choose a category to forward this issue." }, 400);

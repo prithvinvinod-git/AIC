@@ -6,6 +6,7 @@ export type Role =
   | "maintenance_head"
   | "category_head"
   | "maintenance"
+  | "purchase"
   | "admin";
 
 export const ROLES: Role[] = [
@@ -16,6 +17,7 @@ export const ROLES: Role[] = [
   "maintenance_head",
   "category_head",
   "maintenance",
+  "purchase",
   "admin",
 ];
 
@@ -81,10 +83,20 @@ export interface Comment {
 }
 
 export interface Requirement {
+  id?: string;
   item: string;
   qty: number;
   needsApproval: boolean;
   resolved: boolean;
+  /** Set only when `needsApproval` — the purchase team workflow state. */
+  approvalStatus?: "pending" | "approved" | "rejected";
+  /** Unit price entered by the purchase team when approving. */
+  price?: number;
+  approvalBy?: { uid: string; name: string };
+  approvalAt?: string;
+  rejectReason?: string;
+  rejectedBy?: { uid: string; name: string };
+  rejectedAt?: string;
   addedBy: { uid: string; name: string };
   at: string;
 }
@@ -184,6 +196,8 @@ export interface Issue {
   };
   requirements: Requirement[];
   involveTeams: InvolvedTeam[];
+  /** Denormalized count of `needsApproval && approvalStatus === "pending"` requirements. */
+  pendingPurchaseCount?: number;
   sla?: SlaState;
   rejection?: Rejection;
   completion?: Completion;
