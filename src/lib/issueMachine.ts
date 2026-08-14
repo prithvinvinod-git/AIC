@@ -352,6 +352,21 @@ function timelineEntry(
   };
 }
 
+/** Firestore rejects `undefined` values — drop them (recursively) from any
+ *  document we write so optional denormalized fields (e.g. routing.headUid)
+ *  can stay unset instead of failing the transaction. */
+function stripUndefined<T>(value: T): T {
+  if (Array.isArray(value)) return value.map(stripUndefined) as unknown as T;
+  if (value && typeof value === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      if (v !== undefined) out[k] = stripUndefined(v);
+    }
+    return out as T;
+  }
+  return value;
+}
+
 /**
  * Resolve the default team for a category (categories.defaultTeamId wins;
  * otherwise any active team matching the categoryId).
@@ -653,7 +668,7 @@ export async function applyTransition(
       });
     }
     tx.update(ref, {
-      ...patches,
+      ...stripUndefined(patches),
       "counters.timelineCount": FieldValue.increment(steps.length || 1),
     });
 
