@@ -3,6 +3,8 @@ export type Role =
   | "validator"
   | "hod"
   | "principal"
+  | "maintenance_head"
+  | "category_head"
   | "maintenance"
   | "admin";
 
@@ -11,6 +13,8 @@ export const ROLES: Role[] = [
   "validator",
   "hod",
   "principal",
+  "maintenance_head",
+  "category_head",
   "maintenance",
   "admin",
 ];
@@ -20,6 +24,8 @@ export type IssueStatus =
   | "VALIDATED"
   | "ESCALATED"
   | "APPROVED"
+  | "ROUTED"
+  | "PENDING_ASSIGN"
   | "ASSIGNED"
   | "ONGOING"
   | "PENDING"
@@ -33,6 +39,8 @@ export const STATUSES: IssueStatus[] = [
   "VALIDATED",
   "ESCALATED",
   "APPROVED",
+  "ROUTED",
+  "PENDING_ASSIGN",
   "ASSIGNED",
   "ONGOING",
   "PENDING",
@@ -169,6 +177,10 @@ export interface Issue {
     categoryName: string;
     teamId: string;
     staff: { uid: string; name: string }[];
+    /** Department maintenance head the issue was routed to (denormalized). */
+    maintenanceHeadUid?: string;
+    /** Category head responsible for assigning workers (denormalized). */
+    categoryHeadUid?: string;
   };
   requirements: Requirement[];
   involveTeams: InvolvedTeam[];
@@ -244,6 +256,8 @@ export interface Category {
   id?: string;
   name: string;
   description?: string;
+  /** UID of the category head (role `category_head`) who assigns workers. */
+  headUid?: string;
   defaultTeamId?: string;
   slaResponseHours: number;
   slaResolutionHours: number;

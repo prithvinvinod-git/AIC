@@ -78,6 +78,41 @@ export function notifyRecipientsForIssue(issue: Issue, oldStatus: string, newSta
     case "APPROVED":
       toReporter("Issue approved", `${issue.issueNo} approved — routing next.`);
       break;
+    case "ROUTED":
+      toReporter("Issue with maintenance head", `${issue.issueNo} is with the maintenance head for dispatch.`);
+      if (issue.routing?.maintenanceHeadUid) {
+        notify(issue.routing.maintenanceHeadUid, {
+          type: "assignment",
+          title: "New issue to dispatch",
+          body: `${issue.issueNo} routed to you — forward to the right team.`,
+          link,
+        });
+      } else {
+        notifyRole(["maintenance_head"], {
+          type: "assignment",
+          title: "New issue to dispatch",
+          body: `${issue.issueNo} needs dispatch to a maintenance team.`,
+          link,
+        });
+      }
+      break;
+    case "PENDING_ASSIGN":
+      toReporter("Issue ready for assignment", `${issue.issueNo} is being dispatched to a maintenance team.`);
+      if (issue.routing?.categoryHeadUid) {
+        notify(issue.routing.categoryHeadUid, {
+          type: "assignment",
+          title: "Assign workers",
+          body: `${issue.issueNo} forwarded to ${issue.routing?.categoryName || "your category"} — assign a team.`,
+          link,
+        });
+      }
+      notifyRole(["maintenance_head"], {
+        type: "assignment",
+        title: "Issue forwarded",
+        body: `${issue.issueNo} forwarded to ${issue.routing?.categoryName || "a category"}.`,
+        link,
+      });
+      break;
     case "ASSIGNED":
       toReporter("Issue assigned", `${issue.issueNo} assigned to a maintenance team.`);
       notifyRole(["validator", "maintenance"], {
@@ -92,9 +127,17 @@ export function notifyRecipientsForIssue(issue: Issue, oldStatus: string, newSta
       break;
     case "PENDING":
       toReporter("Issue on hold", `${issue.issueNo} is pending a blocker.`);
-      notifyRole(["validator"], {
+      if (issue.routing?.categoryHeadUid) {
+        notify(issue.routing.categoryHeadUid, {
+          type: "pending",
+          title: "Pending issue needs reassignment",
+          body: `${issue.issueNo} hit a blocker — reassign or escalate.`,
+          link,
+        });
+      }
+      notifyRole(["maintenance_head", "validator"], {
         type: "pending",
-        title: "Pending issue needs reassignment",
+        title: "Pending issue needs attention",
         body: `${issue.issueNo} hit a blocker — reassign from the queue.`,
         link,
       });

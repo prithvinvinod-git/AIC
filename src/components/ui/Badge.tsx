@@ -6,6 +6,8 @@ const STATUS_TONE: Record<IssueStatus, string> = {
   VALIDATED: "bg-accent-soft text-accent",
   ESCALATED: "bg-warning-soft text-warning",
   APPROVED: "bg-accent-soft text-accent",
+  ROUTED: "bg-warning-soft text-warning",
+  PENDING_ASSIGN: "bg-warning-soft text-warning",
   ASSIGNED: "bg-accent-soft text-accent",
   ONGOING: "bg-accent-soft text-accent",
   PENDING: "bg-warning-soft text-warning",

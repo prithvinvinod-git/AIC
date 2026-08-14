@@ -67,6 +67,26 @@ export function feedFor(role: Role, department?: string): RoleFeed {
         emptyBody: "Jobs assigned to your team will appear here as they come in.",
         pick: (issues) => issues.filter((i) => OPEN_JOB_STATUSES.includes(i.status)),
       };
+    case "maintenance_head":
+      return {
+        title: "Issues to dispatch",
+        subtitle: `Latest validated work from ${department || "your department"} awaiting your dispatch.`,
+        ctaLabel: "Dispatch",
+        ctaHref: "/dispatch",
+        params: { status: "ROUTED" },
+        emptyTitle: "Nothing to dispatch",
+        emptyBody: "Validated P3–5 issues will land here for you to forward to a category team.",
+      };
+    case "category_head":
+      return {
+        title: "Jobs to assign",
+        subtitle: `Latest forwarded jobs awaiting your team assignment${department ? ` in ${department}` : ""}.`,
+        ctaLabel: "Assign",
+        ctaHref: "/dispatch",
+        params: { status: "PENDING_ASSIGN" },
+        emptyTitle: "Nothing to assign",
+        emptyBody: "Forwarded issues will land here for you to assign a team and workers.",
+      };
     default:
       return {
         title: "Latest campus issues",

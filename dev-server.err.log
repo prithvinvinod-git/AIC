@@ -1,0 +1,145 @@
+[browser] Uncaught Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <InnerLayoutRouter url="/login?nex..." tree={[...]} params={{}} cacheNode={{rsc:{...}, ...}} segmentPath={[...]} ...>
+      <SegmentViewNode type="page" pagePath="(auth)/log...">
+        <SegmentTrieNode>
+        <ClientPageRoot Component={function LoginPage} serverProvidedParams={{...}}>
+          <LoginPage params={Promise} searchParams={Promise}>
+            <Suspense fallback={null}>
+              <LoginInner>
+                <HeroAuthCard onSuccess={function LoginInner.useCallback[goHome]}>
+                  <div className="card w-full">
+                    <h2>
+                    <p>
+                    <div className="mt-5 round...">
+                      <form onSubmit={function HeroAuthCard.useCallback[submitEmail]} className="flex flex-...">
+                        <div>
+                        <div>
+                        <div className="relative">
+                          <button>
+                          <LastUsedBadge method="email">
++                           <span
++                             className="absolute -top-2.5 right-2 z-10 rounded-md border border-silver bg-white px-1...."
++                           >
+                    ...
+      ...
+
+    at <unknown> (https://react.dev/link/hydration-mismatch)
+    at span (<anonymous>)
+    at LastUsedBadge (src/components/auth/LastUsedBadge.tsx:20:5)
+    at HeroAuthCard (src/components/home/HeroAuthCard.tsx:111:13)
+    at LoginInner (src/app/(auth)/login/page.tsx:25:10)
+    at LoginPage (src/app/(auth)/login/page.tsx:31:7)
+  18 |
+  19 |   return (
+> 20 |     <span className="absolute -top-2.5 right-2 z-10 rounded-md border border-silver bg-white px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-accent shadow-sm">
+     |     ^
+  21 |       Last used
+  22 |     </span>
+  23 |   );
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[browser] ./src/components/issues/MaintenanceJobCard.tsx:384:8
+Error: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+  382 |           )}
+  383 |         </div>
+> 384 |       )}
+      |        ^
+  385 |
+  386 |       <div className={uniform ? "mt-auto flex flex-col gap-2" : "flex flex-col gap-2"}>
+  387 |         {actions}
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./src/components/issues/MaintenanceJobCard.tsx [Client Component Browser]
+    ./src/app/(app)/jobs/page.tsx [Client Component Browser]
+    ./src/app/(app)/jobs/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/issues/MaintenanceJobCard.tsx [Client Component SSR]
+    ./src/app/(app)/jobs/page.tsx [Client Component SSR]
+    ./src/app/(app)/jobs/page.tsx [Server Component] 
+[browser] ./src/components/issues/MaintenanceJobCard.tsx:384:8
+Error: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+  382 |           )}
+  383 |         </div>
+> 384 |       )}
+      |        ^
+  385 |
+  386 |       <div className={uniform ? "mt-auto flex flex-col gap-2" : "flex flex-col gap-2"}>
+  387 |         {actions}
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./src/components/issues/MaintenanceJobCard.tsx [Client Component Browser]
+    ./src/app/(app)/jobs/page.tsx [Client Component Browser]
+    ./src/app/(app)/jobs/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/issues/MaintenanceJobCard.tsx [Client Component SSR]
+    ./src/app/(app)/jobs/page.tsx [Client Component SSR]
+    ./src/app/(app)/jobs/page.tsx [Server Component] 
+[browser] ./src/components/issues/MaintenanceJobCard.tsx:384:8
+Error: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+  382 |           )}
+  383 |         </div>
+> 384 |       )}
+      |        ^
+  385 |
+  386 |       <div className={uniform ? "mt-auto flex flex-col gap-2" : "flex flex-col gap-2"}>
+  387 |         {actions}
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./src/components/issues/MaintenanceJobCard.tsx [Client Component Browser]
+    ./src/app/(app)/jobs/page.tsx [Client Component Browser]
+    ./src/app/(app)/jobs/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/issues/MaintenanceJobCard.tsx [Client Component SSR]
+    ./src/app/(app)/jobs/page.tsx [Client Component SSR]
+    ./src/app/(app)/jobs/page.tsx [Server Component] 
+[browser] ./src/components/issues/MaintenanceJobCard.tsx:384:8
+Error: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+  382 |           )}
+  383 |         </div>
+> 384 |       )}
+      |        ^
+  385 |
+  386 |       <div className={uniform ? "mt-auto flex flex-col gap-2" : "flex flex-col gap-2"}>
+  387 |         {actions}
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./src/components/issues/MaintenanceJobCard.tsx [Client Component Browser]
+    ./src/app/(app)/jobs/page.tsx [Client Component Browser]
+    ./src/app/(app)/jobs/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/issues/MaintenanceJobCard.tsx [Client Component SSR]
+    ./src/app/(app)/jobs/page.tsx [Client Component SSR]
+    ./src/app/(app)/jobs/page.tsx [Server Component] 

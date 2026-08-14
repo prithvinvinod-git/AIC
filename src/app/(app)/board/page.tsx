@@ -7,7 +7,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { api, ApiError } from "@/lib/clientApi";
 import { Loading, EmptyState, BoardErrorState } from "@/components/ui/States";
 import { AISuggestionCard } from "@/components/issues/AISuggestionCard";
-import { AssignCard, VerifyCard } from "@/components/issues/HeadCards";
+import { VerifyCard, RouteToHeadCard } from "@/components/issues/HeadCards";
 import { MaintenanceJobCard } from "@/components/issues/MaintenanceJobCard";
 import { RootCauseAnalysisCard } from "@/components/ai/RootCauseAnalysisCard";
 import { PriorityBadge, StatusBadge } from "@/components/ui/Badge";
@@ -181,7 +181,7 @@ export default function ValidatePage() {
         {active.length === 0 ? (
           <EmptyState title="No active jobs" body="Assigned jobs being worked on will appear here." />
         ) : (
-          <div className="grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {active.map((issue) => (
               <MaintenanceJobCard key={issue.id} issue={issue} onRefresh={() => void reload()} readOnly />
             ))}
@@ -191,14 +191,14 @@ export default function ValidatePage() {
 
       <section className="flex flex-col gap-4">
         <h2 className="font-display text-lg font-semibold text-ink">
-          Assign queue <span className="text-sm font-normal text-slate">({assignQueue.length})</span>
+          Route queue <span className="text-sm font-normal text-slate">({assignQueue.length})</span>
         </h2>
         {assignQueue.length === 0 ? (
-          <EmptyState title="Nothing to assign" body="Approved issues awaiting your team assignment will land here." />
+          <EmptyState title="Nothing to route" body="Approved issues awaiting dispatch to the maintenance head will land here." />
         ) : (
           <div className="grid items-start gap-4 lg:grid-cols-2">
             {assignQueue.map((issue) => (
-              <AssignCard key={issue.id} issue={issue} onRefresh={() => void reload()} />
+              <RouteToHeadCard key={issue.id} issue={issue} onRefresh={() => void reload()} />
             ))}
           </div>
         )}
@@ -228,7 +228,7 @@ export default function ValidatePage() {
         ) : (
           <div className="grid items-start gap-4 lg:grid-cols-2">
             {blocked.map((issue) => (
-              <AssignCard key={issue.id} issue={issue} onRefresh={() => void reload()} />
+              <RouteToHeadCard key={issue.id} issue={issue} onRefresh={() => void reload()} pending />
             ))}
           </div>
         )}

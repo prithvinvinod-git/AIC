@@ -59,7 +59,16 @@ export function IssueActions({ issue, onChanged }: Props) {
       );
     }
     if (["APPROVED", "PENDING"].includes(issue.status)) {
-      return <AssignPanel issue={issue} onChanged={onChanged} />;
+      return (
+        <div className="flex flex-col gap-4">
+          <ForwardPanel
+            issue={issue}
+            onChanged={onChanged}
+            to={issue.status === "APPROVED" ? "ROUTED" : "PENDING_ASSIGN"}
+          />
+          <AssignPanel issue={issue} onChanged={onChanged} />
+        </div>
+      );
     }
     if (issue.status === "COMPLETED") {
       return <VerifyPanel issue={issue} onChanged={onChanged} />;
@@ -106,6 +115,21 @@ export function IssueActions({ issue, onChanged }: Props) {
         </div>
       );
     }
+  }
+
+  if (role === "maintenance_head") {
+    if (issue.status === "ROUTED" || issue.status === "PENDING_ASSIGN") {
+      return (
+        <div className="flex flex-col gap-4">
+          <ForwardPanel issue={issue} onChanged={onChanged} />
+          {issue.status === "PENDING_ASSIGN" && <AssignPanel issue={issue} onChanged={onChanged} />}
+        </div>
+      );
+    }
+  }
+
+  if (role === "category_head" && issue.status === "PENDING_ASSIGN") {
+    return <AssignPanel issue={issue} onChanged={onChanged} />;
   }
 
   return null;
@@ -399,8 +423,81 @@ function AssignedActions({ issue, onChanged }: { issue: Issue; onChanged: () => 
   );
 }
 
-function AssignPanel({ issue, onChanged }: { issue: Issue; onChanged: () => void }) {
-  const [teams, setTeams] = useState<TeamWithMembers[]>([]);
+function ForwardPanel({
+  issue,
+  onChanged,
+  to = "PENDING_ASSIGN",
+}: {
+  issue: Issue;
+  onChanged: () => void;
+  to?: "ROUTED" | "PENDING_ASSIGN";
+}) {
+  const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
+  const [categoryId, setCategoryId] = useState(issue.routing?.categoryId || "");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const hasCategory = Boolean(issue.routing?.categoryId);
+
+  useEffect(() => {
+    if (to === "ROUTED" || hasCategory) return;
+    void api<{ categories: { id: string; name: string }[] }>("/api/categories")
+      .then((res) => setCategories(res.categories))
+      .catch(() => setError("Couldn't load categories."));
+  }, [to, hasCategory]);
+
+  const forward = useCallback(async () => {
+    if (!hasCategory && !categoryId) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await api(`/api/issues/${issue.id}/forward`, {
+        method: "POST",
+        body: JSON.stringify({ to, categoryId }),
+      });
+      onChanged();
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "Forward failed.");
+      setBusy(false);
+    }
+  }, [issue.id, to, categoryId, hasCategory, onChanged]);
+
+  const label =
+    to === "ROUTED"
+      ? "Route to maintenance head"
+      : hasCategory
+        ? "Send to category head"
+        : "Forward to category";
+
+  return (
+    <div className="card flex flex-col gap-3">
+      <p className="font-medium text-graphite">
+        {to === "ROUTED"
+          ? "Dispatch this approved issue to the maintenance head"
+          : "Send this job back to the category head for reassignment"}
+      </p>
+      {!hasCategory && to === "PENDING_ASSIGN" && (
+        <select className="input" value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
+          <option value="">Choose category…</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+      )}
+      <button
+        className="btn btn-primary btn-sm self-start"
+        disabled={busy || (!hasCategory && !categoryId)}
+        onClick={() => void forward()}
+      >
+        {busy ? "Sending…" : label}
+      </button>
+      {error && <p className="text-sm text-danger">{error}</p>}
+    </div>
+  );
+}
+
+function AssignPanel({ issue, onChanged }: { issue: Issue; onChanged: () => void }) {  const [teams, setTeams] = useState<TeamWithMembers[]>([]);
   const [teamId, setTeamId] = useState("");
   const [staff, setStaff] = useState<string[]>([]);
   const [suggestReason, setSuggestReason] = useState<string | null>(null);

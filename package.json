@@ -34,10 +34,11 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.0",
-    "firebase-tools": "^15.26.0",
+    "firebase-tools": "^15.27.0",
     "tailwindcss": "^4",
     "tsx": "^4.23.9",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vercel": "^59.0.0"
   },
   "overrides": {
     "jose": "4.15.9"

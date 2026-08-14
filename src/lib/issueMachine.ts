@@ -35,6 +35,10 @@ export interface TransitionInput {
   rejectionReason?: string;
   teamId?: string;
   staff?: string[];
+  categoryId?: string;
+  categoryName?: string;
+  categoryHeadUid?: string;
+  maintenanceHeadUid?: string;
   verdict?: string;
   sendBackReason?: string;
   rating?: number;
@@ -139,6 +143,11 @@ export const TRANSITION_RULES: Record<IssueStatus, TransitionRule[]> = {
       check: never,
     },
     {
+      to: "ROUTED",
+      roles: ["validator", "admin"],
+      check: never,
+    },
+    {
       to: "ASSIGNED",
       roles: ["validator", "admin"],
       check: never,
@@ -165,9 +174,39 @@ export const TRANSITION_RULES: Record<IssueStatus, TransitionRule[]> = {
   ],
   APPROVED: [
     {
+      to: "ROUTED",
+      roles: ["validator", "admin"],
+      check: never,
+    },
+    {
       to: "ASSIGNED",
       roles: ["validator", "admin"],
       check: never,
+    },
+  ],
+  ROUTED: [
+    {
+      to: "PENDING_ASSIGN",
+      roles: ["maintenance_head", "validator", "admin"],
+      check: (_i, _a, input) =>
+        input.categoryId || _i.routing?.categoryId
+          ? null
+          : "Choose a category to forward this issue.",
+    },
+    {
+      to: "ASSIGNED",
+      roles: ["maintenance_head", "admin"],
+      check: never,
+    },
+  ],
+  PENDING_ASSIGN: [
+    {
+      to: "ASSIGNED",
+      roles: ["category_head", "maintenance_head", "admin"],
+      check: (_i, _a, input) =>
+        input.teamId || _i.routing?.teamId || _i.routing?.categoryId
+          ? null
+          : "Choose a team to assign workers.",
     },
   ],
   ASSIGNED: [
@@ -179,6 +218,11 @@ export const TRANSITION_RULES: Record<IssueStatus, TransitionRule[]> = {
         issue.routing?.teamId
           ? null
           : "You are not assigned to this job.",
+    },
+    {
+      to: "PENDING_ASSIGN",
+      roles: ["category_head", "maintenance_head", "validator", "admin"],
+      check: never,
     },
     {
       to: "PENDING",
@@ -219,6 +263,11 @@ export const TRANSITION_RULES: Record<IssueStatus, TransitionRule[]> = {
     },
   ],
   PENDING: [
+    {
+      to: "PENDING_ASSIGN",
+      roles: ["category_head", "maintenance_head", "validator", "admin"],
+      check: never,
+    },
     {
       to: "ASSIGNED",
       roles: ["validator", "admin"],
@@ -386,12 +435,19 @@ export async function applyTransition(
             status: "pending",
           };
         } else {
-          finalStatus = "ASSIGNED";
-          sla = sla || initSla(priority, config);
+          finalStatus = "ROUTED";
           steps.push(timelineEntry(issue.status, "VALIDATED", actor, note, false));
           steps.push(
-            timelineEntry("VALIDATED", "ASSIGNED", actor, "Auto-routed to maintenance", true)
+            timelineEntry("VALIDATED", "ROUTED", actor, "Auto-routed to maintenance head", true)
           );
+          const r = issue.routing || { categoryId: "", categoryName: "", teamId: "", staff: [] };
+          patches.routing = {
+            categoryId: r.categoryId || "",
+            categoryName: r.categoryName || "",
+            teamId: r.teamId || "",
+            staff: r.staff || [],
+            maintenanceHeadUid: input.maintenanceHeadUid || r.maintenanceHeadUid,
+          };
         }
         break;
       }
@@ -449,6 +505,60 @@ export async function applyTransition(
           };
         }
         if (!sla) sla = initSla(issue.priority, config);
+        const r = issue.routing || { categoryId: "", categoryName: "", teamId: "", staff: [] };
+        if (input.teamId || input.staff?.length) {
+          let staffObjs = r.staff || [];
+          if (input.staff && input.staff.length) {
+            staffObjs = await Promise.all(
+              input.staff.map(async (uid) => {
+                const u = await tx.get(db.doc(`users/${uid}`));
+                return {
+                  uid,
+                  name: u.exists ? (u.data()?.name as string) || uid : uid,
+                };
+              })
+            );
+          }
+          patches.routing = {
+            categoryId: input.categoryId || r.categoryId || "",
+            categoryName: input.categoryName || r.categoryName || "",
+            teamId: input.teamId || r.teamId || "",
+            staff: staffObjs,
+            maintenanceHeadUid: r.maintenanceHeadUid,
+            categoryHeadUid: input.categoryHeadUid || r.categoryHeadUid,
+          };
+        }
+        break;
+      }
+      case "ROUTED": {
+        const r = issue.routing || { categoryId: "", categoryName: "", teamId: "", staff: [] };
+        if (input.categoryId) {
+          patches.routing = {
+            categoryId: input.categoryId,
+            categoryName: input.categoryName || r.categoryName,
+            teamId: r.teamId || "",
+            staff: r.staff || [],
+            maintenanceHeadUid: input.maintenanceHeadUid || r.maintenanceHeadUid,
+            categoryHeadUid: r.categoryHeadUid,
+          };
+        } else if (input.maintenanceHeadUid) {
+          patches.routing = {
+            ...r,
+            maintenanceHeadUid: input.maintenanceHeadUid || r.maintenanceHeadUid,
+          };
+        }
+        break;
+      }
+      case "PENDING_ASSIGN": {
+        const r = issue.routing || { categoryId: "", categoryName: "", teamId: "", staff: [] };
+        patches.routing = {
+          categoryId: input.categoryId || r.categoryId || "",
+          categoryName: input.categoryName || r.categoryName || "",
+          teamId: r.teamId || "",
+          staff: r.staff || [],
+          maintenanceHeadUid: input.maintenanceHeadUid || r.maintenanceHeadUid,
+          categoryHeadUid: input.categoryHeadUid || r.categoryHeadUid,
+        };
         break;
       }
       case "ONGOING": {

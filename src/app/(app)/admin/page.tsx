@@ -13,12 +13,29 @@ import type { AppUser, Category, Team, Role } from "@/lib/types";
 const TABS = ["Users", "Teams", "Categories", "Config"] as const;
 type Tab = (typeof TABS)[number];
 
-const ALL_ROLES: Role[] = ["reporter", "validator", "hod", "principal", "maintenance", "admin"];
+const ALL_ROLES: Role[] = [
+  "reporter",
+  "validator",
+  "hod",
+  "principal",
+  "maintenance_head",
+  "category_head",
+  "maintenance",
+  "admin",
+];
 
 const USER_TABS = ["Regular users", "Faculties"] as const;
 type UserTab = (typeof USER_TABS)[number];
 
-const FACULTY_ROLES: Role[] = ["validator", "hod", "principal", "maintenance", "admin"];
+const FACULTY_ROLES: Role[] = [
+  "validator",
+  "hod",
+  "principal",
+  "maintenance_head",
+  "category_head",
+  "maintenance",
+  "admin",
+];
 
 export default function AdminPage() {
   const { claims } = useAuth();
@@ -386,13 +403,19 @@ function TeamsTab() {
 
 function CategoriesTab() {
   const [categories, setCategories] = useState<Category[] | null>(null);
+  const [heads, setHeads] = useState<AppUser[]>([]);
   const [name, setName] = useState("");
+  const [headUid, setHeadUid] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
-      const res = await api<{ categories: Category[] }>("/api/admin/categories");
-      setCategories(res.categories);
+      const [c, u] = await Promise.all([
+        api<{ categories: Category[] }>("/api/admin/categories"),
+        api<{ users: AppUser[] }>("/api/admin/users"),
+      ]);
+      setCategories(c.categories);
+      setHeads(u.users.filter((x) => x.role === "category_head"));
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Failed to load categories.");
       setCategories([]);
@@ -411,18 +434,35 @@ function CategoriesTab() {
           method: "POST",
           body: JSON.stringify({
             name,
+            headUid: headUid || undefined,
             slaResponseHours: 12,
             slaResolutionHours: 72,
             isActive: true,
           }),
         });
         setName("");
+        setHeadUid("");
         await load();
       } catch (e2) {
         setError(e2 instanceof ApiError ? e2.message : "Failed to create category.");
       }
     },
-    [name, load]
+    [name, headUid, load]
+  );
+
+  const setHead = useCallback(
+    async (id: string | undefined, uid: string) => {
+      try {
+        await api(`/api/admin/categories/${id}`, {
+          method: "PATCH",
+          body: JSON.stringify({ headUid: uid || undefined }),
+        });
+        await load();
+      } catch (e2) {
+        setError(e2 instanceof ApiError ? e2.message : "Failed to set category head.");
+      }
+    },
+    [load]
   );
 
   if (!categories) return <Loading label="Loading categories…" />;
@@ -430,8 +470,21 @@ function CategoriesTab() {
   return (
     <div className="flex flex-col gap-4">
       {error && <p className="rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger">{error}</p>}
-      <form onSubmit={create} className="card flex gap-3">
+      <form onSubmit={create} className="card flex flex-wrap items-end gap-3">
         <input className="input flex-1" placeholder="Category name (e.g. HVAC)" required value={name} onChange={(e) => setName(e.target.value)} />
+        <div>
+          <label className="label" htmlFor="cat-head">
+            Category head
+          </label>
+          <select id="cat-head" className="input" value={headUid} onChange={(e) => setHeadUid(e.target.value)}>
+            <option value="">None</option>
+            {heads.map((h) => (
+              <option key={h.uid} value={h.uid || ""}>
+                {h.name}
+              </option>
+            ))}
+          </select>
+        </div>
         <button type="submit" className="btn btn-primary btn-sm">
           Add category
         </button>
@@ -441,6 +494,7 @@ function CategoriesTab() {
           <thead>
             <tr className="border-b border-silver text-left text-xs uppercase tracking-wide text-slate">
               <th className="px-4 py-3">Name</th>
+              <th className="px-4 py-3">Category head</th>
               <th className="px-4 py-3">Response SLA (h)</th>
               <th className="px-4 py-3">Resolution SLA (h)</th>
               <th className="px-4 py-3">Status</th>
@@ -450,6 +504,20 @@ function CategoriesTab() {
             {categories.map((c) => (
               <tr key={c.id} className="border-b border-silver last:border-0">
                 <td className="px-4 py-3 font-medium text-graphite">{c.name}</td>
+                <td className="px-4 py-3">
+                  <select
+                    className="input w-auto py-1 text-xs"
+                    value={c.headUid || ""}
+                    onChange={(e) => void setHead(c.id, e.target.value)}
+                  >
+                    <option value="">None</option>
+                    {heads.map((h) => (
+                      <option key={h.uid} value={h.uid || ""}>
+                        {h.name}
+                      </option>
+                    ))}
+                  </select>
+                </td>
                 <td className="px-4 py-3 text-slate">{c.slaResponseHours}</td>
                 <td className="px-4 py-3 text-slate">{c.slaResolutionHours}</td>
                 <td className="px-4 py-3">

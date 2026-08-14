@@ -159,6 +159,13 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       query = query.where("reporter.uid", "==", user.uid);
     } else if (user.role === "validator") {
       query = query.where("department", "==", user.department);
+    } else if (user.role === "maintenance_head") {
+      query = query.where("department", "==", user.department);
+    } else if (user.role === "category_head") {
+      const catSnap = await db.collection("categories").where("headUid", "==", user.uid).get();
+      const categoryIds = catSnap.docs.map((d) => d.id);
+      if (!categoryIds.length) return json({ issues: [] });
+      query = query.where("routing.categoryId", "in", categoryIds.slice(0, 10));
     } else if (user.role === "maintenance") {
       const teamSnap = await db
         .collection("teams")

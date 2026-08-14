@@ -12,9 +12,10 @@ const schema = z.object({
 });
 
 /**
- * POST /api/issues/[id]/assign — Validator routes to a team (and staff in assign
- * mode). Resolves the default team when none is provided, then runs the
- * machine's ASSIGNED transition transactionally.
+ * POST /api/issues/[id]/assign — Category head (or validator/admin fallback)
+ * assigns a maintenance team + workers. Resolves the default team when none is
+ * provided, then lets the machine's ASSIGNED transition write routing fields
+ * inside the same transaction.
  */
 export async function POST(
   req: NextRequest,
@@ -52,21 +53,10 @@ export async function POST(
     const teamSnap = await adminDb().doc(`teams/${teamId}`).get();
     if (!teamSnap.exists) return json({ error: "Team not found." }, 404);
 
-    // Resolve staff names for denormalization on the ticket.
-    const staffObjs = await Promise.all(
-      (body.staff || []).map(async (uid) => {
-        const u = await adminDb().doc(`users/${uid}`).get();
-        return { uid, name: u.exists ? (u.data()?.name ?? uid) : uid };
-      })
-    );
-
-    // Denormalize routing onto the ticket (display data lives on the doc).
-    await adminDb().doc(`issues/${id}`).update({
-      "routing.teamId": teamId,
-      "routing.staff": staffObjs,
+    return runTransition(req, id, schema, "ASSIGNED", {
+      ...body,
+      teamId,
     });
-
-    return runTransition(req, id, schema, "ASSIGNED", body);
   } catch (e) {
     return handleError(e);
   }
