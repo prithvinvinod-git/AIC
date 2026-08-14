@@ -24,7 +24,7 @@ export function DispatchCard({
 
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [categoryId, setCategoryId] = useState(issue.routing?.categoryId || "");
-  const [note, setNote] = useState("");
+  const [note, setNote] = useState(issue.routing?.note || "");
   const [teams, setTeams] = useState<TeamWithMembers[]>([]);
   const [teamId, setTeamId] = useState("");
   const [staff, setStaff] = useState<string[]>([]);
@@ -47,6 +47,7 @@ export function DispatchCard({
           ? res.teams.filter((t) => t.categoryId === issue.routing?.categoryId)
           : res.teams;
         setTeams(scoped);
+        if (scoped.length === 1) setTeamId(scoped[0].id);
       })
       .catch(() => undefined);
   }, [issue.routing?.categoryId, issue.aiSuggestion?.category]);
@@ -74,7 +75,7 @@ export function DispatchCard({
     try {
       await api(`/api/issues/${issue.id}/assign`, {
         method: "POST",
-        body: JSON.stringify({ teamId, staff }),
+        body: JSON.stringify({ teamId, staff, note }),
       });
       setDialog(null);
       onRefresh();
@@ -82,7 +83,7 @@ export function DispatchCard({
       setError(e instanceof ApiError ? e.message : "Assignment failed.");
       setBusy(false);
     }
-  }, [issue.id, teamId, staff, onRefresh]);
+  }, [issue.id, teamId, staff, note, onRefresh]);
 
   const selectedTeam = teams.find((t) => t.id === teamId);
 
@@ -120,7 +121,7 @@ export function DispatchCard({
   );
 
   const assignPanel = issue.status === "PENDING_ASSIGN" && (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-3">
       <p className="text-xs text-slate">Pick a team and the workers who will handle this job.</p>
       <div className="flex flex-wrap gap-2">
         {teams.map((t) => (
@@ -137,26 +138,43 @@ export function DispatchCard({
           </button>
         ))}
       </div>
+      {issue.routing?.note && (
+        <p className="rounded-lg bg-accent-soft px-3 py-2 text-xs leading-relaxed text-graphite">
+          <span className="font-semibold">Note from maintenance head:</span> {issue.routing.note}
+        </p>
+      )}
       {selectedTeam && selectedTeam.members.length === 0 && (
         <p className="text-xs text-warning">This team has no members — add staff in Admin.</p>
       )}
       {selectedTeam && selectedTeam.members.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {selectedTeam.members.map((m) => {
-            const checked = staff.includes(m.uid);
-            return (
-              <button
-                key={m.uid}
-                type="button"
-                className={`tag ${checked ? "bg-ink text-white" : "tag-outline"}`}
-                onClick={() => setStaff((prev) => (checked ? prev.filter((s) => s !== m.uid) : [...prev, m.uid]))}
-              >
-                {m.name}
-              </button>
-            );
-          })}
+        <div className="flex flex-col gap-1.5">
+          <span className="text-xs font-medium text-slate">Select workers</span>
+          <div className="flex flex-wrap gap-2">
+            {selectedTeam.members.map((m) => {
+              const checked = staff.includes(m.uid);
+              return (
+                <button
+                  key={m.uid}
+                  type="button"
+                  className={`tag border ${checked ? "border-accent bg-ink text-white" : "border-silver"}`}
+                  onClick={() => setStaff((prev) => (checked ? prev.filter((s) => s !== m.uid) : [...prev, m.uid]))}
+                >
+                  {m.name}
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
+      <label className="text-xs font-medium text-slate">
+        Note <span className="font-normal text-slate/70">(optional)</span>
+        <input
+          className="input mt-1 w-full"
+          placeholder="Add a note for the workers…"
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+        />
+      </label>
       <button
         className="btn btn-primary btn-sm self-start"
         disabled={busy || !teamId || staff.length === 0}

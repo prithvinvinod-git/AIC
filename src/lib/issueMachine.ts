@@ -485,6 +485,7 @@ export async function applyTransition(
             teamId: r.teamId || "",
             staff: r.staff || [],
             maintenanceHeadUid: input.maintenanceHeadUid || r.maintenanceHeadUid,
+            note: r.note,
           };
         }
         break;
@@ -564,6 +565,7 @@ export async function applyTransition(
             staff: staffObjs,
             maintenanceHeadUid: r.maintenanceHeadUid,
             categoryHeadUid: input.categoryHeadUid || r.categoryHeadUid,
+            note: input.note || r.note,
           };
         }
         break;
@@ -578,6 +580,7 @@ export async function applyTransition(
             staff: r.staff || [],
             maintenanceHeadUid: input.maintenanceHeadUid || r.maintenanceHeadUid,
             categoryHeadUid: r.categoryHeadUid,
+            note: r.note,
           };
         } else if (input.maintenanceHeadUid) {
           patches.routing = {
@@ -596,6 +599,7 @@ export async function applyTransition(
           staff: r.staff || [],
           maintenanceHeadUid: input.maintenanceHeadUid || r.maintenanceHeadUid,
           categoryHeadUid: input.categoryHeadUid || r.categoryHeadUid,
+          note: input.note || r.note,
         };
         break;
       }

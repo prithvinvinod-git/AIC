@@ -9,11 +9,11 @@ const CACHE_TTL_MS = 60_000;
 let cacheAt = 0;
 let cachedTeams: unknown = null;
 
-/** GET /api/teams — active teams with member names (validator/admin). */
+/** GET /api/teams — active teams with member names (validator/admin/heads). */
 export async function GET(req: NextRequest): Promise<NextResponse> {
   try {
     const user = await requireAuth(req);
-    if (!["validator", "admin"].includes(user.role)) {
+    if (!["validator", "admin", "maintenance_head", "category_head", "maintenance"].includes(user.role)) {
       return json({ error: "Not allowed." }, 403);
     }
     if (cachedTeams && Date.now() - cacheAt < CACHE_TTL_MS) {

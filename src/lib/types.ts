@@ -193,6 +193,8 @@ export interface Issue {
     maintenanceHeadUid?: string;
     /** Category head responsible for assigning workers (denormalized). */
     categoryHeadUid?: string;
+    /** Handoff note from the maintenance head when routing to a category head. */
+    note?: string;
   };
   requirements: Requirement[];
   involveTeams: InvolvedTeam[];
