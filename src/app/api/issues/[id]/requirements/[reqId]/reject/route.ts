@@ -47,10 +47,10 @@ export async function POST(
         rejectReason: body.reason,
         rejectedBy: { uid: user.uid, name: user.name },
         rejectedAt: now,
-        price: undefined,
-        approvalBy: undefined,
-        approvalAt: undefined,
       };
+      delete rejected.price;
+      delete rejected.approvalBy;
+      delete rejected.approvalAt;
       requirements[idx] = rejected;
 
       await tx.update(ref, {

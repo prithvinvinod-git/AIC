@@ -155,10 +155,21 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       return json({ issues });
     }
 
+    if (user.role === "purchase") {
+      const snap = await query.orderBy("createdAt", "desc").limit(500).get();
+      const issues: Issue[] = snap.docs
+        .map((d) => {
+          const data = d.data();
+          if (!Array.isArray(data.requirements)) data.requirements = [];
+          return { id: d.id, ...data } as Issue;
+        })
+        .filter((i) => (i.pendingPurchaseCount ?? 0) > 0)
+        .slice(0, 100);
+      return json({ issues });
+    }
+
     if (user.role === "reporter" || mine) {
       query = query.where("reporter.uid", "==", user.uid);
-    } else if (user.role === "purchase") {
-      query = query.where("pendingPurchaseCount", ">", 0);
     } else if (user.role === "validator") {
       query = query.where("department", "==", user.department);
     } else if (user.role === "maintenance_head") {

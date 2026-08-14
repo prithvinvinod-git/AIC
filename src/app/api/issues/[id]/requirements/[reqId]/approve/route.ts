@@ -47,8 +47,8 @@ export async function POST(
         price: body.price,
         approvalBy: { uid: user.uid, name: user.name },
         approvalAt: now,
-        rejectReason: undefined,
       };
+      delete approved.rejectReason;
       requirements[idx] = approved;
 
       await tx.update(ref, {

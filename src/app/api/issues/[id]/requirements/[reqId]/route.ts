@@ -70,8 +70,8 @@ export async function PATCH(
             ...next,
             approvalStatus: "pending",
             resolved: false,
-            rejectReason: undefined,
           };
+          delete next.rejectReason;
         }
       }
 

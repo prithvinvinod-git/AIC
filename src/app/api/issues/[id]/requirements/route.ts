@@ -25,13 +25,14 @@ export async function POST(
     const ref = db.doc(`issues/${id}`);
 
     const now = new Date().toISOString();
-    const requirement = {
+    const requirement: Record<string, unknown> = {
       id: db.collection("ids").doc().id,
       ...body,
       approvalStatus: body.needsApproval ? "pending" : undefined,
       addedBy: { uid: user.uid, name: user.name },
       at: now,
     };
+    if (!body.needsApproval) delete requirement.approvalStatus;
 
     await db.runTransaction(async (tx) => {
       const snap = await tx.get(ref);
