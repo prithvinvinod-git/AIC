@@ -4,12 +4,13 @@ import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ListChecks, PlayCircle, Sparkles, X } from "lucide-react";
 import type { Issue, Requirement } from "@/lib/types";
-import { api, ApiError } from "@/lib/clientApi";
+import { api } from "@/lib/clientApi";
 import { StatusBadge, PriorityBadge } from "@/components/ui/Badge";
 import { IssuePhotos } from "@/components/ui/IssuePhotos";
 import { Modal } from "@/components/ui/Modal";
 import { FeedbackStars } from "@/components/ui/FeedbackStars";
 import { formatDateTime } from "@/lib/format";
+import { useActionError } from "@/components/ui/Toast";
 
 interface DraftRequirement {
   item: string;
@@ -33,13 +34,12 @@ export function MaintenanceJobCard({
   const [reqQty, setReqQty] = useState("1");
   const [reqApproval, setReqApproval] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [drafting, setDrafting] = useState(false);
+  const { showError, errorEl } = useActionError();
 
   const act = useCallback(
     async (kind: "start" | "block" | "complete") => {
       setBusy(true);
-      setError(null);
       try {
         if (kind === "start") {
           await api(`/api/issues/${issue.id}/status`, {
@@ -61,19 +61,18 @@ export function MaintenanceJobCard({
         setNote("");
         onRefresh();
       } catch (e) {
-        setError(e instanceof ApiError ? e.message : "Action failed.");
+        showError(e);
       } finally {
         setBusy(false);
       }
     },
-    [issue.id, note, onRefresh]
+    [issue.id, note, onRefresh, showError]
   );
 
   const addRequirement = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
       setBusy(true);
-      setError(null);
       try {
         await api(`/api/issues/${issue.id}/requirements`, {
           method: "POST",
@@ -89,17 +88,16 @@ export function MaintenanceJobCard({
         setMode(null);
         onRefresh();
       } catch (e2) {
-        setError(e2 instanceof ApiError ? e2.message : "Failed to log requirement.");
+        showError(e2);
       } finally {
         setBusy(false);
       }
     },
-    [issue.id, reqItem, reqQty, reqApproval, onRefresh]
+    [issue.id, reqItem, reqQty, reqApproval, onRefresh, showError]
   );
 
   const draftRequirements = useCallback(async () => {
     setDrafting(true);
-    setError(null);
     try {
       const res = await api<{ requirements: DraftRequirement[] }>("/api/ai/extract-requirements", {
         method: "POST",
@@ -114,11 +112,11 @@ export function MaintenanceJobCard({
       setMode(null);
       onRefresh();
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Draft failed.");
+      showError(e);
     } finally {
       setDrafting(false);
     }
-  }, [issue.id, onRefresh]);
+  }, [issue.id, onRefresh, showError]);
 
   const toggleRequirement = useCallback(
     async (r: Requirement) => {
@@ -129,16 +127,15 @@ export function MaintenanceJobCard({
         });
         onRefresh();
       } catch {
-        setError("Failed to update requirement.");
+        showError("Failed to update requirement.");
       }
     },
-    [issue.id, onRefresh]
+    [issue.id, onRefresh, showError]
   );
 
   const resubmitRequirement = useCallback(
     async (r: Requirement) => {
       setBusy(true);
-      setError(null);
       try {
         await api(`/api/issues/${issue.id}/requirements/${(r as Requirement & { id?: string }).id}`, {
           method: "PATCH",
@@ -146,30 +143,29 @@ export function MaintenanceJobCard({
         });
         onRefresh();
       } catch (e) {
-        setError(e instanceof ApiError ? e.message : "Resubmit failed.");
+        showError(e);
       } finally {
         setBusy(false);
       }
     },
-    [issue.id, onRefresh]
+    [issue.id, onRefresh, showError]
   );
 
   const removeRequirement = useCallback(
     async (r: Requirement) => {
       setBusy(true);
-      setError(null);
       try {
         await api(`/api/issues/${issue.id}/requirements/${(r as Requirement & { id?: string }).id}`, {
           method: "DELETE",
         });
         onRefresh();
       } catch (e) {
-        setError(e instanceof ApiError ? e.message : "Remove failed.");
+        showError(e);
       } finally {
         setBusy(false);
       }
     },
-    [issue.id, onRefresh]
+    [issue.id, onRefresh, showError]
   );
 
   const isAssigned = issue.status === "ASSIGNED";
@@ -490,7 +486,7 @@ export function MaintenanceJobCard({
         )}
       </div>
 
-      {error && <p className="text-sm text-danger">{error}</p>}
+      {errorEl}
 
       <Modal open={mode === "complete"} onClose={() => setMode(null)} title="Complete job">
         {completeForm}

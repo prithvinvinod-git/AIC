@@ -4,7 +4,7 @@ import { useState } from "react";
 import { CheckCircle2, XCircle } from "lucide-react";
 import { useIssues } from "@/hooks/useIssues";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { api, ApiError } from "@/lib/clientApi";
+import { api } from "@/lib/clientApi";
 import { Loading, EmptyState, BoardErrorState } from "@/components/ui/States";
 import { AISuggestionCard } from "@/components/issues/AISuggestionCard";
 import { VerifyCard, RouteToHeadCard } from "@/components/issues/HeadCards";
@@ -12,6 +12,7 @@ import { MaintenanceJobCard } from "@/components/issues/MaintenanceJobCard";
 import { RootCauseAnalysisCard } from "@/components/ai/RootCauseAnalysisCard";
 import { PriorityBadge, StatusBadge } from "@/components/ui/Badge";
 import { IssuePhotos } from "@/components/ui/IssuePhotos";
+import { useActionError } from "@/components/ui/Toast";
 import type { Issue } from "@/lib/types";
 
 function ValidatePanel({ issue, onDone, onTriaged }: { issue: Issue; onDone: () => void; onTriaged: () => void }) {
@@ -24,11 +25,10 @@ function ValidatePanel({ issue, onDone, onTriaged }: { issue: Issue; onDone: () 
   const [priority, setPriority] = useState(defaultPriority);
   const [rejectReason, setRejectReason] = useState("");
   const [busy, setBusy] = useState<"validate" | "reject" | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const { showError, errorEl } = useActionError();
 
   const act = async (kind: "validate" | "reject") => {
     setBusy(kind);
-    setError(null);
     try {
       if (kind === "validate") {
         await api(`/api/issues/${issue.id}/validate`, {
@@ -43,7 +43,7 @@ function ValidatePanel({ issue, onDone, onTriaged }: { issue: Issue; onDone: () 
       }
       onDone();
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Action failed.");
+      showError(e);
       setBusy(null);
     }
   };
@@ -93,7 +93,7 @@ function ValidatePanel({ issue, onDone, onTriaged }: { issue: Issue; onDone: () 
           {busy === "reject" ? "Rejecting…" : "Reject"}
         </button>
       </div>
-      {error && <p className="text-sm text-danger">{error}</p>}
+      {errorEl}
     </div>
   );
 }

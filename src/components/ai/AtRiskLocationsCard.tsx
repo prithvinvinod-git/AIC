@@ -1,20 +1,20 @@
 import { useState } from "react";
 import { api } from "@/lib/clientApi";
 import type { PredictiveResult } from "@/lib/ai/predictive";
+import { useActionError } from "@/components/ui/Toast";
 
 export function AtRiskLocationsCard() {
   const [result, setResult] = useState<PredictiveResult | null>(null);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { showError } = useActionError();
 
   const load = async () => {
     setBusy(true);
-    setError(null);
     try {
       const res = await api<{ result: PredictiveResult }>("/api/ai/at-risk");
       setResult(res.result);
     } catch {
-      setError("Failed to analyze locations. Please try again.");
+      showError("Failed to analyze locations.");
     } finally {
       setBusy(false);
     }
@@ -32,8 +32,6 @@ export function AtRiskLocationsCard() {
           {busy ? "Analyzing..." : "Check locations"}
         </button>
       </div>
-      
-      {error && <p className="mt-2 text-sm text-danger">{error}</p>}
       
       {result && result.locations.length > 0 ? (
         <div className="mt-3 space-y-2">

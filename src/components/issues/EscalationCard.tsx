@@ -4,10 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ShieldCheck } from "lucide-react";
 import type { Issue } from "@/lib/types";
-import { api, ApiError } from "@/lib/clientApi";
+import { api } from "@/lib/clientApi";
 import { StatusBadge, PriorityBadge } from "@/components/ui/Badge";
 import { IssuePhotos } from "@/components/ui/IssuePhotos";
 import { FeedbackStars } from "@/components/ui/FeedbackStars";
+import { useActionError } from "@/components/ui/Toast";
 
 export function EscalationCard({
   issue,
@@ -23,11 +24,10 @@ export function EscalationCard({
   const [rejectOpen, setRejectOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { showError, errorEl } = useActionError();
 
   const approve = async () => {
     setBusy(true);
-    setError(null);
     try {
       await api(`/api/issues/${issue.id}/approve`, {
         method: "POST",
@@ -38,14 +38,13 @@ export function EscalationCard({
       });
       onAction();
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Approval failed.");
+      showError(e);
       setBusy(false);
     }
   };
 
   const reject = async () => {
     setBusy(true);
-    setError(null);
     try {
       await api(`/api/issues/${issue.id}/reject`, {
         method: "POST",
@@ -53,7 +52,7 @@ export function EscalationCard({
       });
       onAction();
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Rejection failed.");
+      showError(e);
       setBusy(false);
     }
   };
@@ -110,7 +109,7 @@ export function EscalationCard({
         <button className="btn btn-ghost btn-sm" disabled={busy} onClick={() => setRejectOpen((v) => !v)}>
           Reject escalation
         </button>
-        {error && <p className="text-sm text-danger">{error}</p>}
+        {errorEl}
       </div>
       {rejectOpen && (
         <form

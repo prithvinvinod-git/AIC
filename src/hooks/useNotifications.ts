@@ -50,12 +50,20 @@ function playBeep() {
  * `onSnapshot` listener on `notifications/{uid}/items` (owner-only reads are
  * permitted by the security rules). Marking reads still goes through the
  * `POST /api/notifications` route, which stays the source of truth for writes.
+ *
+ * `onNew` fires with the genuinely-new notifications whenever they arrive while
+ * the tab is visible — the same detection that drives the beep.
  */
-export function useNotifications() {
+export function useNotifications(onNew?: (items: NotificationItem[]) => void) {
   const { user } = useAuth();
   const [items, setItems] = useState<NotificationItem[] | null>(null);
   const [unread, setUnread] = useState(0);
   const seenIds = useRef<Set<string> | null>(null);
+  const onNewRef = useRef(onNew);
+
+  useEffect(() => {
+    onNewRef.current = onNew;
+  });
 
   useEffect(() => {
     if (!user) {
@@ -85,7 +93,10 @@ export function useNotifications() {
         const initialized = seenIds.current !== null;
         if (initialized) {
           const fresh = list.filter((n) => !seenIds.current!.has(n.id));
-          if (fresh.length > 0 && !document.hidden && soundEnabled()) playBeep();
+          if (fresh.length > 0 && !document.hidden) {
+            if (soundEnabled()) playBeep();
+            onNewRef.current?.(fresh);
+          }
         }
         seenIds.current = ids;
         setItems(list);

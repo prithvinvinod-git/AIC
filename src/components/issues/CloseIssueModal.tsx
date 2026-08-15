@@ -3,9 +3,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import type { Issue } from "@/lib/types";
-import { api, ApiError } from "@/lib/clientApi";
+import { api } from "@/lib/clientApi";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { StarPicker, fmtRating } from "@/components/ui/StarPicker";
+import { useActionError } from "@/components/ui/Toast";
 
 interface Props {
   issue: Issue | null;
@@ -17,14 +18,13 @@ export function CloseIssueModal({ issue, onClose, onClosed }: Props) {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { showError, errorEl } = useActionError();
   const dialogRef = useRef<HTMLDivElement | null>(null);
 
   useFocusTrap(dialogRef, issue !== null);
 
   const close = useCallback(() => {
     if (busy) return;
-    setError(null);
     setRating(0);
     setComment("");
     onClose();
@@ -46,7 +46,6 @@ export function CloseIssueModal({ issue, onClose, onClosed }: Props) {
   const submit = useCallback(async () => {
     if (!issue) return;
     setBusy(true);
-    setError(null);
     try {
       await api(`/api/issues/${issue.id}/feedback`, {
         method: "POST",
@@ -57,11 +56,11 @@ export function CloseIssueModal({ issue, onClose, onClosed }: Props) {
       setComment("");
       onClose();
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Failed to close the issue.");
+      showError(e);
     } finally {
       setBusy(false);
     }
-  }, [issue, rating, comment, onClosed, onClose]);
+  }, [issue, rating, comment, onClosed, onClose, showError]);
 
   if (!issue) return null;
 
@@ -125,7 +124,7 @@ export function CloseIssueModal({ issue, onClose, onClosed }: Props) {
           />
         </div>
 
-        {error && <p className="mt-3 text-sm text-danger">{error}</p>}
+        {errorEl}
 
         <div className="mt-5 flex justify-end gap-2">
           <button type="button" className="btn btn-ghost" onClick={() => close()} disabled={busy}>

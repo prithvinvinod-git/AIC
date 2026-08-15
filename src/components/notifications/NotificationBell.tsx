@@ -8,6 +8,7 @@ import { useNotifications, type NotificationItem } from "@/hooks/useNotification
 import { NOTIFICATION_FALLBACK_META, NOTIFICATION_META } from "@/lib/constants";
 import { timeAgo } from "@/lib/format";
 import { Loading } from "@/components/ui/States";
+import { useToast } from "@/components/ui/Toast";
 
 function metaFor(type: string) {
   return NOTIFICATION_META[type] || NOTIFICATION_FALLBACK_META;
@@ -16,10 +17,22 @@ function metaFor(type: string) {
 /**
  * Navbar notification bell with a live unread badge and a dropdown preview of
  * the latest notifications. Clicking an item opens its target and marks it
- * read; the footer exposes "Mark all read" and the full page.
+ * read; the footer exposes "Mark all read" and the full page. Live arrivals
+ * also surface as info toasts so the alert is visible even with the bell shut.
  */
 export default function NotificationBell() {
-  const { items, unread, markRead, markAllRead } = useNotifications();
+  const { show } = useToast();
+  const { items, unread, markRead, markAllRead } = useNotifications((fresh) => {
+    const n = fresh[0];
+    if (!n) return;
+    const more = fresh.length - 1;
+    show({
+      type: "info",
+      title: n.title,
+      message: more > 0 ? `${n.body} (+${more} more)` : n.body,
+      link: n.link,
+    });
+  });
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const router = useRouter();

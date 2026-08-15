@@ -8,6 +8,7 @@ import { AlertTriangle, CheckCircle2, RefreshCw, TrendingUp } from "lucide-react
 import { format } from "date-fns";
 import { api } from "@/lib/clientApi";
 import type { WeeklyInsight } from "@/lib/ai/insights";
+import { useActionError } from "@/components/ui/Toast";
 
 const WeeklyInsightsCharts = dynamic(
   () => import("./WeeklyInsightsCharts").then((m) => m.WeeklyInsightsCharts),
@@ -17,41 +18,44 @@ const WeeklyInsightsCharts = dynamic(
 export function WeeklyInsightsCard() {
   const [insight, setInsight] = useState<WeeklyInsight | null>(null);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
+  const { showError } = useActionError();
 
   const load = useCallback(async () => {
     setBusy(true);
-    setError(null);
+    setFailed(false);
     try {
       const res = await api<{ insight: WeeklyInsight }>("/api/ai/weekly-insights");
       setInsight(res.insight);
     } catch {
-      setError("Failed to load weekly insights. Please try again.");
+      setFailed(true);
+      showError("Failed to load weekly insights.");
     } finally {
       setBusy(false);
     }
-  }, []);
+  }, [showError]);
 
   useEffect(() => {
     void load();
   }, [load]);
 
-  if (error) {
-    return (
-      <div className="card">
-        <p className="text-sm text-danger">{error}</p>
-      </div>
-    );
-  }
-
   if (!insight) {
     return (
       <div className="card">
-        <div className="flex items-center gap-2">
-          <TrendingUp className="h-4 w-4 text-accent" aria-hidden />
-          <p className="font-medium text-graphite">Weekly insights</p>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="h-4 w-4 text-accent" aria-hidden />
+            <p className="font-medium text-graphite">Weekly insights</p>
+          </div>
+          {failed && (
+            <button onClick={() => void load()} disabled={busy} className="btn btn-ghost btn-sm">
+              Retry
+            </button>
+          )}
         </div>
-        <p className="mt-3 text-sm text-slate">Loading this week&apos;s governance picture…</p>
+        <p className="mt-3 text-sm text-slate">
+          {failed ? "Couldn't load this week's insights." : "Loading this week's governance picture…"}
+        </p>
       </div>
     );
   }

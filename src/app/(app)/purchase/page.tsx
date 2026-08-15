@@ -7,7 +7,8 @@ import { useIssues } from "@/hooks/useIssues";
 import { Loading, EmptyState, BoardErrorState } from "@/components/ui/States";
 import { Modal } from "@/components/ui/Modal";
 import { StatusBadge } from "@/components/ui/Badge";
-import { api, ApiError } from "@/lib/clientApi";
+import { api } from "@/lib/clientApi";
+import { useActionError } from "@/components/ui/Toast";
 import type { Issue, Requirement } from "@/lib/types";
 
 export default function PurchasePage() {
@@ -17,12 +18,11 @@ export default function PurchasePage() {
   const [rejecting, setRejecting] = useState<{ issue: Issue; req: Requirement } | null>(null);
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const { showError } = useActionError();
 
   const approve = useCallback(
     async (issue: Issue, req: Requirement) => {
       setBusy(true);
-      setErrorMsg(null);
       const price = Math.max(0, Number(prices[req.id ?? ""] ?? "") || 0);
       try {
         await api(`/api/issues/${issue.id}/requirements/${req.id}/approve`, {
@@ -31,22 +31,21 @@ export default function PurchasePage() {
         });
         void reload();
       } catch (e) {
-        setErrorMsg(e instanceof ApiError ? e.message : "Approval failed.");
+        showError(e);
       } finally {
         setBusy(false);
       }
     },
-    [prices, reload]
+    [prices, reload, showError]
   );
 
   const submitReject = useCallback(async () => {
     if (!rejecting) return;
     if (reason.trim().length < 3) {
-      setErrorMsg("A rejection reason (at least 3 characters) is required.");
+      showError("A rejection reason (at least 3 characters) is required.");
       return;
     }
     setBusy(true);
-    setErrorMsg(null);
     try {
       await api(`/api/issues/${rejecting.issue.id}/requirements/${rejecting.req.id}/reject`, {
         method: "POST",
@@ -56,11 +55,11 @@ export default function PurchasePage() {
       setReason("");
       void reload();
     } catch (e) {
-      setErrorMsg(e instanceof ApiError ? e.message : "Rejection failed.");
+      showError(e);
     } finally {
       setBusy(false);
     }
-  }, [rejecting, reason, reload]);
+  }, [rejecting, reason, reload, showError]);
 
   if (!issues) return <Loading label="Loading purchase requests…" />;
   if (error) {
@@ -83,8 +82,6 @@ export default function PurchasePage() {
           Approve or reject purchase requests. Approved items are marked resolved on the job automatically.
         </p>
       </div>
-
-      {errorMsg && <p className="text-sm text-danger">{errorMsg}</p>}
 
       {issues.length === 0 ? (
         <EmptyState
@@ -177,7 +174,6 @@ export default function PurchasePage() {
                             onClick={() => {
                               setRejecting({ issue, req: r });
                               setReason("");
-                              setErrorMsg(null);
                             }}
                           >
                             Reject

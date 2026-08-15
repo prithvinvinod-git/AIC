@@ -5,7 +5,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Megaphone, Pencil, ShieldAlert, Trash2 } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { api, ApiError } from "@/lib/clientApi";
+import { api } from "@/lib/clientApi";
 import { useToast } from "@/components/ui/Toast";
 import { Loading, EmptyState } from "@/components/ui/States";
 import AnnouncementForm, { type AnnouncementFormValue } from "@/components/announcements/AnnouncementForm";
@@ -26,7 +26,7 @@ export default function AnnouncementsPage() {
   const { show, showError } = useToast();
 
   const [items, setItems] = useState<Announcement[] | null>(null);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [editing, setEditing] = useState<Announcement | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
@@ -39,15 +39,16 @@ export default function AnnouncementsPage() {
   useFocusTrap(deleteDialogRef, deleting !== null);
 
   const load = useCallback(async () => {
+    setLoadFailed(false);
     try {
       const res = await api<{ announcements: Announcement[] }>("/api/announcements");
       setItems(res.announcements);
-      setLoadError(null);
     } catch (e) {
-      setLoadError(e instanceof ApiError ? e.message : "Failed to load announcements.");
+      setLoadFailed(true);
       setItems([]);
+      showError(e, { title: "Couldn't load announcements" });
     }
-  }, []);
+  }, [showError]);
 
   useEffect(() => {
     void load();
@@ -139,15 +140,23 @@ export default function AnnouncementsPage() {
       <section className="flex flex-col gap-4">
         <h2 className="font-display text-lg font-semibold text-ink">Live announcements</h2>
 
-        {loadError && <p className="rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger">{loadError}</p>}
         {items === null ? (
           <Loading label="Loading announcements…" />
         ) : items.length === 0 ? (
-          <EmptyState
-            icon={<Megaphone className="h-8 w-8" aria-hidden />}
-            title="No announcements yet"
-            body="Published broadcasts will appear here."
-          />
+          loadFailed ? (
+            <div className="card flex flex-col items-start gap-3">
+              <p className="text-sm text-slate">Couldn&apos;t load announcements.</p>
+              <button className="btn btn-ghost btn-sm" onClick={() => void load()}>
+                Retry
+              </button>
+            </div>
+          ) : (
+            <EmptyState
+              icon={<Megaphone className="h-8 w-8" aria-hidden />}
+              title="No announcements yet"
+              body="Published broadcasts will appear here."
+            />
+          )
         ) : (
           <div className="flex flex-col gap-4">
             {items.map((a) => (

@@ -3,24 +3,24 @@
 import { useCallback, useState } from "react";
 import { Sparkles } from "lucide-react";
 import type { Issue } from "@/lib/types";
-import { api, ApiError } from "@/lib/clientApi";
+import { api } from "@/lib/clientApi";
+import { useActionError } from "@/components/ui/Toast";
 
 export function AISuggestionCard({ issue, onTriaged }: { issue: Issue; onTriaged?: () => void }) {
   const [running, setRunning] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { showError, errorEl } = useActionError();
   const suggestion = issue.aiSuggestion;
 
   const runTriage = useCallback(async () => {
     setRunning(true);
-    setError(null);
     try {
       await api(`/api/ai/triage`, { method: "POST", body: JSON.stringify({ issueId: issue.id }) });
       onTriaged?.();
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Triage failed.");
+      showError(e);
       setRunning(false);
     }
-  }, [issue.id, onTriaged]);
+  }, [issue.id, onTriaged, showError]);
 
   if (!suggestion || (!suggestion.category && suggestion.aiProcessed)) {
     return (
@@ -34,7 +34,7 @@ export function AISuggestionCard({ issue, onTriaged }: { issue: Issue; onTriaged
             {running ? "Running…" : "Run triage"}
           </button>
         </div>
-        {error && <p className="mt-2 text-sm text-danger">{error}</p>}
+        {errorEl}
       </div>
     );
   }

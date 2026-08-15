@@ -4,9 +4,10 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { RotateCcw, Sparkles, ThumbsUp } from "lucide-react";
 import type { Issue, TeamWithMembers } from "@/lib/types";
-import { api, ApiError } from "@/lib/clientApi";
+import { api } from "@/lib/clientApi";
 import { StatusBadge, PriorityBadge } from "@/components/ui/Badge";
 import { IssuePhotos } from "@/components/ui/IssuePhotos";
+import { useActionError } from "@/components/ui/Toast";
 
 export function AssignCard({ issue, onRefresh }: { issue: Issue; onRefresh: () => void }) {
   const router = useRouter();
@@ -16,17 +17,15 @@ export function AssignCard({ issue, onRefresh }: { issue: Issue; onRefresh: () =
   const [suggestReason, setSuggestReason] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [suggesting, setSuggesting] = useState(false);
-  const [teamsError, setTeamsError] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const { showError, errorEl } = useActionError();
 
   const loadTeams = useCallback(() => {
     void api<{ teams: TeamWithMembers[] }>("/api/teams")
       .then((res) => {
         setTeams(res.teams);
-        setTeamsError(null);
       })
-      .catch(() => setTeamsError("Couldn't load teams. Please retry."));
-  }, []);
+      .catch(() => showError("Couldn't load teams."));
+  }, [showError]);
 
   useEffect(() => {
     loadTeams();
@@ -36,7 +35,6 @@ export function AssignCard({ issue, onRefresh }: { issue: Issue; onRefresh: () =
 
   const assign = useCallback(async () => {
     setBusy(true);
-    setError(null);
     try {
       await api(`/api/issues/${issue.id}/assign`, {
         method: "POST",
@@ -44,14 +42,13 @@ export function AssignCard({ issue, onRefresh }: { issue: Issue; onRefresh: () =
       });
       onRefresh();
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Assignment failed.");
+      showError(e);
       setBusy(false);
     }
-  }, [issue.id, teamId, staff, onRefresh]);
+  }, [issue.id, teamId, staff, onRefresh, showError]);
 
   const suggest = useCallback(async () => {
     setSuggesting(true);
-    setError(null);
     setSuggestReason(null);
     try {
       const res = await api<{ result: { teamId: string; staffIds: string[]; reason: string } }>(
@@ -63,11 +60,11 @@ export function AssignCard({ issue, onRefresh }: { issue: Issue; onRefresh: () =
       if (t?.staffIds) setStaff(t.staffIds);
       setSuggestReason(t?.reason || null);
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Suggestion failed.");
+      showError(e);
     } finally {
       setSuggesting(false);
     }
-  }, [issue.id]);
+  }, [issue.id, showError]);
 
   return (
     <div className="card">
@@ -110,14 +107,6 @@ export function AssignCard({ issue, onRefresh }: { issue: Issue; onRefresh: () =
             {suggesting ? "Suggesting…" : "AI suggest"}
           </button>
         </div>
-        {teamsError && (
-          <p className="flex items-center gap-2 text-xs text-danger">
-            {teamsError}
-            <button className="link-blue" onClick={() => void loadTeams()}>
-              Retry
-            </button>
-          </p>
-        )}
         {suggestReason && <p className="text-xs text-slate">AI suggests this because: {suggestReason}</p>}
 
         {selectedTeam && selectedTeam.members.length > 0 && (
@@ -158,7 +147,7 @@ export function AssignCard({ issue, onRefresh }: { issue: Issue; onRefresh: () =
           ) : (
             <span className="text-xs text-slate">Select at least one staff member.</span>
           )}
-          {error && <span className="text-xs text-danger">{error}</span>}
+          {errorEl}
         </div>
       </div>
     </div>
@@ -176,11 +165,10 @@ export function RouteToHeadCard({
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { showError, errorEl } = useActionError();
 
   const forward = useCallback(async () => {
     setBusy(true);
-    setError(null);
     try {
       await api(`/api/issues/${issue.id}/forward`, {
         method: "POST",
@@ -188,10 +176,10 @@ export function RouteToHeadCard({
       });
       onRefresh();
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Action failed.");
+      showError(e);
       setBusy(false);
     }
-  }, [issue.id, pending, onRefresh]);
+  }, [issue.id, pending, onRefresh, showError]);
 
   return (
     <div className="card">
@@ -232,7 +220,7 @@ export function RouteToHeadCard({
             from the issue.
           </p>
         )}
-        {error && <p className="text-sm text-danger">{error}</p>}
+        {errorEl}
       </div>
     </div>
   );
@@ -243,12 +231,11 @@ export function VerifyCard({ issue, onRefresh }: { issue: Issue; onRefresh: () =
   const [verdict, setVerdict] = useState("Work verified as complete.");
   const [sendBackReason, setSendBackReason] = useState("");
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { showError, errorEl } = useActionError();
 
   const submit = useCallback(
     async (kind: "verify" | "sendback") => {
       setBusy(true);
-      setError(null);
       try {
         if (kind === "verify") {
           await api(`/api/issues/${issue.id}/verify`, {
@@ -263,11 +250,11 @@ export function VerifyCard({ issue, onRefresh }: { issue: Issue; onRefresh: () =
         }
         onRefresh();
       } catch (e) {
-        setError(e instanceof ApiError ? e.message : "Action failed.");
+        showError(e);
         setBusy(false);
       }
     },
-    [issue.id, verdict, sendBackReason, onRefresh]
+    [issue.id, verdict, sendBackReason, onRefresh, showError]
   );
 
   return (
@@ -322,7 +309,7 @@ export function VerifyCard({ issue, onRefresh }: { issue: Issue; onRefresh: () =
             </button>
           </div>
         </div>
-        {error && <p className="text-sm text-danger">{error}</p>}
+        {errorEl}
       </div>
     </div>
   );

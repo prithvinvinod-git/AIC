@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { Sparkles, X } from "lucide-react";
 import type { Issue, Requirement, TeamWithMembers } from "@/lib/types";
-import { api, ApiError } from "@/lib/clientApi";
+import { api } from "@/lib/clientApi";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { useActionError } from "@/components/ui/Toast";
 
 interface Props {
   issue: Issue;
@@ -13,23 +14,22 @@ interface Props {
 
 export function IssueActions({ issue, onChanged }: Props) {
   const { claims } = useAuth();
+  const { showError, errorEl } = useActionError();
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const run = useCallback(
     async (path: string, body: unknown) => {
       setBusy(true);
-      setError(null);
       try {
         await api(path, { method: "POST", body: JSON.stringify(body) });
         onChanged();
       } catch (e) {
-        setError(e instanceof ApiError ? e.message : "Action failed.");
+        showError(e);
       } finally {
         setBusy(false);
       }
     },
-    [onChanged]
+    [onChanged, showError]
   );
 
   if (!claims) return null;
@@ -53,7 +53,7 @@ export function IssueActions({ issue, onChanged }: Props) {
             >
               {busy ? "Escalating…" : "Escalate again"}
             </button>
-            {error && <p className="mt-2 text-sm text-danger">{error}</p>}
+            {errorEl}
           </div>
         </div>
       );
@@ -95,7 +95,7 @@ export function IssueActions({ issue, onChanged }: Props) {
           >
             {busy ? "Approving…" : "Approve & route to validator"}
           </button>
-          {error && <span className="text-sm text-danger">{error}</span>}
+          {errorEl}
         </div>
       </div>
     );
@@ -184,12 +184,11 @@ function ValidatorActions({ issue, onChanged }: { issue: Issue; onChanged: () =>
   const [priority, setPriority] = useState(defaultPriority);
   const [rejectReason, setRejectReason] = useState("");
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { showError, errorEl } = useActionError();
 
   const act = useCallback(
     async (kind: "validate" | "reject") => {
       setBusy(true);
-      setError(null);
       try {
         if (kind === "validate") {
           await api(`/api/issues/${issue.id}/validate`, { method: "POST", body: JSON.stringify({ priority: Number(priority) }) });
@@ -198,12 +197,12 @@ function ValidatorActions({ issue, onChanged }: { issue: Issue; onChanged: () =>
         }
         onChanged();
       } catch (e) {
-        setError(e instanceof ApiError ? e.message : "Action failed.");
+        showError(e);
       } finally {
         setBusy(false);
       }
     },
-    [issue.id, priority, rejectReason, onChanged]
+    [issue.id, priority, rejectReason, onChanged, showError]
   );
 
   return (
@@ -238,7 +237,7 @@ function ValidatorActions({ issue, onChanged }: { issue: Issue; onChanged: () =>
           Reject
         </button>
       </div>
-      {error && <p className="text-sm text-danger">{error}</p>}
+      {errorEl}
     </div>
   );
 }
@@ -261,12 +260,11 @@ function VerifyPanel({
   const [verdict, setVerdict] = useState("");
   const [sendBack, setSendBack] = useState("");
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { showError, errorEl } = useActionError();
 
   const act = useCallback(
     async (kind: "verify" | "sendback") => {
       setBusy(true);
-      setError(null);
       try {
         if (kind === "verify") {
           const endpoint = to === "INSPECTED" ? "inspect" : "verify";
@@ -279,12 +277,12 @@ function VerifyPanel({
         }
         onChanged();
       } catch (e) {
-        setError(e instanceof ApiError ? e.message : "Action failed.");
+        showError(e);
       } finally {
         setBusy(false);
       }
     },
-    [issue.id, verdict, sendBack, to, onChanged]
+    [issue.id, verdict, sendBack, to, onChanged, showError]
   );
 
   return (
@@ -302,7 +300,7 @@ function VerifyPanel({
           </button>
         </div>
       </div>
-      {error && <p className="mt-2 text-sm text-danger">{error}</p>}
+      {errorEl}
     </div>
   );
 }
@@ -311,12 +309,11 @@ function ApprovePanel({ issue, onChanged }: { issue: Issue; onChanged: () => voi
   const [note, setNote] = useState("");
   const [sendBack, setSendBack] = useState("");
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { showError, errorEl } = useActionError();
 
   const act = useCallback(
     async (kind: "approve" | "sendback") => {
       setBusy(true);
-      setError(null);
       try {
         if (kind === "approve") {
           await api(`/api/issues/${issue.id}/head-approve`, {
@@ -328,12 +325,12 @@ function ApprovePanel({ issue, onChanged }: { issue: Issue; onChanged: () => voi
         }
         onChanged();
       } catch (e) {
-        setError(e instanceof ApiError ? e.message : "Action failed.");
+        showError(e);
       } finally {
         setBusy(false);
       }
     },
-    [issue.id, note, sendBack, onChanged]
+    [issue.id, note, sendBack, onChanged, showError]
   );
 
   return (
@@ -355,7 +352,7 @@ function ApprovePanel({ issue, onChanged }: { issue: Issue; onChanged: () => voi
           </button>
         </div>
       </div>
-      {error && <p className="mt-2 text-sm text-danger">{error}</p>}
+      {errorEl}
     </div>
   );
 }
@@ -365,12 +362,11 @@ function MaintenanceComplete({ issue, onChanged }: { issue: Issue; onChanged: ()
   const [blockOpen, setBlockOpen] = useState(false);
   const [blockReason, setBlockReason] = useState("");
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { showError, errorEl } = useActionError();
   const unresolvedApproval = issue.requirements.filter((r) => !r.resolved && r.needsApproval).length;
 
   const complete = useCallback(async () => {
     setBusy(true);
-    setError(null);
     try {
       await api(`/api/issues/${issue.id}/complete`, {
         method: "POST",
@@ -378,14 +374,13 @@ function MaintenanceComplete({ issue, onChanged }: { issue: Issue; onChanged: ()
       });
       onChanged();
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Failed to complete.");
+      showError(e);
       setBusy(false);
     }
-  }, [issue.id, report, onChanged]);
+  }, [issue.id, report, onChanged, showError]);
 
   const block = useCallback(async () => {
     setBusy(true);
-    setError(null);
     try {
       await api(`/api/issues/${issue.id}/pending`, {
         method: "POST",
@@ -393,10 +388,10 @@ function MaintenanceComplete({ issue, onChanged }: { issue: Issue; onChanged: ()
       });
       onChanged();
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Action failed.");
+      showError(e);
       setBusy(false);
     }
-  }, [issue.id, blockReason, onChanged]);
+  }, [issue.id, blockReason, onChanged, showError]);
 
   return (
     <div className="card flex flex-col gap-3">
@@ -461,7 +456,7 @@ function MaintenanceComplete({ issue, onChanged }: { issue: Issue; onChanged: ()
           </div>
         </form>
       )}
-      {error && <p className="text-sm text-danger">{error}</p>}
+      {errorEl}
     </div>
   );
 }
@@ -470,21 +465,20 @@ function AssignedActions({ issue, onChanged }: { issue: Issue; onChanged: () => 
   const [blockOpen, setBlockOpen] = useState(false);
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { showError, errorEl } = useActionError();
 
   const run = useCallback(
     async (path: string, body: unknown) => {
       setBusy(true);
-      setError(null);
       try {
         await api(path, { method: "POST", body: JSON.stringify(body) });
         onChanged();
       } catch (e) {
-        setError(e instanceof ApiError ? e.message : "Action failed.");
+        showError(e);
         setBusy(false);
       }
     },
-    [onChanged]
+    [onChanged, showError]
   );
 
   return (
@@ -500,7 +494,7 @@ function AssignedActions({ issue, onChanged }: { issue: Issue; onChanged: () => 
         <button className="btn btn-ghost btn-sm" disabled={busy} onClick={() => setBlockOpen((v) => !v)}>
           Set blocked
         </button>
-        {error && <span className="text-sm text-danger">{error}</span>}
+        {errorEl}
       </div>
       {blockOpen && (
         <form
@@ -552,20 +546,19 @@ function ForwardPanel({
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [categoryId, setCategoryId] = useState(issue.routing?.categoryId || "");
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { showError, errorEl } = useActionError();
   const hasCategory = Boolean(issue.routing?.categoryId);
 
   useEffect(() => {
     if (to === "ROUTED" || hasCategory) return;
     void api<{ categories: { id: string; name: string }[] }>("/api/categories")
       .then((res) => setCategories(res.categories))
-      .catch(() => setError("Couldn't load categories."));
-  }, [to, hasCategory]);
+      .catch(() => showError("Couldn't load categories."));
+  }, [to, hasCategory, showError]);
 
   const forward = useCallback(async () => {
     if (!hasCategory && !categoryId) return;
     setBusy(true);
-    setError(null);
     try {
       await api(`/api/issues/${issue.id}/forward`, {
         method: "POST",
@@ -573,10 +566,10 @@ function ForwardPanel({
       });
       onChanged();
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Forward failed.");
+      showError(e);
       setBusy(false);
     }
-  }, [issue.id, to, categoryId, hasCategory, onChanged]);
+  }, [issue.id, to, categoryId, hasCategory, onChanged, showError]);
 
   const label =
     to === "ROUTED"
@@ -609,7 +602,7 @@ function ForwardPanel({
       >
         {busy ? "Sending…" : label}
       </button>
-      {error && <p className="text-sm text-danger">{error}</p>}
+      {errorEl}
     </div>
   );
 }
@@ -620,17 +613,15 @@ function AssignPanel({ issue, onChanged }: { issue: Issue; onChanged: () => void
   const [suggestReason, setSuggestReason] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [suggesting, setSuggesting] = useState(false);
-  const [teamsError, setTeamsError] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const { showError, errorEl } = useActionError();
 
   const loadTeams = useCallback(() => {
     void api<{ teams: TeamWithMembers[] }>("/api/teams")
       .then((res) => {
         setTeams(res.teams);
-        setTeamsError(null);
       })
-      .catch(() => setTeamsError("Couldn't load teams. Please retry."));
-  }, []);
+      .catch(() => showError("Couldn't load teams."));
+  }, [showError]);
 
   useEffect(() => {
     loadTeams();
@@ -638,19 +629,17 @@ function AssignPanel({ issue, onChanged }: { issue: Issue; onChanged: () => void
 
   const assign = useCallback(async () => {
     setBusy(true);
-    setError(null);
     try {
       await api(`/api/issues/${issue.id}/assign`, { method: "POST", body: JSON.stringify({ teamId, staff }) });
       onChanged();
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Assignment failed.");
+      showError(e);
       setBusy(false);
     }
-  }, [issue.id, teamId, staff, onChanged]);
+  }, [issue.id, teamId, staff, onChanged, showError]);
 
   const suggest = useCallback(async () => {
     setSuggesting(true);
-    setError(null);
     setSuggestReason(null);
     try {
       const res = await api<{ result: { teamId: string; staffIds: string[]; reason: string } }>("/api/ai/suggest-assign", {
@@ -661,11 +650,11 @@ function AssignPanel({ issue, onChanged }: { issue: Issue; onChanged: () => void
       if (res.result?.staffIds) setStaff(res.result.staffIds);
       setSuggestReason(res.result?.reason || null);
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Suggestion failed.");
+      showError(e);
     } finally {
       setSuggesting(false);
     }
-  }, [issue.id]);
+  }, [issue.id, showError]);
 
   const selectedTeam = teams.find((t) => t.id === teamId);
 
@@ -678,14 +667,6 @@ function AssignPanel({ issue, onChanged }: { issue: Issue; onChanged: () => void
           {suggesting ? "Suggesting…" : "AI suggest"}
         </button>
       </div>
-      {teamsError && (
-        <p className="flex items-center gap-2 text-xs text-danger">
-          {teamsError}
-          <button className="link-blue" onClick={() => void loadTeams()}>
-            Retry
-          </button>
-        </p>
-      )}
       {suggestReason && <p className="text-xs text-slate">AI suggests this because: {suggestReason}</p>}
       <select
         className="input"
@@ -731,7 +712,7 @@ function AssignPanel({ issue, onChanged }: { issue: Issue; onChanged: () => void
           {busy ? "Assigning…" : issue.status === "PENDING" ? "Reassign" : "Assign"}
         </button>
         {staff.length === 0 && <span className="text-xs text-slate">Select at least one staff member.</span>}
-        {error && <span className="text-sm text-danger">{error}</span>}
+        {errorEl}
       </div>
     </div>
   );
@@ -742,7 +723,7 @@ export function RequirementsPanel({ issue, onChanged }: { issue: Issue; onChange
   const [item, setItem] = useState("");
   const [qty, setQty] = useState("1");
   const [needsApproval, setNeedsApproval] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { showError, errorEl } = useActionError();
   const canEdit = claims && ["maintenance", "admin"].includes(claims.role);
   const closed = issue.status === "CLOSED";
 
@@ -759,10 +740,10 @@ export function RequirementsPanel({ issue, onChanged }: { issue: Issue; onChange
         setNeedsApproval(false);
         onChanged();
       } catch (e2) {
-        setError(e2 instanceof ApiError ? e2.message : "Failed to add requirement.");
+        showError(e2);
       }
     },
-    [issue.id, item, qty, needsApproval, onChanged]
+    [issue.id, item, qty, needsApproval, onChanged, showError]
   );
 
   const remove = useCallback(
@@ -773,10 +754,10 @@ export function RequirementsPanel({ issue, onChanged }: { issue: Issue; onChange
         });
         onChanged();
       } catch {
-        setError("Failed to remove requirement.");
+        showError("Failed to remove requirement.");
       }
     },
-    [issue.id, onChanged]
+    [issue.id, onChanged, showError]
   );
 
   const toggle = useCallback(
@@ -788,10 +769,10 @@ export function RequirementsPanel({ issue, onChanged }: { issue: Issue; onChange
         });
         onChanged();
       } catch {
-        setError("Failed to update requirement.");
+        showError("Failed to update requirement.");
       }
     },
-    [issue.id, onChanged]
+    [issue.id, onChanged, showError]
   );
 
   const resubmit = useCallback(
@@ -803,10 +784,10 @@ export function RequirementsPanel({ issue, onChanged }: { issue: Issue; onChange
         });
         onChanged();
       } catch {
-        setError("Failed to resubmit requirement.");
+        showError("Failed to resubmit requirement.");
       }
     },
-    [issue.id, onChanged]
+    [issue.id, onChanged, showError]
   );
 
   return (
@@ -908,7 +889,7 @@ export function RequirementsPanel({ issue, onChanged }: { issue: Issue; onChange
           </div>
         </form>
       )}
-      {error && <p className="mt-2 text-sm text-danger">{error}</p>}
+      {errorEl}
     </div>
   );
 }

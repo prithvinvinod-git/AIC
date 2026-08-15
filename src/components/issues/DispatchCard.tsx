@@ -4,11 +4,12 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, UserCheck } from "lucide-react";
 import type { Issue, TeamWithMembers } from "@/lib/types";
-import { api, ApiError } from "@/lib/clientApi";
+import { api } from "@/lib/clientApi";
 import { StatusBadge, PriorityBadge } from "@/components/ui/Badge";
 import { IssuePhotos } from "@/components/ui/IssuePhotos";
 import { Modal } from "@/components/ui/Modal";
 import { FeedbackStars } from "@/components/ui/FeedbackStars";
+import { useActionError } from "@/components/ui/Toast";
 
 export function DispatchCard({
   issue,
@@ -31,12 +32,11 @@ export function DispatchCard({
   const [teamId, setTeamId] = useState("");
   const [staff, setStaff] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [dialog, setDialog] = useState<"forward" | "assign" | null>(null);
   const [verdict, setVerdict] = useState("");
   const [sendBack, setSendBack] = useState("");
   const [reviewBusy, setReviewBusy] = useState(false);
-  const [reviewError, setReviewError] = useState<string | null>(null);
+  const { showError, errorEl } = useActionError();
 
   useEffect(() => {
     void api<{ categories: { id: string; name: string }[] }>("/api/categories")
@@ -61,7 +61,6 @@ export function DispatchCard({
   const forward = useCallback(async () => {
     if (!categoryId) return;
     setBusy(true);
-    setError(null);
     try {
       await api(`/api/issues/${issue.id}/forward`, {
         method: "POST",
@@ -70,14 +69,13 @@ export function DispatchCard({
       setDialog(null);
       onRefresh();
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Forward failed.");
+      showError(e);
       setBusy(false);
     }
-  }, [issue.id, categoryId, note, onRefresh]);
+  }, [issue.id, categoryId, note, onRefresh, showError]);
 
   const assign = useCallback(async () => {
     setBusy(true);
-    setError(null);
     try {
       await api(`/api/issues/${issue.id}/assign`, {
         method: "POST",
@@ -86,17 +84,16 @@ export function DispatchCard({
       setDialog(null);
       onRefresh();
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Assignment failed.");
+      showError(e);
       setBusy(false);
     }
-  }, [issue.id, teamId, staff, note, onRefresh]);
+  }, [issue.id, teamId, staff, note, onRefresh, showError]);
 
   const selectedTeam = teams.find((t) => t.id === teamId);
 
   const review = useCallback(
     async (kind: "inspect" | "approve" | "sendback") => {
       setReviewBusy(true);
-      setReviewError(null);
       try {
         if (kind === "inspect") {
           await api(`/api/issues/${issue.id}/inspect`, {
@@ -115,11 +112,11 @@ export function DispatchCard({
         setSendBack("");
         onRefresh();
       } catch (e) {
-        setReviewError(e instanceof ApiError ? e.message : "Action failed.");
+        showError(e);
         setReviewBusy(false);
       }
     },
-    [issue.id, verdict, sendBack, onRefresh]
+    [issue.id, verdict, sendBack, onRefresh, showError]
   );
 
   const forwardPanel = isForward && (
@@ -151,7 +148,7 @@ export function DispatchCard({
         <ArrowRight className="h-3.5 w-3.5" aria-hidden />
         {busy ? "Routing…" : "Route to Category Head"}
       </button>
-      {error && <p className="text-sm text-danger">{error}</p>}
+      {errorEl}
     </div>
   );
 
@@ -218,7 +215,7 @@ export function DispatchCard({
         <UserCheck className="h-3.5 w-3.5" aria-hidden />
         {busy ? "Assigning…" : "Assign workers"}
       </button>
-      {error && <p className="text-sm text-danger">{error}</p>}
+      {errorEl}
     </div>
   );
 
@@ -290,7 +287,7 @@ export function DispatchCard({
               Send back
             </button>
           </div>
-          {reviewError && <p className="text-xs text-danger">{reviewError}</p>}
+          {errorEl}
         </div>
       )}
 
@@ -312,7 +309,7 @@ export function DispatchCard({
               Send back
             </button>
           </div>
-          {reviewError && <p className="text-xs text-danger">{reviewError}</p>}
+          {errorEl}
         </div>
       )}
 

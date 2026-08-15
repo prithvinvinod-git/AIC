@@ -5,8 +5,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { api, ApiError } from "@/lib/clientApi";
+import { api } from "@/lib/clientApi";
 import { Loading, EmptyState } from "@/components/ui/States";
+import { Modal } from "@/components/ui/Modal";
+import { useActionError } from "@/components/ui/Toast";
 import { COLLEGES, DEPARTMENTS_BY_COLLEGE, ROLE_LABEL, type College } from "@/lib/constants";
 import type { AppUser, Category, Team, Role } from "@/lib/types";
 
@@ -74,7 +76,9 @@ export default function AdminPage() {
 function UsersTab() {
   const [userTab, setUserTab] = useState<UserTab>("Regular users");
   const [users, setUsers] = useState<AppUser[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<AppUser | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const { showError } = useActionError();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("demo1234");
@@ -87,10 +91,10 @@ function UsersTab() {
       const res = await api<{ users: AppUser[] }>("/api/admin/users");
       setUsers(res.users);
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Failed to load users.");
+      showError(e);
       setUsers([]);
     }
-  }, []);
+  }, [showError]);
 
   useEffect(() => {
     void load();
@@ -112,10 +116,10 @@ function UsersTab() {
         setEmail("");
         await load();
       } catch (e2) {
-        setError(e2 instanceof ApiError ? e2.message : "Failed to create user.");
+        showError(e2);
       }
     },
-    [name, email, password, addRole, college, department, load]
+    [name, email, password, addRole, college, department, load, showError]
   );
 
   const updateUser = useCallback(
@@ -127,26 +131,27 @@ function UsersTab() {
         });
         await load();
       } catch (e) {
-        setError(e instanceof ApiError ? e.message : "Failed to update user.");
+        showError(e);
       }
     },
-    [load]
+    [load, showError]
   );
 
   const deleteUser = useCallback(
     async (u: AppUser) => {
       if (!u.uid) return;
-      if (!window.confirm(`Delete ${u.name} (${u.email})? This removes their account and cannot be undone.`)) {
-        return;
-      }
+      setDeleting(true);
       try {
         await api(`/api/admin/users?uid=${encodeURIComponent(u.uid)}`, { method: "DELETE" });
+        setPendingDelete(null);
         await load();
       } catch (e) {
-        setError(e instanceof ApiError ? e.message : "Failed to delete user.");
+        showError(e);
+      } finally {
+        setDeleting(false);
       }
     },
-    [load]
+    [load, showError]
   );
 
   if (!users) return <Loading label="Loading users…" />;
@@ -157,8 +162,6 @@ function UsersTab() {
 
   return (
     <div className="flex flex-col gap-4">
-      {error && <p className="rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger">{error}</p>}
-
       <div className="flex flex-wrap gap-2">
         {USER_TABS.map((t) => (
           <button
@@ -259,7 +262,7 @@ function UsersTab() {
                     </button>
                     <button
                       className="btn btn-sm btn-ghost text-danger hover:bg-danger-soft"
-                      onClick={() => void deleteUser(u)}
+                      onClick={() => setPendingDelete(u)}
                       aria-label={`Delete ${u.name}`}
                     >
                       <Trash2 className="h-3.5 w-3.5" aria-hidden /> Delete
@@ -276,6 +279,26 @@ function UsersTab() {
           </p>
         )}
       </div>
+
+      <Modal open={pendingDelete !== null} onClose={() => setPendingDelete(null)} title="Delete user">
+        <p className="text-sm text-graphite">
+          Delete <span className="font-semibold">{pendingDelete?.name}</span> ({pendingDelete?.email})? This
+          removes their account and cannot be undone.
+        </p>
+        <div className="mt-5 flex justify-end gap-2">
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setPendingDelete(null)} disabled={deleting}>
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="btn btn-danger btn-sm"
+            onClick={() => pendingDelete && void deleteUser(pendingDelete)}
+            disabled={deleting}
+          >
+            {deleting ? "Deleting…" : "Delete"}
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }
@@ -287,22 +310,29 @@ function TeamsTab() {
   const [name, setName] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [members, setMembers] = useState<string[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
+  const { showError } = useActionError();
 
   const load = useCallback(async () => {
-    const [t, u, c] = await Promise.all([
-      api<{ teams: Team[] }>("/api/admin/teams"),
-      api<{ users: AppUser[] }>("/api/admin/users"),
-      api<{ categories: Category[] }>("/api/admin/categories"),
-    ]);
-    setTeams(t.teams);
-    setUsers(u.users);
-    setCategories(c.categories);
-    if (!categoryId && c.categories.length) setCategoryId(c.categories[0].id || "");
-  }, [categoryId]);
+    setFailed(false);
+    try {
+      const [t, u, c] = await Promise.all([
+        api<{ teams: Team[] }>("/api/admin/teams"),
+        api<{ users: AppUser[] }>("/api/admin/users"),
+        api<{ categories: Category[] }>("/api/admin/categories"),
+      ]);
+      setTeams(t.teams);
+      setUsers(u.users);
+      setCategories(c.categories);
+      if (!categoryId && c.categories.length) setCategoryId(c.categories[0].id || "");
+    } catch (e) {
+      setFailed(true);
+      showError(e);
+    }
+  }, [categoryId, showError]);
 
   useEffect(() => {
-    void load().catch((e) => setError(e instanceof ApiError ? e.message : "Failed to load."));
+    void load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -318,20 +348,29 @@ function TeamsTab() {
         setMembers([]);
         await load();
       } catch (e2) {
-        setError(e2 instanceof ApiError ? e2.message : "Failed to create team.");
+        showError(e2);
       }
     },
-    [name, categoryId, members, load]
+    [name, categoryId, members, load, showError]
   );
 
   const maintenanceStaff = users.filter((u) => u.role === "maintenance");
+
+  if (failed) {
+    return (
+      <div className="card flex flex-col items-start gap-3">
+        <p className="text-sm text-slate">Couldn&apos;t load teams.</p>
+        <button className="btn btn-ghost btn-sm" onClick={() => void load()}>
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   if (!teams) return <Loading label="Loading teams…" />;
 
   return (
     <div className="flex flex-col gap-4">
-      {error && <p className="rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger">{error}</p>}
-
       <form onSubmit={create} className="card flex flex-col gap-3">
         <div className="grid gap-3 sm:grid-cols-2">
           <input className="input" placeholder="Team name (e.g. Electrical Crew)" required value={name} onChange={(e) => setName(e.target.value)} />
@@ -408,7 +447,7 @@ function CategoriesTab() {
   const [heads, setHeads] = useState<AppUser[]>([]);
   const [name, setName] = useState("");
   const [headUid, setHeadUid] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const { showError } = useActionError();
 
   const load = useCallback(async () => {
     try {
@@ -419,10 +458,10 @@ function CategoriesTab() {
       setCategories(c.categories);
       setHeads(u.users.filter((x) => x.role === "category_head"));
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Failed to load categories.");
+      showError(e);
       setCategories([]);
     }
-  }, []);
+  }, [showError]);
 
   useEffect(() => {
     void load();
@@ -446,10 +485,10 @@ function CategoriesTab() {
         setHeadUid("");
         await load();
       } catch (e2) {
-        setError(e2 instanceof ApiError ? e2.message : "Failed to create category.");
+        showError(e2);
       }
     },
-    [name, headUid, load]
+    [name, headUid, load, showError]
   );
 
   const setHead = useCallback(
@@ -461,17 +500,16 @@ function CategoriesTab() {
         });
         await load();
       } catch (e2) {
-        setError(e2 instanceof ApiError ? e2.message : "Failed to set category head.");
+        showError(e2);
       }
     },
-    [load]
+    [load, showError]
   );
 
   if (!categories) return <Loading label="Loading categories…" />;
 
   return (
     <div className="flex flex-col gap-4">
-      {error && <p className="rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger">{error}</p>}
       <form onSubmit={create} className="card flex flex-wrap items-end gap-3">
         <input className="input flex-1" placeholder="Category name (e.g. HVAC)" required value={name} onChange={(e) => setName(e.target.value)} />
         <div>
@@ -538,10 +576,12 @@ function CategoriesTab() {
 
 function ConfigTab() {
   const [config, setConfig] = useState<{ feedbackGraceHours?: number; assignmentMode?: string; aiEnabled?: boolean; aiThreshold?: number } | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
   const [saved, setSaved] = useState(false);
+  const { showError } = useActionError();
 
   const load = useCallback(async () => {
+    setFailed(false);
     try {
       const res = await api<{ config: { feedbackGraceHours: number; assignmentMode: string; ai: { enabled: boolean; threshold: number } } }>("/api/admin/config");
       setConfig({
@@ -551,9 +591,10 @@ function ConfigTab() {
         aiThreshold: res.config.ai.threshold,
       });
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Failed to load config.");
+      setFailed(true);
+      showError(e);
     }
-  }, []);
+  }, [showError]);
 
   useEffect(() => {
     void load();
@@ -574,17 +615,27 @@ function ConfigTab() {
         });
         setSaved(true);
       } catch (e2) {
-        setError(e2 instanceof ApiError ? e2.message : "Failed to save config.");
+        showError(e2);
       }
     },
-    [config]
+    [config, showError]
   );
+
+  if (failed) {
+    return (
+      <div className="card flex flex-col items-start gap-3">
+        <p className="text-sm text-slate">Couldn&apos;t load configuration.</p>
+        <button className="btn btn-ghost btn-sm" onClick={() => void load()}>
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   if (!config) return <Loading label="Loading config…" />;
 
   return (
     <form onSubmit={save} className="card flex max-w-xl flex-col gap-4">
-      {error && <p className="rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger">{error}</p>}
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="label" htmlFor="grace">

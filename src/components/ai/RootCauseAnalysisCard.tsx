@@ -1,20 +1,20 @@
 import { useState } from "react";
 import { api } from "@/lib/clientApi";
 import type { RootCauseResult } from "@/lib/ai/rootCause";
+import { useActionError } from "@/components/ui/Toast";
 
 export function RootCauseAnalysisCard() {
   const [result, setResult] = useState<RootCauseResult | null>(null);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { showError } = useActionError();
 
   const analyze = async () => {
     setBusy(true);
-    setError(null);
     try {
       const res = await api<{ result: RootCauseResult }>("/api/ai/root-cause");
       setResult(res.result);
     } catch {
-      setError("Failed to analyze issues. Please try again.");
+      showError("Failed to analyze issues.");
     } finally {
       setBusy(false);
     }
@@ -32,8 +32,6 @@ export function RootCauseAnalysisCard() {
           {busy ? "Analyzing..." : "Analyze patterns"}
         </button>
       </div>
-      
-      {error && <p className="mt-2 text-sm text-danger">{error}</p>}
       
       {result && (
         <div className="mt-3 space-y-2">

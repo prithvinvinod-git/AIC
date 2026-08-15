@@ -3,10 +3,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Heart, MessageSquareText, X } from "lucide-react";
 import type { Comment } from "@/lib/types";
-import { api, ApiError } from "@/lib/clientApi";
+import { api } from "@/lib/clientApi";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { formatDateTime } from "@/lib/format";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
+import { useActionError } from "@/components/ui/Toast";
 
 interface Props {
   issueId: string;
@@ -60,8 +61,8 @@ export function CommentsSection({ issueId, comments, onReload }: Props) {
   const [items, setItems] = useState<Comment[]>(comments);
   const [comment, setComment] = useState("");
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [likeBusy, setLikeBusy] = useState<string | null>(null);
+  const { showError, errorEl } = useActionError();
 
   useFocusTrap(dialogRef, open);
 
@@ -73,7 +74,6 @@ export function CommentsSection({ issueId, comments, onReload }: Props) {
 
   const close = useCallback(() => {
     if (busy) return;
-    setError(null);
     setOpen(false);
   }, [busy]);
 
@@ -94,7 +94,6 @@ export function CommentsSection({ issueId, comments, onReload }: Props) {
     async (e: React.FormEvent) => {
       e.preventDefault();
       setBusy(true);
-      setError(null);
       try {
         await api(`/api/issues/${issueId}/comments`, {
           method: "POST",
@@ -103,12 +102,12 @@ export function CommentsSection({ issueId, comments, onReload }: Props) {
         setComment("");
         onReload();
       } catch (e2) {
-        setError(e2 instanceof ApiError ? e2.message : "Failed to post comment.");
+        showError(e2);
       } finally {
         setBusy(false);
       }
     },
-    [issueId, comment, onReload]
+    [issueId, comment, onReload, showError]
   );
 
   const toggleLike = useCallback(
@@ -130,12 +129,12 @@ export function CommentsSection({ issueId, comments, onReload }: Props) {
           })
         );
       } catch (e2) {
-        setError(e2 instanceof ApiError ? e2.message : "Failed to update like.");
+        showError(e2);
       } finally {
         setLikeBusy(null);
       }
     },
-    [issueId, likeBusy, userId]
+    [issueId, likeBusy, userId, showError]
   );
 
   const lastThree = items.slice(-3);
@@ -221,7 +220,7 @@ export function CommentsSection({ issueId, comments, onReload }: Props) {
                 {busy ? "Posting…" : "Post"}
               </button>
             </form>
-            {error && <p className="mt-2 text-sm text-danger">{error}</p>}
+            {errorEl}
           </div>
         </div>
       )}
