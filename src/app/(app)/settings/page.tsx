@@ -6,6 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { api } from "@/lib/clientApi";
 import { ROLE_LABEL } from "@/lib/constants";
+import { soundEnabled, setSoundEnabled } from "@/lib/soundPref";
 import { Loading } from "@/components/ui/States";
 
 interface SettingsData {
@@ -17,13 +18,52 @@ interface SettingsData {
   notifyEmail?: boolean;
 }
 
+function Toggle({
+  checked,
+  onToggle,
+  disabled,
+  label,
+}: {
+  checked: boolean;
+  onToggle: (next: boolean) => void;
+  disabled?: boolean;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={() => onToggle(!checked)}
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      className="group relative inline-flex shrink-0 cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
+    >
+      <span
+        aria-hidden
+        className={`h-[1.5em] w-[calc(2.75em+2px)] rounded-full transition-all duration-300 ease-in-out ${
+          checked ? "bg-accent" : "bg-[#cccccc]"
+        }`}
+      />
+      <span
+        aria-hidden
+        className={`pointer-events-none absolute left-[0.125em] top-[0.125em] h-[1.25em] w-[1.25em] rounded-full bg-white transition-all duration-300 ease-in-out group-active:w-[2.25em] ${
+          checked
+            ? "translate-x-[calc(1.375em+2px)] shadow-[-10px_0_40px_rgba(0,0,0,0.1)] group-active:translate-x-[0.375em]"
+            : "translate-x-0 shadow-[10px_0_40px_rgba(0,0,0,0.1)]"
+        }`}
+      />
+    </button>
+  );
+}
+
 export default function SettingsPage() {
   const { user, claims, ready } = useAuth();
   const router = useRouter();
   const [settings, setSettings] = useState<SettingsData | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [sound, setSound] = useState(soundEnabled);
 
   useEffect(() => {
     if (!ready) return;
@@ -43,7 +83,6 @@ export default function SettingsPage() {
   const toggleNotifications = useCallback(
     async (next: boolean) => {
       setError(null);
-      setNotice(null);
       setBusy(true);
       try {
         await api("/api/profile", {
@@ -51,7 +90,6 @@ export default function SettingsPage() {
           body: JSON.stringify({ notifyEmail: next }),
         });
         setSettings((s) => ({ ...(s || {}), notifyEmail: next }));
-        setNotice(next ? "Email notifications turned on." : "Email notifications turned off.");
       } catch (err) {
         setError(err instanceof Error ? err.message : "Couldn't update the preference.");
       } finally {
@@ -60,6 +98,11 @@ export default function SettingsPage() {
     },
     []
   );
+
+  const toggleSound = useCallback((next: boolean) => {
+    setSoundEnabled(next);
+    setSound(next);
+  }, []);
 
   if (!ready) return <Loading label="Loading settings…" />;
   if (!user || !claims) return null;
@@ -99,33 +142,29 @@ export default function SettingsPage() {
 
       <div className="card">
         <h2 className="font-display text-base font-semibold text-ink">Notifications</h2>
-        <p className="mt-1 text-sm text-slate">Receive an email when one of your issues changes status.</p>
+        <p className="mt-1 text-sm text-slate">Choose how you want to be notified.</p>
         <div className="mt-4 flex items-center justify-between gap-4">
           <div className="min-w-0">
             <p className="text-sm font-medium text-graphite">Email notifications</p>
             <p className="text-xs text-slate">Sent to {user.email}</p>
           </div>
-          <button
-            type="button"
+          <Toggle
+            checked={Boolean(settings?.notifyEmail ?? true)}
+            onToggle={(next) => void toggleNotifications(next)}
             disabled={busy}
-            onClick={() => void toggleNotifications(!(settings?.notifyEmail ?? true))}
-            role="switch"
-            aria-checked={Boolean(settings?.notifyEmail ?? true)}
-            aria-label="Email notifications"
-            className={`relative h-8 w-14 shrink-0 rounded-full transition-colors ${
-              settings?.notifyEmail ?? true ? "bg-ink" : "bg-stone"
-            }`}
-          >
-            <span
-              className={`absolute top-0.5 h-7 w-7 rounded-full bg-white shadow transition-all ${
-                settings?.notifyEmail ?? true ? "left-[26px]" : "left-0.5"
-              }`}
-            />
-          </button>
+            label="Email notifications"
+          />
+        </div>
+
+        <div className="mt-4 flex items-center justify-between gap-4 border-t border-silver pt-4">
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-graphite">Notification sound</p>
+            <p className="text-xs text-slate">Play a short beep when a new notification arrives.</p>
+          </div>
+          <Toggle checked={sound} onToggle={toggleSound} label="Notification sound" />
         </div>
 
         {error && <p className="mt-4 rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger">{error}</p>}
-        {notice && <p className="mt-4 rounded-lg bg-success-soft px-3 py-2 text-sm text-success">{notice}</p>}
       </div>
     </div>
   );

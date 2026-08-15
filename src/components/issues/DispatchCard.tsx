@@ -8,6 +8,7 @@ import { api, ApiError } from "@/lib/clientApi";
 import { StatusBadge, PriorityBadge } from "@/components/ui/Badge";
 import { IssuePhotos } from "@/components/ui/IssuePhotos";
 import { Modal } from "@/components/ui/Modal";
+import { FeedbackStars } from "@/components/ui/FeedbackStars";
 
 export function DispatchCard({
   issue,
@@ -20,6 +21,7 @@ export function DispatchCard({
 }) {
   const router = useRouter();
   const isMaintHead = role === "maintenance_head";
+  const isCatHead = role === "category_head";
   const isForward = isMaintHead && (issue.status === "ROUTED" || issue.status === "PENDING_ASSIGN");
 
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
@@ -31,6 +33,10 @@ export function DispatchCard({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dialog, setDialog] = useState<"forward" | "assign" | null>(null);
+  const [verdict, setVerdict] = useState("");
+  const [sendBack, setSendBack] = useState("");
+  const [reviewBusy, setReviewBusy] = useState(false);
+  const [reviewError, setReviewError] = useState<string | null>(null);
 
   useEffect(() => {
     void api<{ categories: { id: string; name: string }[] }>("/api/categories")
@@ -86,6 +92,35 @@ export function DispatchCard({
   }, [issue.id, teamId, staff, note, onRefresh]);
 
   const selectedTeam = teams.find((t) => t.id === teamId);
+
+  const review = useCallback(
+    async (kind: "inspect" | "approve" | "sendback") => {
+      setReviewBusy(true);
+      setReviewError(null);
+      try {
+        if (kind === "inspect") {
+          await api(`/api/issues/${issue.id}/inspect`, {
+            method: "POST",
+            body: JSON.stringify({ verdict: verdict || "Verified." }),
+          });
+        } else if (kind === "approve") {
+          await api(`/api/issues/${issue.id}/head-approve`, { method: "POST", body: JSON.stringify({}) });
+        } else {
+          await api(`/api/issues/${issue.id}/sendback`, {
+            method: "POST",
+            body: JSON.stringify({ sendBackReason: sendBack }),
+          });
+        }
+        setVerdict("");
+        setSendBack("");
+        onRefresh();
+      } catch (e) {
+        setReviewError(e instanceof ApiError ? e.message : "Action failed.");
+        setReviewBusy(false);
+      }
+    },
+    [issue.id, verdict, sendBack, onRefresh]
+  );
 
   const forwardPanel = isForward && (
     <div className="flex flex-col gap-3">
@@ -225,6 +260,59 @@ export function DispatchCard({
               <UserCheck className="h-3.5 w-3.5" aria-hidden /> Assign workers
             </button>
           )}
+        </div>
+      )}
+
+      {issue.status === "CLOSED" && issue.feedback?.rating && (
+        <div className="mt-auto flex justify-end">
+          <FeedbackStars rating={issue.feedback.rating} size={16} />
+        </div>
+      )}
+
+      {isCatHead && issue.status === "COMPLETED" && (
+        <div className="mt-auto flex flex-col gap-2 rounded-xl bg-paper p-3">
+          <p className="text-xs text-slate">Verify the completed work on site.</p>
+          <input
+            className="input"
+            placeholder="Inspection note"
+            value={verdict}
+            onChange={(e) => setVerdict(e.target.value)}
+          />
+          <div className="flex gap-2">
+            <button className="btn btn-primary btn-sm" disabled={reviewBusy} onClick={() => void review("inspect")}>
+              {reviewBusy ? "Saving…" : "Verify"}
+            </button>
+            <button
+              className="btn btn-ghost btn-sm"
+              disabled={reviewBusy || sendBack.trim().length < 3}
+              onClick={() => void review("sendback")}
+            >
+              Send back
+            </button>
+          </div>
+          {reviewError && <p className="text-xs text-danger">{reviewError}</p>}
+        </div>
+      )}
+
+      {isMaintHead && issue.status === "INSPECTED" && (
+        <div className="mt-auto flex flex-col gap-2 rounded-xl bg-paper p-3">
+          <p className="text-xs text-slate">
+            {issue.inspection?.inspectedBy.name || "The category head"} verified this on site — approve to send to
+            the department validator.
+          </p>
+          <div className="flex gap-2">
+            <button className="btn btn-primary btn-sm" disabled={reviewBusy} onClick={() => void review("approve")}>
+              {reviewBusy ? "Approving…" : "Approve"}
+            </button>
+            <button
+              className="btn btn-ghost btn-sm"
+              disabled={reviewBusy || sendBack.trim().length < 3}
+              onClick={() => void review("sendback")}
+            >
+              Send back
+            </button>
+          </div>
+          {reviewError && <p className="text-xs text-danger">{reviewError}</p>}
         </div>
       )}
 

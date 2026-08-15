@@ -29,6 +29,10 @@ export default function DispatchPage() {
 
   const isMaintHead = role === "maintenance_head";
   const defaultTab: IssueStatus = isMaintHead ? "ROUTED" : "PENDING_ASSIGN";
+  const reviewTabs: { key: IssueStatus; label: string }[] = isMaintHead
+    ? [{ key: "INSPECTED", label: "To approve" }]
+    : [{ key: "COMPLETED", label: "To verify" }];
+  const tabs = [...TABS, ...reviewTabs];
   const activeTab: IssueStatus = tab === "all" ? defaultTab : tab;
   const queue = issues.filter((i) => i.status === activeTab);
 
@@ -55,7 +59,7 @@ export default function DispatchPage() {
             ({issues.filter((i) => i.status === defaultTab).length})
           </span>
         </button>
-        {TABS.filter((t) => t.key !== defaultTab).map((t) => (
+        {tabs.filter((t) => t.key !== defaultTab).map((t) => (
           <button
             key={t.key}
             className={`btn btn-sm ${tab === t.key ? "btn-primary" : "btn-ghost"}`}
@@ -71,7 +75,7 @@ export default function DispatchPage() {
       ) : queue.length === 0 ? (
         <EmptyState
           icon={<CornerDownRight className="h-8 w-8" aria-hidden />}
-          title={`No ${(TABS.find((t) => t.key === tab)?.label || "issues").toLowerCase()}`}
+          title={`No ${(tabs.find((t) => t.key === tab)?.label || "issues").toLowerCase()}`}
           body={
             isMaintHead
               ? "Validated P3–5 issues will land here for you to forward to a category team."

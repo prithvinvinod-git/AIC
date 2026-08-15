@@ -3,7 +3,7 @@ import "server-only";
 import { adminDb } from "../firebaseAdmin";
 import { mailEnabled, sendMail } from "./client";
 import { getRecipientEmails, getTeamEmails } from "./recipients";
-import { approvedTemplate, jobAssignmentTemplate, reportedTemplate } from "./templates";
+import { approvedTemplate, feedbackTemplate, jobAssignmentTemplate, reportedTemplate } from "./templates";
 import type { Issue } from "../types";
 
 const db = adminDb();
@@ -59,6 +59,29 @@ export async function sendJobAssignmentEmail(issue: Issue): Promise<void> {
   await sendMail({
     to: recipients,
     subject: `New job assigned — ${issue.issueNo}`,
+    html: t.html,
+    text: t.text,
+  });
+}
+
+/** Feedback email — after a reporter rates a closed issue (or an issue
+ *  auto-closes): the assigned team/staff + the department validator get the
+ *  outcome. Manual closes carry the rating; auto-closes note the miss. */
+export async function sendFeedbackEmail(issue: Issue): Promise<void> {
+  if (!mailEnabled()) return;
+  const staffUids = (issue.routing?.staff || []).map((s) => s.uid);
+  const teamRecipients = issue.routing?.teamId
+    ? await getTeamEmails(issue.routing.teamId, staffUids)
+    : await getTeamEmails("", staffUids);
+  const validatorRecipients = await getRecipientEmails(["validator"], issue.department);
+  const recipients = [...new Set([...teamRecipients, ...validatorRecipients])];
+  if (recipients.length === 0) return;
+
+  const rated = (issue.feedback?.rating || 0) > 0;
+  const t = feedbackTemplate(issue);
+  await sendMail({
+    to: recipients,
+    subject: `${rated ? "Feedback received" : "Issue closed"} — ${issue.issueNo}`,
     html: t.html,
     text: t.text,
   });

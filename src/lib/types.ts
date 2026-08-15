@@ -32,6 +32,8 @@ export type IssueStatus =
   | "ONGOING"
   | "PENDING"
   | "COMPLETED"
+  | "INSPECTED"
+  | "HEAD_APPROVED"
   | "VERIFIED"
   | "REJECTED"
   | "CLOSED";
@@ -47,6 +49,8 @@ export const STATUSES: IssueStatus[] = [
   "ONGOING",
   "PENDING",
   "COMPLETED",
+  "INSPECTED",
+  "HEAD_APPROVED",
   "VERIFIED",
   "REJECTED",
   "CLOSED",
@@ -134,6 +138,21 @@ export interface Verification {
   sendBackReason?: string;
 }
 
+/** Category head's on-site inspection after the worker reports completion. */
+export interface Inspection {
+  inspectedBy: { uid: string; name: string };
+  inspectedAt: string;
+  verdict: string;
+  note?: string;
+}
+
+/** Maintenance head's approval of the inspected work (→ dept validator). */
+export interface HeadApproval {
+  approvedBy: { uid: string; name: string };
+  approvedAt: string;
+  note?: string;
+}
+
 export interface Feedback {
   rating: number;
   comment?: string;
@@ -203,6 +222,8 @@ export interface Issue {
   sla?: SlaState;
   rejection?: Rejection;
   completion?: Completion;
+  inspection?: Inspection;
+  headApproval?: HeadApproval;
   verification?: Verification;
   feedback?: Feedback;
   reporter: { uid: string; name: string; department: string };

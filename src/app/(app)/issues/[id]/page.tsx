@@ -2,13 +2,14 @@
 
 import { useCallback, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, CircleCheckBig, Clock3, Download, MapPin, Star } from "lucide-react";
+import { ArrowLeft, CircleCheckBig, Clock3, Download, MapPin } from "lucide-react";
 import { downloadIssueReceipt } from "@/lib/receiptPdf";
 import { useIssue } from "@/hooks/useIssue";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Loading, EmptyState } from "@/components/ui/States";
 import { PriorityBadge, StatusBadge } from "@/components/ui/Badge";
 import { IssuePhotos } from "@/components/ui/IssuePhotos";
+import { FeedbackStars } from "@/components/ui/FeedbackStars";
 import { AISuggestionCard } from "@/components/issues/AISuggestionCard";
 import { CloseIssueModal } from "@/components/issues/CloseIssueModal";
 import { CommentsSection } from "@/components/issues/CommentsSection";
@@ -60,7 +61,7 @@ export default function IssueDetailPage() {
   if (!issue || !claims) return <Loading label="Loading issue…" />;
 
   const slaDeadline =
-    issue.sla?.resolutionDeadline && ["ASSIGNED", "ONGOING", "PENDING", "COMPLETED"].includes(issue.status)
+    issue.sla?.resolutionDeadline && ["ASSIGNED", "ONGOING", "PENDING", "COMPLETED", "INSPECTED", "HEAD_APPROVED"].includes(issue.status)
       ? deadlineLabel(issue.sla.resolutionDeadline)
       : null;
 
@@ -130,7 +131,12 @@ export default function IssueDetailPage() {
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="flex flex-col gap-4 lg:col-span-2">
           <div className="card">
-            <h2 className="font-display text-lg font-semibold text-ink">Description</h2>
+            <div className="flex items-start justify-between gap-3">
+              <h2 className="font-display text-lg font-semibold text-ink">Description</h2>
+              {issue.feedback?.rating ? (
+                <FeedbackStars rating={issue.feedback.rating} size={20} />
+              ) : null}
+            </div>
             <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-slate">{issue.description}</p>
             <div className="mt-4 flex flex-wrap gap-2 text-sm text-slate">
               <span className="flex items-center gap-1.5">
@@ -199,28 +205,6 @@ export default function IssueDetailPage() {
               ))}
             </ol>
           </div>
-
-          {issue.feedback && (
-            <div className="card">
-              <h2 className="font-display text-lg font-semibold text-ink">Feedback</h2>
-              <div className="mt-2 flex items-center gap-1.5">
-                {[1, 2, 3, 4, 5].map((r) => (
-                  <Star
-                    key={r}
-                    className={`h-5 w-5 ${
-                      r <= issue.feedback!.rating ? "fill-warning text-warning" : "text-silver"
-                    }`}
-                    aria-hidden
-                  />
-                ))}
-                <span className="ml-1 text-sm text-slate">{issue.feedback.rating}/5</span>
-              </div>
-              {issue.feedback.comment && <p className="mt-2 text-sm text-slate">{issue.feedback.comment}</p>}
-              {issue.feedback.autoClosed && (
-                <p className="mt-2 text-xs text-slate">Closed automatically after the feedback grace period.</p>
-              )}
-            </div>
-          )}
 
           {issue.rejection && (
             <div className="card">

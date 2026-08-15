@@ -48,6 +48,8 @@ export async function runAutoCloseJob(): Promise<number> {
           link: `/issues/${id}`,
         });
       }
+
+      await import("@/lib/email").then((m) => m.sendFeedbackEmail(updated));
       closed += 1;
     } catch (e) {
       console.error(`autoClose: failed for ${id}:`, e);

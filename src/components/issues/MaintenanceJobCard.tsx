@@ -2,12 +2,13 @@
 
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ListChecks, PlayCircle, Sparkles } from "lucide-react";
+import { ListChecks, PlayCircle, Sparkles, X } from "lucide-react";
 import type { Issue, Requirement } from "@/lib/types";
 import { api, ApiError } from "@/lib/clientApi";
 import { StatusBadge, PriorityBadge } from "@/components/ui/Badge";
 import { IssuePhotos } from "@/components/ui/IssuePhotos";
 import { Modal } from "@/components/ui/Modal";
+import { FeedbackStars } from "@/components/ui/FeedbackStars";
 import { formatDateTime } from "@/lib/format";
 
 interface DraftRequirement {
@@ -153,6 +154,24 @@ export function MaintenanceJobCard({
     [issue.id, onRefresh]
   );
 
+  const removeRequirement = useCallback(
+    async (r: Requirement) => {
+      setBusy(true);
+      setError(null);
+      try {
+        await api(`/api/issues/${issue.id}/requirements/${(r as Requirement & { id?: string }).id}`, {
+          method: "DELETE",
+        });
+        onRefresh();
+      } catch (e) {
+        setError(e instanceof ApiError ? e.message : "Remove failed.");
+      } finally {
+        setBusy(false);
+      }
+    },
+    [issue.id, onRefresh]
+  );
+
   const isAssigned = issue.status === "ASSIGNED";
   const isOngoing = issue.status === "ONGOING";
   const isBlocked = issue.status === "PENDING";
@@ -282,13 +301,17 @@ export function MaintenanceJobCard({
           </button>
         </>
       )}
-      <button className="btn btn-ghost btn-sm" onClick={() => setMode("req")}>
-        + Requirement
-      </button>
-      <button className="btn btn-ghost btn-sm" onClick={() => void draftRequirements()} disabled={drafting}>
-        <Sparkles className="h-3.5 w-3.5 text-accent" aria-hidden />
-        {drafting ? "Drafting…" : "AI draft"}
-      </button>
+      {issue.status !== "CLOSED" && (
+        <>
+          <button className="btn btn-ghost btn-sm" onClick={() => setMode("req")}>
+            + Requirement
+          </button>
+          <button className="btn btn-ghost btn-sm" onClick={() => void draftRequirements()} disabled={drafting}>
+            <Sparkles className="h-3.5 w-3.5 text-accent" aria-hidden />
+            {drafting ? "Drafting…" : "AI draft"}
+          </button>
+        </>
+      )}
     </div>
   );
 
@@ -298,7 +321,19 @@ export function MaintenanceJobCard({
     </p>
   ) : issue.status === "COMPLETED" ? (
     <p className="rounded-lg bg-warning-soft px-3 py-2 text-xs text-warning">
-      Awaiting verification by the department validator.
+      Awaiting in-site verification by your category head.
+    </p>
+  ) : issue.status === "INSPECTED" ? (
+    <div className="rounded-lg bg-success-soft px-3 py-2 text-xs text-success">
+      <p className="font-medium">
+        In-site verified{issue.inspection?.inspectedBy ? ` by ${issue.inspection.inspectedBy.name}` : ""}
+      </p>
+      {issue.inspection?.verdict && <p className="mt-1">{issue.inspection.verdict}</p>}
+      <p className="mt-1 text-slate">Awaiting maintenance head approval.</p>
+    </div>
+  ) : issue.status === "HEAD_APPROVED" ? (
+    <p className="rounded-lg bg-warning-soft px-3 py-2 text-xs text-warning">
+      Awaiting final verification by the department validator.
     </p>
   ) : issue.status === "VERIFIED" && issue.verification ? (
     <div className="rounded-lg bg-success-soft px-3 py-2 text-xs text-success">
@@ -347,7 +382,11 @@ export function MaintenanceJobCard({
         <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-slate">
           <ListChecks className="h-3.5 w-3.5" aria-hidden /> Requirements
         </p>
-        <ul className="mt-2 flex h-20 flex-col gap-1.5 overflow-y-auto pr-1">
+        <ul
+          className={`mt-2 flex flex-col gap-1.5 overflow-y-auto pr-1 ${
+            issue.requirements.length > 2 ? "max-h-[54px] sm:max-h-[40px]" : ""
+          }`}
+        >
           {issue.requirements.length === 0 && (
             <li className="text-xs text-stone">No requirements logged yet.</li>
           )}
@@ -383,7 +422,7 @@ export function MaintenanceJobCard({
                     {r.resolved && <span className="text-[10px] leading-none">✓</span>}
                   </button>
                 )}
-                <span className={r.resolved ? "text-slate line-through" : "text-graphite"}>
+                <span className={`min-w-0 flex-1 truncate ${r.resolved ? "text-slate line-through" : "text-graphite"}`}>
                   {r.item} ×{r.qty}
                 </span>
                 {isApproval && (
@@ -417,6 +456,18 @@ export function MaintenanceJobCard({
                     Resubmit
                   </button>
                 )}
+                {!readOnly && !isApproval && (
+                  <button
+                    type="button"
+                    onClick={() => void removeRequirement(r)}
+                    disabled={busy}
+                    aria-label={`Remove requirement ${r.item}`}
+                    title="Remove requirement"
+                    className="ml-auto rounded p-0.5 text-slate transition-colors hover:bg-danger-soft hover:text-danger"
+                  >
+                    <X className="h-3.5 w-3.5" aria-hidden />
+                  </button>
+                )}
               </li>
             );
           })}
@@ -432,6 +483,11 @@ export function MaintenanceJobCard({
       <div className="mt-auto flex flex-col gap-2">
         {actions}
         {statusNote}
+        {issue.status === "CLOSED" && issue.feedback?.rating && (
+          <div className="flex justify-end pt-1">
+            <FeedbackStars rating={issue.feedback.rating} size={16} />
+          </div>
+        )}
       </div>
 
       {error && <p className="text-sm text-danger">{error}</p>}

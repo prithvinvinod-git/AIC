@@ -43,12 +43,15 @@ export async function runTransition(
     void notifyRecipientsForIssue(issue, before.status, issue.status);
 
     // Best-effort emails keyed on the final status. Approvals reach HOD +
-    // Principal; assignments reach the maintenance team. Rejections never email.
+    // Principal; assignments reach the maintenance team; a CLOSED issue tells
+    // the staff + dept validator the feedback outcome. Rejections never email.
     after(async () => {
       if (issue.status === "APPROVED") {
         await import("@/lib/email").then((m) => m.sendIssueApprovedEmail(issue));
       } else if (issue.status === "ASSIGNED") {
         await import("@/lib/email").then((m) => m.sendJobAssignmentEmail(issue));
+      } else if (issue.status === "CLOSED") {
+        await import("@/lib/email").then((m) => m.sendFeedbackEmail(issue));
       }
     });
 

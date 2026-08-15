@@ -143,10 +143,45 @@ export function notifyRecipientsForIssue(issue: Issue, oldStatus: string, newSta
       });
       break;
     case "COMPLETED":
+      if (issue.routing?.categoryHeadUid) {
+        notify(issue.routing.categoryHeadUid, {
+          type: "verification",
+          title: "In-site verification needed",
+          body: `${issue.issueNo} completed — verify the work on site.`,
+          link,
+        });
+      } else {
+        notifyRole(["category_head"], {
+          type: "verification",
+          title: "In-site verification needed",
+          body: `${issue.issueNo} completed — verify the work on site.`,
+          link,
+        });
+      }
+      break;
+    case "INSPECTED":
+      toReporter("Work inspected", `${issue.issueNo} passed the on-site inspection.`);
+      if (issue.routing?.maintenanceHeadUid) {
+        notify(issue.routing.maintenanceHeadUid, {
+          type: "verification",
+          title: "Head approval needed",
+          body: `${issue.issueNo} inspected — approve the completed work.`,
+          link,
+        });
+      } else {
+        notifyRole(["maintenance_head"], {
+          type: "verification",
+          title: "Head approval needed",
+          body: `${issue.issueNo} inspected — approve the completed work.`,
+          link,
+        });
+      }
+      break;
+    case "HEAD_APPROVED":
       notifyRole(["validator"], {
         type: "verification",
-        title: "Verification needed",
-        body: `${issue.issueNo} completed — verify the work.`,
+        title: "Final verification needed",
+        body: `${issue.issueNo} approved by the maintenance head — do the final check.`,
         link,
       });
       break;

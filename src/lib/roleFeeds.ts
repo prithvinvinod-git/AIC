@@ -76,6 +76,7 @@ export function feedFor(role: Role, department?: string): RoleFeed {
         params: { status: "ROUTED" },
         emptyTitle: "Nothing to dispatch",
         emptyBody: "Validated P3–5 issues will land here for you to forward to a category team.",
+        pick: (issues) => issues.filter((i) => ["ROUTED", "INSPECTED"].includes(i.status)),
       };
     case "category_head":
       return {
@@ -86,6 +87,7 @@ export function feedFor(role: Role, department?: string): RoleFeed {
         params: { status: "PENDING_ASSIGN" },
         emptyTitle: "Nothing to assign",
         emptyBody: "Forwarded issues will land here for you to assign a team and workers.",
+        pick: (issues) => issues.filter((i) => ["PENDING_ASSIGN", "COMPLETED"].includes(i.status)),
       };
     case "purchase":
       return {

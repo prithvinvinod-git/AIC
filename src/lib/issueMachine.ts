@@ -116,6 +116,54 @@ export interface TransitionRule {
 
 const never = (): string | null => null;
 
+/** Category head verifies work done for their own category (on-site check). */
+const checkInspect = (issue: Issue, actor: Actor, input: TransitionInput): string | null => {
+  if (
+    actor.role === "category_head" &&
+    issue.routing?.categoryHeadUid &&
+    issue.routing.categoryHeadUid !== actor.uid
+  )
+    return "This issue belongs to another category head.";
+  return input.verdict && input.verdict.trim().length >= 2
+    ? null
+    : "A short in-site verification note is required.";
+};
+
+const checkInspectSendBack = (issue: Issue, actor: Actor, input: TransitionInput): string | null => {
+  if (
+    actor.role === "category_head" &&
+    issue.routing?.categoryHeadUid &&
+    issue.routing.categoryHeadUid !== actor.uid
+  )
+    return "This issue belongs to another category head.";
+  return input.sendBackReason && input.sendBackReason.trim().length >= 3
+    ? null
+    : "A send-back reason is required.";
+};
+
+/** Maintenance head signs off the inspected work. */
+const checkHeadApprove = (issue: Issue, actor: Actor): string | null => {
+  if (
+    actor.role === "maintenance_head" &&
+    issue.routing?.maintenanceHeadUid &&
+    issue.routing.maintenanceHeadUid !== actor.uid
+  )
+    return "This issue belongs to another maintenance head.";
+  return null;
+};
+
+const checkHeadSendBack = (issue: Issue, actor: Actor, input: TransitionInput): string | null => {
+  if (
+    actor.role === "maintenance_head" &&
+    issue.routing?.maintenanceHeadUid &&
+    issue.routing.maintenanceHeadUid !== actor.uid
+  )
+    return "This issue belongs to another maintenance head.";
+  return input.sendBackReason && input.sendBackReason.trim().length >= 3
+    ? null
+    : "A send-back reason is required.";
+};
+
 /** Spec §3.1 — the one authoritative transition table. */
 export const TRANSITION_RULES: Record<IssueStatus, TransitionRule[]> = {
   NEW: [
@@ -274,6 +322,30 @@ export const TRANSITION_RULES: Record<IssueStatus, TransitionRule[]> = {
   ],
   COMPLETED: [
     {
+      to: "INSPECTED",
+      roles: ["category_head", "admin"],
+      check: checkInspect,
+    },
+    {
+      to: "ONGOING",
+      roles: ["category_head", "admin"],
+      check: checkInspectSendBack,
+    },
+  ],
+  INSPECTED: [
+    {
+      to: "HEAD_APPROVED",
+      roles: ["maintenance_head", "admin"],
+      check: checkHeadApprove,
+    },
+    {
+      to: "ONGOING",
+      roles: ["maintenance_head", "admin"],
+      check: checkHeadSendBack,
+    },
+  ],
+  HEAD_APPROVED: [
+    {
       to: "VERIFIED",
       roles: ["validator", "admin"],
       check: (_i, _a, input) =>
@@ -296,9 +368,12 @@ export const TRANSITION_RULES: Record<IssueStatus, TransitionRule[]> = {
       roles: ["reporter"],
       check: (_i, _a, input) => {
         if (input.isAuto) return null;
-        return input.rating && input.rating >= 1 && input.rating <= 5
+        return input.rating &&
+          input.rating >= 0.5 &&
+          input.rating <= 5 &&
+          input.rating % 0.5 === 0
           ? null
-          : "Please rate the resolution (1–5) to close the issue.";
+          : "Please rate the resolution (0.5–5, in half steps) to close the issue.";
       },
     },
   ],
@@ -626,6 +701,23 @@ export async function applyTransition(
         }
         break;
       }
+      case "INSPECTED": {
+        patches.inspection = {
+          inspectedBy: { uid: actor.uid, name: actor.name },
+          inspectedAt: nowIso(),
+          verdict: input.verdict || note || "Inspected",
+          ...(input.note ? { note: input.note } : {}),
+        };
+        break;
+      }
+      case "HEAD_APPROVED": {
+        patches.headApproval = {
+          approvedBy: { uid: actor.uid, name: actor.name },
+          approvedAt: nowIso(),
+          ...(input.note ? { note: input.note } : {}),
+        };
+        break;
+      }
       case "VERIFIED": {
         patches.verification = {
           verifiedBy: { uid: actor.uid, name: actor.name },
@@ -646,7 +738,7 @@ export async function applyTransition(
       }
     }
 
-    if (input.to === "ONGOING" && issue.status === "COMPLETED") {
+    if (input.to === "ONGOING" && ["COMPLETED", "INSPECTED", "HEAD_APPROVED"].includes(issue.status)) {
       patches.verification = {
         verifiedBy: { uid: actor.uid, name: actor.name },
         verifiedAt: nowIso(),

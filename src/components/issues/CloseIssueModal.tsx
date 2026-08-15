@@ -1,10 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Star, X } from "lucide-react";
+import { X } from "lucide-react";
 import type { Issue } from "@/lib/types";
 import { api, ApiError } from "@/lib/clientApi";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
+import { StarPicker, fmtRating } from "@/components/ui/StarPicker";
 
 interface Props {
   issue: Issue | null;
@@ -86,32 +87,23 @@ export function CloseIssueModal({ issue, onClose, onClosed }: Props) {
         </div>
 
         <div className="mt-5">
-          <p className="label">Your rating</p>
-          <div className="flex items-center gap-1.5">
-            {[1, 2, 3, 4, 5].map((r) => (
-              <button
-                key={r}
-                type="button"
-                onClick={() => setRating(r)}
-                disabled={busy}
-                aria-label={`${r} star${r === 1 ? "" : "s"}`}
-                className="rounded-lg p-0.5 transition-transform hover:scale-110"
-              >
-                <Star
-                  className={`h-9 w-9 ${
-                    r <= rating ? "fill-warning text-warning" : "text-stone"
-                  }`}
-                  aria-hidden
-                />
-              </button>
-            ))}
+          <div className="flex items-center justify-between gap-3">
+            <p className="label">Your rating</p>
+            {rating > 0 && (
+              <span className="rounded-full bg-accent-soft px-3 py-1 font-display text-sm font-semibold text-accent">
+                {fmtRating(rating)}/5
+              </span>
+            )}
           </div>
-          <p className="mt-1.5 text-xs text-slate">
+          <div className="mt-2 flex justify-center rounded-2xl bg-paper py-4">
+            <StarPicker value={rating} onChange={setRating} disabled={busy} />
+          </div>
+          <p className="mt-2 text-center text-xs text-slate">
             {rating === 0
-              ? "Tap at least one star to close."
-              : rating <= 2
+              ? "Tap a star to rate — tap the same star again for a half step."
+              : rating < 3
                 ? "We'll look into this."
-                : rating === 3
+                : rating < 4
                   ? "Thanks for the feedback."
                   : "Glad we could help."}
           </p>
@@ -139,7 +131,7 @@ export function CloseIssueModal({ issue, onClose, onClosed }: Props) {
           <button type="button" className="btn btn-ghost" onClick={() => close()} disabled={busy}>
             Cancel
           </button>
-          <button type="button" className="btn btn-primary" onClick={() => void submit()} disabled={busy || rating < 1}>
+          <button type="button" className="btn btn-primary" onClick={() => void submit()} disabled={busy || rating < 0.5}>
             {busy ? "Closing…" : "Close issue"}
           </button>
         </div>

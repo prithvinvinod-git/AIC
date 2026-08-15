@@ -3,15 +3,14 @@ import { z } from "zod";
 import { runTransition } from "@/lib/transition";
 
 const schema = z.object({
-  rating: z.number().min(0.5).max(5).multipleOf(0.5),
-  comment: z.string().max(500).optional(),
+  note: z.string().optional(),
 });
 
-/** POST /api/issues/[id]/feedback — reporter rates → CLOSED. */
+/** POST /api/issues/[id]/head-approve — Maintenance head approves inspected work. */
 export async function POST(
   req: NextRequest,
-  ctx: RouteContext<"/api/issues/[id]/feedback">
+  ctx: RouteContext<"/api/issues/[id]/head-approve">
 ): Promise<NextResponse> {
   const { id } = await ctx.params;
-  return runTransition(req, id, schema, "CLOSED");
+  return runTransition(req, id, schema, "HEAD_APPROVED");
 }

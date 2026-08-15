@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Clock3, MapPin, Star } from "lucide-react";
+import { ArrowLeft, Clock3, MapPin } from "lucide-react";
 import { STATUS_LABEL } from "@/lib/constants";
 import { deadlineLabel, formatDateTime, timeAgo } from "@/lib/format";
 import type { Issue, IssueStatus, TimelineEntry } from "@/lib/types";
 import { PriorityBadge, StatusBadge } from "@/components/ui/Badge";
 import { EmptyState, Loading } from "@/components/ui/States";
 import { IssuePhotos } from "@/components/ui/IssuePhotos";
+import { FeedbackStars } from "@/components/ui/FeedbackStars";
 
 interface TrackData {
   issue: Issue;
@@ -87,8 +88,8 @@ function TrackContent({ data }: { data: TrackData }) {
   const steps = useMemo<IssueStatus[]>(
     () =>
       escalated
-        ? ["NEW", "VALIDATED", "ESCALATED", "APPROVED", "ASSIGNED", "ONGOING", "COMPLETED", "VERIFIED", "CLOSED"]
-        : ["NEW", "VALIDATED", "ASSIGNED", "ONGOING", "COMPLETED", "VERIFIED", "CLOSED"],
+        ? ["NEW", "VALIDATED", "ESCALATED", "APPROVED", "ASSIGNED", "ONGOING", "COMPLETED", "INSPECTED", "HEAD_APPROVED", "VERIFIED", "CLOSED"]
+        : ["NEW", "VALIDATED", "ASSIGNED", "ONGOING", "COMPLETED", "INSPECTED", "HEAD_APPROVED", "VERIFIED", "CLOSED"],
     [escalated]
   );
   const statusIdx = issue.status === "PENDING" ? "ONGOING" : issue.status;
@@ -224,15 +225,7 @@ function TrackContent({ data }: { data: TrackData }) {
             <div className="card">
               <h2 className="font-display text-lg font-semibold text-ink">Feedback</h2>
               <div className="mt-2 flex items-center gap-1.5">
-                {[1, 2, 3, 4, 5].map((r) => (
-                  <Star
-                    key={r}
-                    className={`h-5 w-5 ${
-                      r <= issue.feedback!.rating ? "fill-warning text-warning" : "text-silver"
-                    }`}
-                    aria-hidden
-                  />
-                ))}
+                <FeedbackStars rating={issue.feedback.rating} size={20} />
               </div>
               {issue.feedback.comment && (
                 <p className="mt-2 whitespace-pre-wrap text-sm text-slate">{issue.feedback.comment}</p>

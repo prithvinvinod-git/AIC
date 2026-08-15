@@ -38,6 +38,7 @@ export async function POST(
       const snap = await tx.get(ref);
       if (!snap.exists) throw new Error("issue-missing");
       const data = snap.data() as Issue;
+      if (data.status === "CLOSED") throw new Error("issue-closed");
       await tx.update(ref, {
         requirements: [...(data.requirements || []), requirement],
         pendingPurchaseCount:
@@ -59,6 +60,9 @@ export async function POST(
   } catch (e) {
     if (e instanceof Error && e.message === "issue-missing") {
       return json({ error: "Issue not found." }, 404);
+    }
+    if (e instanceof Error && e.message === "issue-closed") {
+      return json({ error: "This issue is closed — requirements can no longer be added." }, 400);
     }
     return handleError(e);
   }

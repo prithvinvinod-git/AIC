@@ -65,6 +65,25 @@ function fmt(iso: string): string {
   }
 }
 
+/** "4" or "3.5" — keep halves readable in email + notification copy. */
+function ratingLabel(r: number): string {
+  return Number.isInteger(r) ? String(r) : r.toFixed(1);
+}
+
+/** ★ row with accent fills — full/half/empty support (0.5 steps). */
+function starsHtml(rating: number): string {
+  const full = Math.floor(rating);
+  const frac = rating - full;
+  const half = frac >= 0.25 && frac <= 0.75;
+  let html = "";
+  for (let i = 0; i < 5; i++) {
+    if (i < full) html += `<span style="color:${ACCENT};">★</span>`;
+    else if (i === full && half) html += `<span style="color:${ACCENT};opacity:0.55;">★</span>`;
+    else html += `<span style="color:${BORDER};">★</span>`;
+  }
+  return html;
+}
+
 /** Human "time remaining" label computed at send time. */
 function remaining(deadlineIso: string): { text: string; tone: "danger" | "warn" | "ok" } {
   const ms = new Date(deadlineIso).getTime() - Date.now();
@@ -183,6 +202,34 @@ export function reportedTemplate(issue: Issue, priority: number): { html: string
     ${cta(issueLink(issue), "Track this issue")}
   `;
   const text = `${headline}\n\n${issue.title}\n\n${issue.issueNo}\nDepartment: ${issue.department}\nCategory: ${issue.routing?.categoryName || "—"}\nReported: ${fmt(issue.createdAt)}\n\nTrack: ${issueLink(issue)}`;
+  return { html: shell(body), text };
+}
+
+export function feedbackTemplate(issue: Issue): { html: string; text: string } {
+  const rating = issue.feedback?.rating || 0;
+  const rated = rating > 0;
+  const headline = rated ? `Feedback received — ${issue.issueNo}` : `Issue closed — ${issue.issueNo}`;
+
+  const stars = rated
+    ? `<p style="margin:18px 0 6px;font-size:22px;letter-spacing:4px;line-height:1;">${starsHtml(rating)}</p>`
+    : "";
+  const ratingLine = rated
+    ? `<p style="margin:0;font-size:14px;color:${TEXT};"><strong>${ratingLabel(rating)}/5</strong> — thank you for rating your service experience.</p>`
+    : `<p style="margin:0;color:${MUTED};">This issue was closed automatically after the feedback grace period — no rating was submitted.</p>`;
+  const comment = issue.feedback?.comment
+    ? `<p style="margin:12px 0 0;background:${PANEL};border:1px solid ${BORDER};border-radius:10px;padding:12px 14px;color:${TEXT};">“${esc(issue.feedback.comment)}”</p>`
+    : "";
+
+  const body = `
+    ${heading(headline)}
+    <p style="margin:0 0 6px;color:${MUTED};">${esc(issue.title)}</p>
+    ${stars}
+    ${ratingLine}
+    ${comment}
+    ${issueMeta(issue)}
+    ${cta(issueLink(issue), rated ? "View this issue" : "Track this issue")}
+  `;
+  const text = `${headline}\n\n${issue.title}\n\n${rated ? `Rating: ${ratingLabel(rating)}/5${issue.feedback?.comment ? `\n"${issue.feedback.comment}"` : ""}` : "Closed without a rating."}\n\n${issue.issueNo}\nDepartment: ${issue.department}\nCategory: ${issue.routing?.categoryName || "—"}\n\nView: ${issueLink(issue)}`;
   return { html: shell(body), text };
 }
 

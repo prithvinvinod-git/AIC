@@ -6,11 +6,12 @@ import type { Issue } from "@/lib/types";
 import { deadlineLabel, timeAgo } from "@/lib/format";
 import { PriorityBadge, StatusBadge } from "./Badge";
 import { IssuePhotos } from "./IssuePhotos";
+import { FeedbackStars } from "./FeedbackStars";
 
 export function IssueCard({ issue, onClose }: { issue: Issue; onClose?: () => void }) {
   const sla = issue.sla;
   const deadline =
-    sla?.resolutionDeadline && ["ASSIGNED", "ONGOING", "PENDING", "COMPLETED"].includes(issue.status)
+    sla?.resolutionDeadline && ["ASSIGNED", "ONGOING", "PENDING", "COMPLETED", "INSPECTED", "HEAD_APPROVED"].includes(issue.status)
       ? deadlineLabel(sla.resolutionDeadline)
       : null;
   const canClose = issue.status === "VERIFIED" && !!onClose;
@@ -40,7 +41,9 @@ export function IssueCard({ issue, onClose }: { issue: Issue; onClose?: () => vo
 
         <div className="flex items-center justify-between text-xs text-slate">
           <span>Reported {timeAgo(issue.createdAt)}</span>
-          {deadline && (
+          {issue.status === "CLOSED" && issue.feedback?.rating ? (
+            <FeedbackStars rating={issue.feedback.rating} size={15} />
+          ) : deadline ? (
             <span
               className={
                 deadline.tone === "over"
@@ -53,7 +56,7 @@ export function IssueCard({ issue, onClose }: { issue: Issue; onClose?: () => vo
               <Clock3 className="mr-1 inline h-3.5 w-3.5" aria-hidden />
               {deadline.text}
             </span>
-          )}
+          ) : null}
         </div>
       </Link>
 

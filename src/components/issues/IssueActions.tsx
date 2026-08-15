@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Sparkles } from "lucide-react";
+import { Sparkles, X } from "lucide-react";
 import type { Issue, Requirement, TeamWithMembers } from "@/lib/types";
 import { api, ApiError } from "@/lib/clientApi";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -70,8 +70,16 @@ export function IssueActions({ issue, onChanged }: Props) {
         </div>
       );
     }
-    if (issue.status === "COMPLETED") {
-      return <VerifyPanel issue={issue} onChanged={onChanged} />;
+    if (issue.status === "HEAD_APPROVED") {
+      return (
+        <VerifyPanel
+          issue={issue}
+          onChanged={onChanged}
+          to="VERIFIED"
+          title="Final verification"
+          verifyLabel="Verify"
+        />
+      );
     }
   }
 
@@ -103,7 +111,24 @@ export function IssueActions({ issue, onChanged }: Props) {
     if (issue.status === "COMPLETED") {
       return (
         <div className="card">
-          <p className="text-sm text-warning">Awaiting verification by the department validator.</p>
+          <p className="text-sm text-warning">Awaiting in-site verification by your category head.</p>
+        </div>
+      );
+    }
+    if (issue.status === "INSPECTED") {
+      return (
+        <div className="card">
+          <p className="text-sm text-success">
+            In-site verified by {issue.inspection?.inspectedBy.name || "the category head"} — awaiting maintenance
+            head approval.
+          </p>
+        </div>
+      );
+    }
+    if (issue.status === "HEAD_APPROVED") {
+      return (
+        <div className="card">
+          <p className="text-sm text-slate">Awaiting final verification by the department validator.</p>
         </div>
       );
     }
@@ -126,10 +151,24 @@ export function IssueActions({ issue, onChanged }: Props) {
         </div>
       );
     }
+    if (issue.status === "INSPECTED") {
+      return <ApprovePanel issue={issue} onChanged={onChanged} />;
+    }
   }
 
-  if (role === "category_head" && issue.status === "PENDING_ASSIGN") {
-    return <AssignPanel issue={issue} onChanged={onChanged} />;
+  if (role === "category_head") {
+    if (issue.status === "PENDING_ASSIGN") return <AssignPanel issue={issue} onChanged={onChanged} />;
+    if (issue.status === "COMPLETED") {
+      return (
+        <VerifyPanel
+          issue={issue}
+          onChanged={onChanged}
+          to="INSPECTED"
+          title="In-site verification"
+          verifyLabel="Verify"
+        />
+      );
+    }
   }
 
   return null;
@@ -204,7 +243,21 @@ function ValidatorActions({ issue, onChanged }: { issue: Issue; onChanged: () =>
   );
 }
 
-function VerifyPanel({ issue, onChanged }: { issue: Issue; onChanged: () => void }) {
+function VerifyPanel({
+  issue,
+  onChanged,
+  to,
+  title = "Verify completion",
+  verifyLabel = "Verify",
+  placeholder = "Verification note",
+}: {
+  issue: Issue;
+  onChanged: () => void;
+  to: "INSPECTED" | "VERIFIED";
+  title?: string;
+  verifyLabel?: string;
+  placeholder?: string;
+}) {
   const [verdict, setVerdict] = useState("");
   const [sendBack, setSendBack] = useState("");
   const [busy, setBusy] = useState(false);
@@ -216,7 +269,11 @@ function VerifyPanel({ issue, onChanged }: { issue: Issue; onChanged: () => void
       setError(null);
       try {
         if (kind === "verify") {
-          await api(`/api/issues/${issue.id}/verify`, { method: "POST", body: JSON.stringify({ verdict: verdict || "Verified." }) });
+          const endpoint = to === "INSPECTED" ? "inspect" : "verify";
+          await api(`/api/issues/${issue.id}/${endpoint}`, {
+            method: "POST",
+            body: JSON.stringify({ verdict: verdict || "Verified." }),
+          });
         } else {
           await api(`/api/issues/${issue.id}/sendback`, { method: "POST", body: JSON.stringify({ sendBackReason: sendBack }) });
         }
@@ -227,18 +284,71 @@ function VerifyPanel({ issue, onChanged }: { issue: Issue; onChanged: () => void
         setBusy(false);
       }
     },
-    [issue.id, verdict, sendBack, onChanged]
+    [issue.id, verdict, sendBack, to, onChanged]
   );
 
   return (
     <div className="card">
-      <p className="font-medium text-graphite">Verify completion</p>
+      <p className="font-medium text-graphite">{title}</p>
       <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
-        <input className="input flex-1" placeholder="Verification note" value={verdict} onChange={(e) => setVerdict(e.target.value)} />
+        <input className="input flex-1" placeholder={placeholder} value={verdict} onChange={(e) => setVerdict(e.target.value)} />
         <input className="input flex-1" placeholder="Send-back reason" value={sendBack} onChange={(e) => setSendBack(e.target.value)} />
         <div className="flex gap-2">
           <button className="btn btn-primary btn-sm" disabled={busy} onClick={() => void act("verify")}>
-            {busy ? "Verifying…" : "Verify"}
+            {busy ? "Saving…" : verifyLabel}
+          </button>
+          <button className="btn btn-ghost btn-sm" disabled={busy || sendBack.trim().length < 3} onClick={() => void act("sendback")}>
+            Send back
+          </button>
+        </div>
+      </div>
+      {error && <p className="mt-2 text-sm text-danger">{error}</p>}
+    </div>
+  );
+}
+
+function ApprovePanel({ issue, onChanged }: { issue: Issue; onChanged: () => void }) {
+  const [note, setNote] = useState("");
+  const [sendBack, setSendBack] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const act = useCallback(
+    async (kind: "approve" | "sendback") => {
+      setBusy(true);
+      setError(null);
+      try {
+        if (kind === "approve") {
+          await api(`/api/issues/${issue.id}/head-approve`, {
+            method: "POST",
+            body: JSON.stringify({ note: note || undefined }),
+          });
+        } else {
+          await api(`/api/issues/${issue.id}/sendback`, { method: "POST", body: JSON.stringify({ sendBackReason: sendBack }) });
+        }
+        onChanged();
+      } catch (e) {
+        setError(e instanceof ApiError ? e.message : "Action failed.");
+      } finally {
+        setBusy(false);
+      }
+    },
+    [issue.id, note, sendBack, onChanged]
+  );
+
+  return (
+    <div className="card">
+      <p className="font-medium text-graphite">Approve inspected work</p>
+      <p className="mt-1 text-xs text-slate">
+        {issue.inspection?.inspectedBy.name || "The category head"} verified the work on site — confirm before it
+        goes to the department validator.
+      </p>
+      <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+        <input className="input flex-1" placeholder="Approval note (optional)" value={note} onChange={(e) => setNote(e.target.value)} />
+        <input className="input flex-1" placeholder="Send-back reason" value={sendBack} onChange={(e) => setSendBack(e.target.value)} />
+        <div className="flex gap-2">
+          <button className="btn btn-primary btn-sm" disabled={busy} onClick={() => void act("approve")}>
+            {busy ? "Approving…" : "Approve"}
           </button>
           <button className="btn btn-ghost btn-sm" disabled={busy || sendBack.trim().length < 3} onClick={() => void act("sendback")}>
             Send back
@@ -634,6 +744,7 @@ export function RequirementsPanel({ issue, onChanged }: { issue: Issue; onChange
   const [needsApproval, setNeedsApproval] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const canEdit = claims && ["maintenance", "admin"].includes(claims.role);
+  const closed = issue.status === "CLOSED";
 
   const add = useCallback(
     async (e: React.FormEvent) => {
@@ -652,6 +763,20 @@ export function RequirementsPanel({ issue, onChanged }: { issue: Issue; onChange
       }
     },
     [issue.id, item, qty, needsApproval, onChanged]
+  );
+
+  const remove = useCallback(
+    async (r: Requirement) => {
+      try {
+        await api(`/api/issues/${issue.id}/requirements/${(r as Requirement & { id?: string }).id}`, {
+          method: "DELETE",
+        });
+        onChanged();
+      } catch {
+        setError("Failed to remove requirement.");
+      }
+    },
+    [issue.id, onChanged]
   );
 
   const toggle = useCallback(
@@ -750,12 +875,23 @@ export function RequirementsPanel({ issue, onChanged }: { issue: Issue; onChange
                     Resubmit
                   </button>
                 )}
+                {canEdit && !isApproval && (
+                  <button
+                    type="button"
+                    onClick={() => void remove(r)}
+                    aria-label={`Remove requirement ${r.item}`}
+                    title="Remove requirement"
+                    className="ml-auto rounded p-0.5 text-slate transition-colors hover:bg-danger-soft hover:text-danger"
+                  >
+                    <X className="h-3.5 w-3.5" aria-hidden />
+                  </button>
+                )}
               </li>
             );
           })}
         </ul>
       )}
-      {canEdit && (
+      {canEdit && !closed && (
         <form onSubmit={(e) => void add(e)} className="mt-3 flex flex-col gap-2 border-t border-silver pt-3">
           <div className="grid grid-cols-[1fr_64px] gap-2">
             <input className="input col-span-4" placeholder="e.g. LED tube replacement" required minLength={2} value={item} onChange={(e) => setItem(e.target.value)} />

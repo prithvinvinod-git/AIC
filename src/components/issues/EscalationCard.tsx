@@ -7,6 +7,7 @@ import type { Issue } from "@/lib/types";
 import { api, ApiError } from "@/lib/clientApi";
 import { StatusBadge, PriorityBadge } from "@/components/ui/Badge";
 import { IssuePhotos } from "@/components/ui/IssuePhotos";
+import { FeedbackStars } from "@/components/ui/FeedbackStars";
 
 export function EscalationCard({
   issue,
@@ -144,6 +145,12 @@ export function EscalationCard({
             </button>
           </div>
         </form>
+      )}
+
+      {issue.status === "CLOSED" && issue.feedback?.rating && (
+        <div className="flex justify-end border-t border-silver pt-3">
+          <FeedbackStars rating={issue.feedback.rating} size={16} />
+        </div>
       )}
     </div>
   );
