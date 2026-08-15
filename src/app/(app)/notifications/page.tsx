@@ -42,7 +42,7 @@ export default function NotificationsPage() {
         <div>
           <h1 className="font-display text-2xl font-semibold text-ink">Notifications</h1>
           <p className="mt-1 text-sm text-slate">
-            {unread > 0 ? `${unread} unread` : "You&apos;re all caught up."}
+            {unread > 0 ? `${unread} unread` : "You're all caught up."}
           </p>
         </div>
         <button

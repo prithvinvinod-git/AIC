@@ -2,10 +2,11 @@
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { CircleCheck, Info, TriangleAlert, X } from "lucide-react";
+import { CircleCheck, Info, OctagonAlert, TriangleAlert, X } from "lucide-react";
 import { ApiError } from "@/lib/clientApi";
+import { playBeep, setSoundEnabled, soundEnabled } from "@/lib/soundPref";
 
-type ToastType = "error" | "info" | "success";
+type ToastType = "error" | "info" | "success" | "warning";
 
 const MAX_TOASTS = 4;
 
@@ -13,6 +14,7 @@ const EXIT_MS = 220;
 
 const DEFAULT_DURATION: Record<ToastType, number> = {
   error: 8000,
+  warning: 6000,
   info: 5000,
   success: 5000,
 };
@@ -42,10 +44,11 @@ interface ToastContextValue {
 
 const ToastContext = createContext<ToastContextValue | null>(null);
 
-const ICONS: Record<ToastType, { Icon: typeof TriangleAlert; chip: string }> = {
-  error: { Icon: TriangleAlert, chip: "bg-danger-soft text-danger" },
-  info: { Icon: Info, chip: "bg-accent-soft text-accent" },
-  success: { Icon: CircleCheck, chip: "bg-success-soft text-success" },
+const ICONS: Record<ToastType, { Icon: typeof TriangleAlert; chip: string; title: string }> = {
+  error: { Icon: TriangleAlert, chip: "bg-danger-soft text-danger", title: "text-danger" },
+  warning: { Icon: OctagonAlert, chip: "bg-warning-soft text-warning", title: "text-warning" },
+  success: { Icon: CircleCheck, chip: "bg-success-soft text-success", title: "text-success" },
+  info: { Icon: Info, chip: "bg-accent-soft text-accent", title: "text-ink" },
 };
 
 /** Turn any thrown value (ApiError with server validation details, etc.) into a readable toast. */
@@ -123,15 +126,33 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       __toast?: {
         show: (opts: ToastOptions) => void;
         error: (message: string, title?: string) => void;
+        warning: (message: string, title?: string) => void;
         info: (message: string, title?: string) => void;
         success: (message: string, title?: string) => void;
+      };
+      __sound?: {
+        test: () => void;
+        play: () => void;
+        on: () => void;
+        off: () => void;
+        set: (on: boolean) => void;
+        enabled: () => boolean;
       };
     };
     w.__toast = {
       show,
       error: (message, title = "Demo error") => show({ title, message, type: "error" }),
+      warning: (message, title = "Demo warning") => show({ title, message, type: "warning" }),
       info: (message, title = "Demo info") => show({ title, message, type: "info" }),
       success: (message, title = "Demo success") => show({ title, message, type: "success" }),
+    };
+    w.__sound = {
+      test: () => playBeep(),
+      play: () => playBeep(),
+      on: () => setSoundEnabled(true),
+      off: () => setSoundEnabled(false),
+      set: (on: boolean) => setSoundEnabled(Boolean(on)),
+      enabled: () => soundEnabled(),
     };
     return () => {
       delete w.__toast;
@@ -146,7 +167,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         aria-live="assertive"
       >
         {toasts.map((t) => {
-          const { Icon, chip } = ICONS[t.type];
+          const { Icon, chip, title } = ICONS[t.type];
           return (
             <div
               key={t.id}
@@ -156,7 +177,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               }`}
             >
               <div
-                className={`flex w-full items-start gap-2.5 rounded-xl border border-silver bg-white p-3 shadow-card transition-shadow hover:shadow-[var(--shadow-card-hover)] ${
+                className={`flex w-full items-start gap-2.5 rounded-xl border border-silver bg-white px-3.5 py-[22px] shadow-card transition-shadow hover:shadow-[var(--shadow-card-hover)] ${
                   t.link ? "cursor-pointer" : ""
                 }`}
                 onClick={
@@ -170,11 +191,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 }
               >
                 <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${chip}`}>
-                  <Icon className="h-4 w-4" aria-hidden />
+                  <Icon className="h-5 w-5" aria-hidden />
                 </span>
 
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-ink">{t.title}</p>
+                  <p className={`text-sm font-semibold ${title}`}>{t.title}</p>
                   {t.message && (
                     <p className="mt-0.5 whitespace-pre-line text-xs leading-relaxed text-slate">{t.message}</p>
                   )}
