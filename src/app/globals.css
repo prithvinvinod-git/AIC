@@ -272,6 +272,393 @@ body {
   text-decoration: underline;
 }
 
+/* Animated requirement checkbox (SVG stroke-dash check) */
+.req-check {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transform: translate3d(0, 0, 0);
+}
+.req-check::before {
+  content: "";
+  position: absolute;
+  top: -15px;
+  left: -15px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(34, 50, 84, 0.03);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+.req-check:hover::before {
+  opacity: 1;
+}
+.req-check svg {
+  position: relative;
+  z-index: 1;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke: #c8ccd4;
+  stroke-width: 1.5;
+  transform: translate3d(0, 0, 0);
+  transition: stroke 0.2s ease;
+}
+.req-check svg path {
+  stroke-dasharray: 60;
+  stroke-dashoffset: 0;
+}
+.req-check svg polyline {
+  stroke-dasharray: 22;
+  stroke-dashoffset: 66;
+}
+.req-check:hover svg {
+  stroke: var(--color-success);
+}
+.req-check-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+.req-check-input:checked ~ svg,
+.req-check svg.checked {
+  stroke: var(--color-success);
+}
+.req-check-input:checked ~ svg path,
+.req-check svg.checked path {
+  stroke-dashoffset: 60;
+  transition: all 0.3s linear;
+}
+.req-check-input:checked ~ svg polyline,
+.req-check svg.checked polyline {
+  stroke-dashoffset: 42;
+  transition: all 0.2s linear;
+  transition-delay: 0.15s;
+}
+.req-check--static {
+  cursor: default;
+}
+.req-check--static:hover::before {
+  opacity: 0;
+}
+.req-check--static:hover svg {
+  stroke: #c8ccd4;
+}
+
+/* Session + page-level loader (blurred gradient ring) */
+.app-loader {
+  position: relative;
+  border-radius: 50%;
+  height: 36px;
+  width: 36px;
+  animation: rotate_3922 1.2s linear infinite;
+  background-color: #e56a66;
+  background-image: linear-gradient(#e56a66, #f07d5a, #ecc362);
+}
+.app-loader span {
+  position: absolute;
+  border-radius: 50%;
+  height: 100%;
+  width: 100%;
+  background-color: #e56a66;
+  background-image: linear-gradient(#e56a66, #f07d5a, #ecc362);
+}
+.app-loader span:nth-of-type(1) {
+  filter: blur(0.5px);
+}
+.app-loader span:nth-of-type(2) {
+  filter: blur(1px);
+}
+.app-loader span:nth-of-type(3) {
+  filter: blur(2px);
+}
+.app-loader span:nth-of-type(4) {
+  filter: blur(4px);
+}
+.app-loader::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  right: 4px;
+  bottom: 4px;
+  background-color: var(--color-white);
+  border: 2px solid var(--color-white);
+  border-radius: 50%;
+}
+@keyframes rotate_3922 {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 404 ghost pixel animation */
+.ghost-wrap {
+  line-height: 0;
+  user-select: none;
+}
+.ghost-wrap #ghost {
+  position: relative;
+  scale: 0.8;
+}
+.ghost-wrap #red {
+  animation: ghostUpNDown infinite 0.5s;
+  position: relative;
+  width: 140px;
+  height: 140px;
+  display: grid;
+  grid-template-columns: repeat(14, 1fr);
+  grid-template-rows: repeat(14, 1fr);
+  grid-template-areas:
+    "a1  a2  a3  a4  a5  top0  top0  top0  top0  a10 a11 a12 a13 a14"
+    "b1  b2  b3  top1 top1 top1 top1 top1 top1 top1 top1 b12 b13 b14"
+    "c1 c2 top2 top2 top2 top2 top2 top2 top2 top2 top2 top2 c13 c14"
+    "d1 top3 top3 top3 top3 top3 top3 top3 top3 top3 top3 top3 top3 d14"
+    "e1 top3 top3 top3 top3 top3 top3 top3 top3 top3 top3 top3 top3 e14"
+    "f1 top3 top3 top3 top3 top3 top3 top3 top3 top3 top3 top3 top3 f14"
+    "top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4"
+    "top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4"
+    "top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4"
+    "top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4"
+    "top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4"
+    "top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4 top4"
+    "st0 st0 an4 st1 an7 st2 an10 an10 st3 an13 st4 an16 st5 st5"
+    "an1 an2 an3 an5 an6 an8 an9 an9 an11 an12 an14 an15 an17 an18";
+}
+@keyframes ghostUpNDown {
+  0%,
+  49% {
+    transform: translateY(0px);
+  }
+  50%,
+  100% {
+    transform: translateY(-10px);
+  }
+}
+.ghost-wrap #top0,
+.ghost-wrap #top1,
+.ghost-wrap #top2,
+.ghost-wrap #top3,
+.ghost-wrap #top4,
+.ghost-wrap #st0,
+.ghost-wrap #st1,
+.ghost-wrap #st2,
+.ghost-wrap #st3,
+.ghost-wrap #st4,
+.ghost-wrap #st5 {
+  background-color: var(--color-accent);
+}
+.ghost-wrap #top0 {
+  grid-area: top0;
+}
+.ghost-wrap #top1 {
+  grid-area: top1;
+}
+.ghost-wrap #top2 {
+  grid-area: top2;
+}
+.ghost-wrap #top3 {
+  grid-area: top3;
+}
+.ghost-wrap #top4 {
+  grid-area: top4;
+}
+.ghost-wrap #st0 {
+  grid-area: st0;
+}
+.ghost-wrap #st1 {
+  grid-area: st1;
+}
+.ghost-wrap #st2 {
+  grid-area: st2;
+}
+.ghost-wrap #st3 {
+  grid-area: st3;
+}
+.ghost-wrap #st4 {
+  grid-area: st4;
+}
+.ghost-wrap #st5 {
+  grid-area: st5;
+}
+.ghost-wrap #an1 {
+  grid-area: an1;
+  animation: ghostFlicker0 infinite 0.5s;
+}
+.ghost-wrap #an18 {
+  grid-area: an18;
+  animation: ghostFlicker0 infinite 0.5s;
+}
+.ghost-wrap #an2 {
+  grid-area: an2;
+  animation: ghostFlicker1 infinite 0.5s;
+}
+.ghost-wrap #an17 {
+  grid-area: an17;
+  animation: ghostFlicker1 infinite 0.5s;
+}
+.ghost-wrap #an3 {
+  grid-area: an3;
+  animation: ghostFlicker1 infinite 0.5s;
+}
+.ghost-wrap #an16 {
+  grid-area: an16;
+  animation: ghostFlicker1 infinite 0.5s;
+}
+.ghost-wrap #an4 {
+  grid-area: an4;
+  animation: ghostFlicker1 infinite 0.5s;
+}
+.ghost-wrap #an15 {
+  grid-area: an15;
+  animation: ghostFlicker1 infinite 0.5s;
+}
+.ghost-wrap #an6 {
+  grid-area: an6;
+  animation: ghostFlicker0 infinite 0.5s;
+}
+.ghost-wrap #an12 {
+  grid-area: an12;
+  animation: ghostFlicker0 infinite 0.5s;
+}
+.ghost-wrap #an7 {
+  grid-area: an7;
+  animation: ghostFlicker0 infinite 0.5s;
+}
+.ghost-wrap #an13 {
+  grid-area: an13;
+  animation: ghostFlicker0 infinite 0.5s;
+}
+.ghost-wrap #an9 {
+  grid-area: an9;
+  animation: ghostFlicker1 infinite 0.5s;
+}
+.ghost-wrap #an10 {
+  grid-area: an10;
+  animation: ghostFlicker1 infinite 0.5s;
+}
+.ghost-wrap #an8 {
+  grid-area: an8;
+  animation: ghostFlicker0 infinite 0.5s;
+}
+.ghost-wrap #an11 {
+  grid-area: an11;
+  animation: ghostFlicker0 infinite 0.5s;
+}
+@keyframes ghostFlicker0 {
+  0%,
+  49% {
+    background-color: var(--color-accent);
+  }
+  50%,
+  100% {
+    background-color: transparent;
+  }
+}
+@keyframes ghostFlicker1 {
+  0%,
+  49% {
+    background-color: transparent;
+  }
+  50%,
+  100% {
+    background-color: var(--color-accent);
+  }
+}
+.ghost-wrap #eye {
+  width: 40px;
+  height: 50px;
+  position: absolute;
+  top: 30px;
+  left: 10px;
+}
+.ghost-wrap #eye::before {
+  content: "";
+  background-color: var(--color-white);
+  width: 20px;
+  height: 50px;
+  transform: translateX(10px);
+  display: block;
+  position: absolute;
+}
+.ghost-wrap #eye::after {
+  content: "";
+  background-color: var(--color-white);
+  width: 40px;
+  height: 30px;
+  transform: translateY(10px);
+  display: block;
+  position: absolute;
+}
+.ghost-wrap #eye1 {
+  width: 40px;
+  height: 50px;
+  position: absolute;
+  top: 30px;
+  right: 30px;
+}
+.ghost-wrap #eye1::before {
+  content: "";
+  background-color: var(--color-white);
+  width: 20px;
+  height: 50px;
+  transform: translateX(10px);
+  display: block;
+  position: absolute;
+}
+.ghost-wrap #eye1::after {
+  content: "";
+  background-color: var(--color-white);
+  width: 40px;
+  height: 30px;
+  transform: translateY(10px);
+  display: block;
+  position: absolute;
+}
+.ghost-wrap #pupil {
+  width: 20px;
+  height: 20px;
+  background-color: #000;
+  position: absolute;
+  top: 50px;
+  left: 10px;
+  z-index: 1;
+  animation: ghostEyesMovement infinite 3s;
+}
+.ghost-wrap #pupil1 {
+  width: 20px;
+  height: 20px;
+  background-color: #000;
+  position: absolute;
+  top: 50px;
+  right: 50px;
+  z-index: 1;
+  animation: ghostEyesMovement infinite 3s;
+}
+@keyframes ghostEyesMovement {
+  0%,
+  49% {
+    transform: translateX(0px);
+  }
+  50%,
+  99% {
+    transform: translateX(10px);
+  }
+  100% {
+    transform: translateX(0px);
+  }
+}
+
 @keyframes overlay-in {
   from {
     opacity: 0;

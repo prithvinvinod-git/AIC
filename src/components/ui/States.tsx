@@ -3,8 +3,13 @@ import { AlertCircle, RefreshCw } from "lucide-react";
 
 export function Loading({ label = "Loading…" }: { label?: string }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 py-16 text-slate">
-      <div className="h-6 w-6 animate-spin rounded-full border-2 border-silver border-t-ink" />
+    <div className="flex flex-col items-center justify-center gap-4 py-16 text-slate">
+      <div className="app-loader" role="status" aria-label="Loading">
+        <span />
+        <span />
+        <span />
+        <span />
+      </div>
       <p className="text-sm">{label}</p>
     </div>
   );

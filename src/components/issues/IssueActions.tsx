@@ -6,6 +6,7 @@ import type { Issue, Requirement, TeamWithMembers } from "@/lib/types";
 import { api } from "@/lib/clientApi";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useActionError } from "@/components/ui/Toast";
+import { RequirementCheck } from "@/components/issues/RequirementCheck";
 
 interface Props {
   issue: Issue;
@@ -808,28 +809,17 @@ export function RequirementsPanel({ issue, onChanged }: { issue: Issue; onChange
             return (
               <li key={`${(r as Requirement & { id?: string }).id || i}`} className="flex items-center gap-2 text-sm">
                 {toggleable ? (
-                  <button
-                    type="button"
-                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 transition-colors sm:h-[21px] sm:w-[21px] ${
-                      r.resolved
-                        ? "border-success bg-success text-white"
-                        : "border-slate bg-white hover:border-ink"
-                    }`}
-                    aria-label={r.resolved ? "Mark as unresolved" : "Mark as resolved"}
+                  <RequirementCheck
+                    checked={r.resolved}
+                    onToggle={() => void toggle(r)}
                     title={r.resolved ? "Mark as unresolved" : "Mark as resolved"}
-                    onClick={() => void toggle(r)}
-                  >
-                    {r.resolved && <span className="text-sm leading-none">✓</span>}
-                  </button>
+                  />
                 ) : (
-                  <span
-                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 sm:h-[21px] sm:w-[21px] ${
-                      r.resolved ? "border-success bg-success text-white" : "border-slate bg-white"
-                    }`}
+                  <RequirementCheck
+                    checked={r.resolved}
+                    disabled
                     title={r.resolved ? "Resolved" : "Unresolved"}
-                  >
-                    {r.resolved && <span className="text-sm leading-none">✓</span>}
-                  </span>
+                  />
                 )}
                 <span className={r.resolved ? "text-slate line-through" : "text-graphite"}>
                   {r.item} ×{r.qty}

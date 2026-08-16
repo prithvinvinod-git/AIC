@@ -12,6 +12,7 @@ import { FeedbackStars } from "@/components/ui/FeedbackStars";
 import { formatDateTime } from "@/lib/format";
 import { useActionError } from "@/components/ui/Toast";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { RequirementCheck } from "@/components/issues/RequirementCheck";
 
 interface DraftRequirement {
   item: string;
@@ -399,29 +400,17 @@ export function MaintenanceJobCard({
             return (
               <li key={`${(r as Requirement & { id?: string }).id || i}`} className="flex items-center gap-3 text-sm">
                 {readOnly || !toggleable ? (
-                  <span
-                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 sm:h-3.5 sm:w-3.5 ${
-                      r.resolved ? "border-success bg-success text-white" : "border-slate bg-white"
-                    }`}
-                    aria-label={r.resolved ? "Resolved" : "Unresolved"}
+                  <RequirementCheck
+                    checked={r.resolved}
+                    disabled
                     title={r.resolved ? "Resolved" : "Unresolved"}
-                  >
-                    {r.resolved && <span className="text-[10px] leading-none">✓</span>}
-                  </span>
+                  />
                 ) : (
-                  <button
-                    type="button"
-                    onClick={() => void toggleRequirement(r)}
-                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors sm:h-3.5 sm:w-3.5 ${
-                      r.resolved
-                        ? "border-success bg-success text-white"
-                        : "border-slate bg-white hover:border-ink"
-                    }`}
-                    aria-label={r.resolved ? "Mark as unresolved" : "Mark as resolved"}
+                  <RequirementCheck
+                    checked={r.resolved}
+                    onToggle={() => void toggleRequirement(r)}
                     title={r.resolved ? "Mark as unresolved" : "Mark as resolved"}
-                  >
-                    {r.resolved && <span className="text-[10px] leading-none">✓</span>}
-                  </button>
+                  />
                 )}
                 <span className={`min-w-0 flex-1 truncate ${r.resolved ? "text-slate line-through" : "text-graphite"}`}>
                   {r.item} ×{r.qty}

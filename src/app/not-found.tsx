@@ -1,9 +1,11 @@
 import Link from "next/link";
+import { GhostLoader } from "@/components/ui/GhostLoader";
 
 export default function NotFound() {
   return (
     <main className="flex min-h-svh flex-col items-center justify-center gap-6 px-4 py-16 text-center">
-      <span className="tag border border-accent !bg-transparent text-accent!">404 · Page not found</span>
+      <GhostLoader />
+      <span className="tag border border-accent !bg-transparent text-accent!">Page not found</span>
 
       <div>
         <p className="font-valve text-7xl leading-none tracking-tight text-accent sm:text-8xl">404</p>
