@@ -219,65 +219,69 @@ function UsersTab() {
         </select>
       </form>
 
-      <div className="card overflow-x-auto p-0">
-        <table className="w-full text-sm">
+      <div className="card flex flex-col p-0 overflow-hidden max-md:overflow-x-auto max-h-[480px] max-md:max-h-[70vh]">
+        <table className="w-full table-fixed max-md:min-w-[640px] text-sm">
           <thead>
-            <tr className="border-b border-silver text-left text-xs uppercase tracking-wide text-slate">
-              <th className="px-4 py-3 max-md:px-3 max-md:py-2">User</th>
-              <th className="px-4 py-3 max-md:px-3 max-md:py-2">College</th>
-              <th className="px-4 py-3 max-md:px-3 max-md:py-2">Department</th>
-              <th className="px-4 py-3 max-md:px-3 max-md:py-2">Role</th>
-              <th className="px-4 py-3 max-md:px-3 max-md:py-2 text-right">Actions</th>
+            <tr className="text-left text-xs uppercase tracking-wide text-slate">
+              <th className="w-[30%] max-md:w-[24%] border-b border-silver bg-white px-4 py-3 max-md:px-3 max-md:py-1.5">User</th>
+              <th className="w-[17%] max-md:w-[12%] border-b border-silver bg-white px-4 py-3 max-md:px-3 max-md:py-1.5">College</th>
+              <th className="w-[17%] max-md:w-[12%] border-b border-silver bg-white px-4 py-3 max-md:px-3 max-md:py-1.5">Department</th>
+              <th className="w-[14%] max-md:w-[20%] border-b border-silver bg-white px-4 py-3 max-md:px-3 max-md:py-1.5">Role</th>
+              <th className="w-[22%] max-md:w-[32%] border-b border-silver bg-white px-4 py-3 max-md:px-3 max-md:py-1.5 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody>
-            {visible.map((u) => (
-              <tr key={u.uid} className="border-b border-silver last:border-0">
-                <td className="px-4 py-3 max-md:px-3 max-md:py-2">
-                  <p className="font-medium text-graphite">{u.name}</p>
-                  <p className="text-xs text-slate">{u.email}</p>
-                </td>
-                <td className="px-4 py-3 max-md:px-3 max-md:py-2 text-slate">{u.college || "—"}</td>
-                <td className="px-4 py-3 max-md:px-3 max-md:py-2 text-slate">{u.department || "—"}</td>
-                <td className="px-4 py-3 max-md:px-3 max-md:py-2">
-                  <select
-                    className="input w-auto py-1 text-xs"
-                    value={u.role}
-                    onChange={(e) => void updateUser(u.uid || "", { role: e.target.value as Role })}
-                  >
-                    {ALL_ROLES.map((r) => (
-                      <option key={r} value={r}>
-                        {ROLE_LABEL[r]}
-                      </option>
-                    ))}
-                  </select>
-                </td>
-                <td className="px-4 py-3 max-md:px-3 max-md:py-2">
-                  <div className="flex items-center justify-end gap-2">
-                    <button
-                      className={`btn btn-sm ${u.isActive ? "btn-ghost" : "btn-primary"}`}
-                      onClick={() => void updateUser(u.uid || "", { isActive: !u.isActive })}
-                    >
-                      {u.isActive ? "Active" : "Disabled"}
-                    </button>
-                    <button
-                      className="btn btn-sm btn-ghost text-danger hover:bg-danger-soft"
-                      onClick={() => setPendingDelete(u)}
-                      aria-label={`Delete ${u.name}`}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" aria-hidden /> Delete
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
         </table>
-        {visible.length === 0 && (
-          <p className="px-4 py-6 text-center text-sm text-slate">
-            {isFaculty ? "No faculties yet." : "No regular users yet."}
-          </p>
-        )}
+        <div className="flex-1 overflow-y-auto max-md:w-[640px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <table className="w-full table-fixed border-separate border-spacing-0 max-md:min-w-[640px] text-sm">
+            <tbody className="[&_tr:last-child_td]:border-b-0">
+              {visible.map((u) => (
+                <tr key={u.uid}>
+                  <td className="w-[30%] max-md:w-[24%] border-b border-silver px-4 py-3 max-md:px-3 max-md:py-1.5">
+                    <p className="truncate font-medium text-graphite max-md:leading-tight">{u.name}</p>
+                    <p className="truncate text-xs text-slate max-md:text-[11px] max-md:leading-tight">{u.email}</p>
+                  </td>
+                  <td className="w-[17%] max-md:w-[12%] truncate border-b border-silver px-4 py-3 max-md:px-3 max-md:py-1.5 text-slate">{u.college || "—"}</td>
+                  <td className="w-[17%] max-md:w-[12%] truncate border-b border-silver px-4 py-3 max-md:px-3 max-md:py-1.5 text-slate">{u.department || "—"}</td>
+                  <td className="w-[14%] max-md:w-[20%] border-b border-silver px-4 py-3 max-md:px-3 max-md:py-1.5">
+                    <select
+                      className="input w-full py-1 text-xs max-md:py-0.5 max-md:text-[11px]"
+                      value={u.role}
+                      onChange={(e) => void updateUser(u.uid || "", { role: e.target.value as Role })}
+                    >
+                      {ALL_ROLES.map((r) => (
+                        <option key={r} value={r}>
+                          {ROLE_LABEL[r]}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td className="w-[22%] max-md:w-[32%] border-b border-silver px-4 py-3 max-md:px-3 max-md:py-1.5">
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        className={`btn btn-sm max-md:px-2 max-md:py-1 max-md:text-[11px] ${u.isActive ? "btn-ghost" : "btn-primary"}`}
+                        onClick={() => void updateUser(u.uid || "", { isActive: !u.isActive })}
+                      >
+                        {u.isActive ? "Active" : "Disabled"}
+                      </button>
+                      <button
+                        className="btn btn-sm btn-ghost text-danger hover:bg-danger-soft max-md:px-2 max-md:py-1 max-md:text-[11px]"
+                        onClick={() => setPendingDelete(u)}
+                        aria-label={`Delete ${u.name}`}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" aria-hidden /> Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {visible.length === 0 && (
+            <p className="px-4 py-6 text-center text-sm text-slate">
+              {isFaculty ? "No faculties yet." : "No regular users yet."}
+            </p>
+          )}
+        </div>
       </div>
 
       <Modal open={pendingDelete !== null} onClose={() => setPendingDelete(null)} title="Delete user">

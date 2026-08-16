@@ -4,6 +4,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import ProfileOnboarding from "@/components/auth/ProfileOnboarding";
 import { Loading } from "@/components/ui/States";
 import AppHeader from "@/components/AppHeader";
+import MobileNav from "@/components/MobileNav";
 import PublicNav from "@/components/home/PublicNav";
 import PublicHero from "@/components/home/PublicHero";
 import FeatureSection from "@/components/home/FeatureSection";
@@ -43,7 +44,7 @@ export default function Home() {
   return (
     <div className="flex min-h-full flex-col">
       <AppHeader />
-      <main className="mx-auto w-full max-w-page flex-1 px-4 sm:px-6">
+      <main className="mx-auto w-full max-w-page flex-1 px-4 max-lg:pb-[88px] sm:px-6">
         <DashboardHero />
 
         <section className="flex min-h-[100svh] flex-col gap-6 py-10 sm:py-14">
@@ -57,6 +58,7 @@ export default function Home() {
         </section>
       </main>
       <ProfileOnboarding />
+      <MobileNav />
     </div>
   );
 }

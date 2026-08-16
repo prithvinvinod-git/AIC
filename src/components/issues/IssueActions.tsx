@@ -719,12 +719,15 @@ function AssignPanel({ issue, onChanged }: { issue: Issue; onChanged: () => void
 }
 
 export function RequirementsPanel({ issue, onChanged }: { issue: Issue; onChanged: () => void }) {
-  const { claims } = useAuth();
+  const { claims, user } = useAuth();
   const [item, setItem] = useState("");
   const [qty, setQty] = useState("1");
   const [needsApproval, setNeedsApproval] = useState(false);
   const { showError, errorEl } = useActionError();
   const canEdit = claims && ["maintenance", "admin"].includes(claims.role);
+  const canRemove =
+    claims?.role === "admin" ||
+    (claims?.role === "maintenance" && !!user && issue.routing?.staff?.some((s) => s.uid === user.uid));
   const closed = issue.status === "CLOSED";
 
   const add = useCallback(
@@ -856,7 +859,7 @@ export function RequirementsPanel({ issue, onChanged }: { issue: Issue; onChange
                     Resubmit
                   </button>
                 )}
-                {canEdit && !isApproval && (
+                {canRemove && !isApproval && (
                   <button
                     type="button"
                     onClick={() => void remove(r)}

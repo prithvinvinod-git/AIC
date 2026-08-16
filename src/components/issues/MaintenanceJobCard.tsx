@@ -11,6 +11,7 @@ import { Modal } from "@/components/ui/Modal";
 import { FeedbackStars } from "@/components/ui/FeedbackStars";
 import { formatDateTime } from "@/lib/format";
 import { useActionError } from "@/components/ui/Toast";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 interface DraftRequirement {
   item: string;
@@ -28,6 +29,7 @@ export function MaintenanceJobCard({
   readOnly?: boolean;
 }) {
   const router = useRouter();
+  const { user, claims } = useAuth();
   const [mode, setMode] = useState<"start" | "block" | "complete" | "req" | null>(null);
   const [note, setNote] = useState("");
   const [reqItem, setReqItem] = useState("");
@@ -36,6 +38,9 @@ export function MaintenanceJobCard({
   const [busy, setBusy] = useState(false);
   const [drafting, setDrafting] = useState(false);
   const { showError, errorEl } = useActionError();
+  const canRemove =
+    claims?.role === "admin" ||
+    (claims?.role === "maintenance" && !!user && issue.routing?.staff?.some((s) => s.uid === user.uid));
 
   const act = useCallback(
     async (kind: "start" | "block" | "complete") => {
@@ -452,7 +457,7 @@ export function MaintenanceJobCard({
                     Resubmit
                   </button>
                 )}
-                {!readOnly && !isApproval && (
+                {!readOnly && canRemove && !isApproval && (
                   <button
                     type="button"
                     onClick={() => void removeRequirement(r)}

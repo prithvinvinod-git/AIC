@@ -128,6 +128,9 @@ export async function DELETE(
       const snap = await tx.get(ref);
       if (!snap.exists) throw new Error("issue-missing");
       const data = snap.data() as Issue;
+      if (user.role === "maintenance" && !(data.routing?.staff || []).some((s) => s.uid === user.uid)) {
+        throw new Error("not-assigned");
+      }
       if (data.status === "CLOSED") throw new Error("issue-closed");
       const requirements: Requirement[] = Array.isArray(data.requirements) ? [...data.requirements] : [];
       const idx = requirements.findIndex((r) => r.id === reqId);
@@ -148,6 +151,8 @@ export async function DELETE(
     if (e instanceof Error && e.message === "issue-closed")
       return json({ error: "This issue is closed — requirements can no longer be modified." }, 400);
     if (e instanceof Error && e.message === "requirement-missing") return json({ error: "Requirement not found." }, 404);
+    if (e instanceof Error && e.message === "not-assigned")
+      return json({ error: "Only the assigned maintenance staff can remove requirements." }, 403);
     if (e instanceof Error && e.message === "approval-locked")
       return json({ error: "Requirements sent for approval cannot be removed." }, 403);
     return handleError(e);

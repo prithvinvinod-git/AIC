@@ -47,7 +47,7 @@ export default function MobileNav() {
     pathname === href || (href !== "/" && pathname.startsWith(href + "/"));
 
   return (
-    <div ref={ref} className="fixed bottom-[15px] right-[15px] z-50 lg:hidden">
+    <div ref={ref} className="fixed bottom-[15px] right-[15px] z-40 lg:hidden">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}

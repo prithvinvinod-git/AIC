@@ -155,6 +155,13 @@ export default function IssueDetailPage() {
                 <IssuePhotos images={issue.images} size={148} mobileSize={100} />
               </div>
             )}
+            {issue.completion && (
+              <div className="mt-4 border-t border-silver pt-4">
+                <h2 className="font-display text-lg max-md:text-base font-semibold text-ink">Completion</h2>
+                <p className="mt-2 whitespace-pre-wrap text-sm text-slate">{issue.completion.report}</p>
+                <p className="mt-1 text-xs text-slate">{formatDateTime(issue.completion.completedAt)}</p>
+              </div>
+            )}
           </div>
 
           <AISuggestionCard issue={issue} onTriaged={() => void reload()} />
@@ -179,27 +186,27 @@ export default function IssueDetailPage() {
 
           <div className="card">
             <h2 className="font-display text-lg max-md:text-base font-semibold text-ink">Timeline</h2>
-            <ol className="mt-4 flex flex-col gap-0">
+            <ol className="mt-4 flex flex-col gap-0 max-md:mt-2">
               {timeline?.map((t, i) => (
-                <li key={i} className="relative flex gap-3 pb-5 last:pb-0">
+                <li key={i} className="relative flex gap-3 pb-5 last:pb-0 max-md:gap-2 max-md:pb-2">
                   {i < (timeline?.length || 0) - 1 && (
-                    <span className="absolute left-[5px] top-[11px] h-full w-px bg-silver" aria-hidden />
+                    <span className="absolute left-[5px] top-[11px] h-full w-px bg-silver max-md:left-[3px] max-md:top-[9px]" aria-hidden />
                   )}
                   <span
-                    className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${dotClass(t)}`}
+                    className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full max-md:mt-[3px] max-md:h-2 max-md:w-2 ${dotClass(t)}`}
                     aria-hidden
                   />
                   <div className="min-w-0">
-                    <p className="text-sm">
+                    <p className="text-sm max-md:text-xs">
                       <span className="font-medium text-graphite">
                         {t.from ? STATUS_LABEL[t.from] : "Reported"} → {STATUS_LABEL[t.to]}
                       </span>
                       {t.isAuto && <span className="ml-1 text-xs text-accent">auto</span>}
                     </p>
-                    <p className="mt-0.5 text-xs text-slate">
+                    <p className="mt-0.5 text-xs text-slate max-md:text-[11px]">
                       {t.by?.name} · {formatDateTime(t.at)}
                     </p>
-                    {t.note && <p className="mt-1 text-sm text-slate">{t.note}</p>}
+                    {t.note && <p className="mt-1 text-sm text-slate max-md:text-xs">{t.note}</p>}
                   </div>
                 </li>
               ))}
@@ -211,14 +218,6 @@ export default function IssueDetailPage() {
               <h2 className="font-display text-lg max-md:text-base font-semibold text-ink">Rejected</h2>
               <p className="mt-2 text-sm text-slate">{issue.rejection.reason}</p>
               <p className="mt-1 text-xs text-slate">by {issue.rejection.by?.name} · {formatDateTime(issue.rejection.at)}</p>
-            </div>
-          )}
-
-          {issue.completion && (
-            <div className="card">
-              <h2 className="font-display text-lg max-md:text-base font-semibold text-ink">Completion</h2>
-              <p className="mt-2 whitespace-pre-wrap text-sm text-slate">{issue.completion.report}</p>
-              <p className="mt-1 text-xs text-slate">{formatDateTime(issue.completion.completedAt)}</p>
             </div>
           )}
         </div>
