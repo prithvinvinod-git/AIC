@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { InertiaPlugin } from "gsap/InertiaPlugin";
 
@@ -41,6 +41,7 @@ type DotGridProps = {
   dotSize?: number;
   gap?: number;
   baseColor?: string;
+  darkBaseColor?: string;
   activeColor?: string;
   proximity?: number;
   speedTrigger?: number;
@@ -57,6 +58,7 @@ const DotGrid = ({
   dotSize = 16,
   gap = 32,
   baseColor = "#e6e2d8",
+  darkBaseColor = "#252321",
   activeColor = "#d97757",
   proximity = 150,
   speedTrigger = 100,
@@ -82,7 +84,25 @@ const DotGrid = ({
     lastY: 0,
   });
 
-  const baseRgb = useMemo(() => hexToRgb(baseColor), [baseColor]);
+  const mobileRef = useRef(false);
+
+  const [darkMode, setDarkMode] = useState(() => {
+    if (typeof document === "undefined") return false;
+    return document.documentElement.classList.contains("dark");
+  });
+
+  useEffect(() => {
+    const el = document.documentElement;
+    const obs = new MutationObserver(() => {
+      setDarkMode(el.classList.contains("dark"));
+    });
+    obs.observe(el, { attributes: true, attributeFilter: ["class"] });
+    return () => obs.disconnect();
+  }, []);
+
+  const effectiveBaseColor = darkMode ? darkBaseColor : baseColor;
+
+  const baseRgb = useMemo(() => hexToRgb(effectiveBaseColor), [effectiveBaseColor]);
   const activeRgb = useMemo(() => hexToRgb(activeColor), [activeColor]);
 
   const circlePath = useMemo(() => {
@@ -159,7 +179,7 @@ const DotGrid = ({
         const dy = dot.cy - py;
         const dsq = dx * dx + dy * dy;
 
-        let fill = baseColor;
+        let fill = effectiveBaseColor;
         if (dsq <= proxSq) {
           const dist = Math.sqrt(dsq);
           const t = 1 - dist / proximity;
@@ -170,6 +190,7 @@ const DotGrid = ({
         }
 
         ctx.save();
+        if (mobileRef.current) ctx.globalAlpha = 0.85;
         ctx.translate(ox, oy);
         ctx.fillStyle = fill;
         ctx.fill(circlePath);
@@ -194,7 +215,7 @@ const DotGrid = ({
       cancelAnimationFrame(rafId);
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [proximity, baseColor, activeRgb, baseRgb, circlePath]);
+  }, [proximity, effectiveBaseColor, activeRgb, baseRgb, circlePath]);
 
   useEffect(() => {
     buildGrid();
@@ -218,6 +239,44 @@ const DotGrid = ({
     ) {
       return;
     }
+
+    /* On mobile (< 768px) simulate a slow-moving pointer so dots light up
+       automatically — mimics the hover effect without requiring interaction. */
+    const mq = window.matchMedia("(max-width: 767px)");
+    let autoId: number | null = null;
+
+    const startAutoAnimate = () => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const w = canvas.getBoundingClientRect().width;
+      const h = canvas.getBoundingClientRect().height;
+      const pr = pointerRef.current;
+      let t = 0;
+
+      const tick = () => {
+        t += 0.015;
+        pr.x = w * 0.5 + Math.sin(t * 1.1) * w * 0.35;
+        pr.y = h * 0.5 + Math.cos(t * 0.7) * h * 0.3;
+        pr.lastTime = performance.now();
+        autoId = requestAnimationFrame(tick);
+      };
+      autoId = requestAnimationFrame(tick);
+    };
+
+    const stopAutoAnimate = () => {
+      if (autoId !== null) {
+        cancelAnimationFrame(autoId);
+        autoId = null;
+      }
+    };
+
+    if (mq.matches) { mobileRef.current = true; startAutoAnimate(); }
+    const onChange = (e: MediaQueryListEvent) => {
+      mobileRef.current = e.matches;
+      if (e.matches) startAutoAnimate();
+      else stopAutoAnimate();
+    };
+    mq.addEventListener("change", onChange);
 
     const onMove = (e: MouseEvent) => {
       const now = performance.now();
@@ -305,6 +364,8 @@ const DotGrid = ({
     window.addEventListener("click", onClick);
 
     return () => {
+      stopAutoAnimate();
+      mq.removeEventListener("change", onChange);
       window.removeEventListener("mousemove", throttledMove);
       window.removeEventListener("click", onClick);
     };

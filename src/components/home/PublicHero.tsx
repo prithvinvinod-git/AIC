@@ -6,7 +6,7 @@ const DotGrid = dynamic(() => import("@/components/home/DotGrid"), { ssr: false 
 /** Split hero — fills the first viewport; "How it works" follows below the fold. */
 export default function PublicHero() {
   return (
-    <section className="relative flex min-h-[100svh] w-full items-center overflow-hidden px-[20px] pb-14 max-md:pb-10 pt-[112px] max-md:pt-[96px] sm:px-6">
+    <section className="relative flex min-h-[100svh] w-full items-center overflow-hidden px-[20px] pb-14 max-md:pb-10 pt-[112px] max-md:pt-[8px] sm:px-6">
       <div className="absolute inset-0 -z-10">
         <DotGrid
           dotSize={8}
@@ -21,29 +21,29 @@ export default function PublicHero() {
         />
       </div>
       <div className="mx-auto grid w-full max-w-page items-center gap-10 lg:-mt-[200px] lg:grid-cols-[1.1fr_0.9fr]">
-        <div>
+        <div className="max-md:-mt-[10px]">
           <h1 className="font-valve text-5xl max-md:text-4xl leading-tight tracking-tight text-ink sm:text-7xl">
             Report it once.
             <br />
             Watch it close.
           </h1>
-          <p className="mt-4 max-w-xl text-lg text-slate">
+          <p className="mt-4 max-w-xl text-lg max-md:text-xs text-slate">
             A governed, AI-assisted workflow for professional campus upkeep — from a leak in
             Block&nbsp;C to a full electrical audit.
           </p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <a href="#how-it-works" className="btn btn-secondary btn-lg">
+          <div className="mt-8 max-md:mt-[6px] flex flex-wrap gap-3">
+            <a href="#how-it-works" className="btn btn-secondary btn-lg max-md:!px-[14px] max-md:!py-[7px] max-md:!text-xs">
               Explore how it works
             </a>
           </div>
         </div>
 
-        <div className="w-full max-w-md justify-self-center lg:justify-self-end">
+        <div className="w-full max-w-md justify-self-center lg:justify-self-end max-md:-mt-[34px]">
           <HeroAuthCard />
         </div>
       </div>
 
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 lg:bottom-[106px]">
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 lg:bottom-[106px] hidden lg:block">
         <div className="animate-scroll-pill flex items-center gap-2.5 rounded-full border border-silver bg-white/80 px-[34px] py-3 text-sm font-medium text-slate backdrop-blur">
           Scroll down
           <svg

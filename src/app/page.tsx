@@ -29,7 +29,7 @@ export default function Home() {
 
   if (!user || !claims) {
     return (
-      <div className="flex min-h-full flex-col">
+      <div className="flex min-h-full flex-col overflow-x-hidden">
         <PublicNav />
         <main className="flex-1">
           <PublicHero />
@@ -42,7 +42,7 @@ export default function Home() {
   }
 
   return (
-    <div className="flex min-h-full flex-col">
+    <div className="flex min-h-full flex-col overflow-x-hidden">
       <AppHeader />
       <main className="mx-auto w-full max-w-page flex-1 px-4 max-lg:pb-[88px] sm:px-6">
         <DashboardHero />

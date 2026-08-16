@@ -58,7 +58,7 @@ export default function SiteFooter() {
             </ul>
           </div>
 
-          <div>
+          <div className="max-md:hidden">
             <h3 className="text-xs font-semibold uppercase tracking-widest text-graphite">
               Platform
             </h3>
@@ -88,8 +88,8 @@ export default function SiteFooter() {
             </ul>
             <p className="mt-5 text-sm text-slate">
               Support:{" "}
-              <a href="mailto:support@servox-phi.example" className="link-blue font-medium">
-                support@servox-phi.example
+              <a href="mailto:servox@gmail.com" className="link-blue font-medium">
+                servox@gmail.com
               </a>
             </p>
           </div>

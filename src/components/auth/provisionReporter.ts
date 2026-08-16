@@ -7,6 +7,8 @@ import { capitalizeName } from "@/lib/format";
 /**
  * Claim an already-signed-in Auth user (e.g. a fresh Google sign-in) as a
  * reporter: writes the Firestore user doc + custom claims if no role exists.
+ * Also syncs the Google email into Firestore if the user is already provisioned
+ * but the doc is missing the email.
  */
 export async function ensureReporterProvisioned(opts?: {
   college?: string;
@@ -14,14 +16,24 @@ export async function ensureReporterProvisioned(opts?: {
 }): Promise<void> {
   const user = getClientAuth().currentUser;
   if (!user) return;
+  const email = user.email || "";
   const token = await user.getIdTokenResult(true);
-  if (token.claims.role) return;
+  if (token.claims.role) {
+    // Already provisioned — just make sure Firestore has the email.
+    if (email) {
+      await api("/api/profile", {
+        method: "PATCH",
+        body: JSON.stringify({ email }),
+      }).catch(() => {});
+    }
+    return;
+  }
   await api("/api/auth/provision", {
     method: "POST",
     body: JSON.stringify({
       uid: user.uid,
       name: capitalizeName(user.displayName || user.email || user.phoneNumber || "User"),
-      email: user.email || "",
+      email,
       role: "reporter",
       college: opts?.college || "",
       department: opts?.department || "Computer Science",

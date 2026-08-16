@@ -1,3 +1,4 @@
+import dynamic from "next/dynamic";
 import {
   Brain,
   FileSearch,
@@ -7,41 +8,54 @@ import {
   Sparkles,
   TrendingUp,
 } from "lucide-react";
+import type { CardData } from "@/components/ui/morphing-card-stack";
 
-const AI_FEATURES = [
+const MorphingCardStack = dynamic(
+  () => import("@/components/ui/morphing-card-stack").then((m) => m.MorphingCardStack),
+  { ssr: false }
+);
+
+const AI_FEATURES: CardData[] = [
   {
-    icon: ScanEye,
+    id: "triage",
     title: "AI triage",
-    body: "On every report, AI suggests the category and priority before a validator confirms them.",
+    description: "On every report, AI suggests the category and priority before a validator confirms them.",
+    icon: <ScanEye className="h-7 w-7 max-md:h-5 max-md:w-5" aria-hidden />,
   },
   {
-    icon: MapPin,
+    id: "at-risk",
     title: "At-risk location analysis",
-    body: "Patterns across locations are analysed to surface buildings and zones at risk of repeat failures.",
+    description: "Patterns across locations are analysed to surface buildings and zones at risk of repeat failures.",
+    icon: <MapPin className="h-7 w-7 max-md:h-5 max-md:w-5" aria-hidden />,
   },
   {
-    icon: Route,
+    id: "routing",
     title: "Smart routing",
-    body: "The model picks the most relevant team and staff for each issue based on its description.",
+    description: "The model picks the most relevant team and staff for each issue based on its description.",
+    icon: <Route className="h-7 w-7 max-md:h-5 max-md:w-5" aria-hidden />,
   },
   {
-    icon: Sparkles,
+    id: "spam",
     title: "Spam & photo safety",
-    body: "Low-effort or unsafe reports are flagged automatically before they hit the queue.",
+    description: "Low-effort or unsafe reports are flagged automatically before they hit the queue.",
+    icon: <Sparkles className="h-7 w-7 max-md:h-5 max-md:w-5" aria-hidden />,
   },
   {
-    icon: FileSearch,
+    id: "closure",
     title: "Closure reports",
-    body: "Completion and verification are summarised into concise, structured reports.",
+    description: "Completion and verification are summarised into concise, structured reports.",
+    icon: <FileSearch className="h-7 w-7 max-md:h-5 max-md:w-5" aria-hidden />,
   },
   {
-    icon: TrendingUp,
+    id: "insights",
     title: "Insights & forecasting",
-    body: "Weekly insights, at-risk locations and root-cause analysis surface patterns for leadership.",
+    description: "Weekly insights, at-risk locations and root-cause analysis surface patterns for leadership.",
+    icon: <TrendingUp className="h-7 w-7 max-md:h-5 max-md:w-5" aria-hidden />,
   },
 ];
 
-/** Static band describing the AI-implemented features in the app. */
+/** Static band describing the AI-implemented features in the app.
+ *  Mobile: MorphingCardStack (stack/grid/list). Desktop: original grid. */
 export default function AiSection() {
   return (
     <section id="ai" className="scroll-mt-24 border-y border-silver bg-paper/60">
@@ -52,20 +66,30 @@ export default function AiSection() {
             Powered by AI
           </span>
         </div>
-        <h2 className="mt-3 font-display text-2xl max-md:text-xl font-semibold text-ink">What AI does for you</h2>
+        <h2 className="mt-3 font-display text-2xl max-md:text-xl font-semibold text-ink">
+          What AI does for you
+        </h2>
         <p className="mt-1 max-w-2xl text-sm text-slate">
           Every step that can be automated is — here is exactly what is implemented with AI in this
           app.
         </p>
 
-        <div className="mt-8 grid gap-4 max-md:gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {/* Mobile: morphing card stack */}
+        <div className="mt-8 max-md:block hidden">
+          <MorphingCardStack cards={AI_FEATURES} defaultLayout="stack" />
+        </div>
+
+        {/* Desktop: original grid */}
+        <div className="mt-8 max-md:hidden grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {AI_FEATURES.map((f) => (
-            <div key={f.title} className="card">
-              <span className="flex h-14 w-14 max-md:h-12 max-md:w-12 items-center justify-center rounded-xl bg-paper text-graphite">
-                <f.icon className="h-7 w-7" aria-hidden />
-              </span>
-              <h3 className="mt-4 font-display text-base font-medium text-graphite">{f.title}</h3>
-              <p className="mt-1.5 text-sm text-slate">{f.body}</p>
+            <div key={f.id} className="card">
+              <div className="flex items-center gap-3">
+                <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl text-accent">
+                  {f.icon}
+                </span>
+                <h3 className="font-display text-base font-medium text-graphite">{f.title}</h3>
+              </div>
+              <p className="mt-1.5 text-sm text-slate">{f.description}</p>
             </div>
           ))}
         </div>

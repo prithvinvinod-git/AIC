@@ -10,9 +10,11 @@
   },
   "dependencies": {
     "@genkit-ai/googleai": "^1.28.0",
+    "clsx": "^2.1.1",
     "date-fns": "^4.4.0",
     "firebase": "^12.17.1",
     "firebase-admin": "^14.2.0",
+    "framer-motion": "^13.1.0",
     "genkit": "^1.40.1",
     "genkitx-groq": "^0.31.0",
     "gsap": "^3.15.0",
@@ -23,6 +25,7 @@
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "recharts": "^3.10.1",
+    "tailwind-merge": "^3.6.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {

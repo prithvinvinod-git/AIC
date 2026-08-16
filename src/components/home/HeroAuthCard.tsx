@@ -65,12 +65,12 @@ export default function HeroAuthCard({ onSuccess }: HeroAuthCardProps = {}) {
   }, [loginWithGoogle, refreshClaims, onSuccess]);
 
   return (
-    <div className="card w-full">
-      <h2 className="font-display text-xl font-semibold text-ink">Sign in to Servox</h2>
-      <p className="mt-1 text-sm text-slate">Track and manage campus maintenance issues.</p>
+    <div className="card w-full max-md:!p-3">
+      <h2 className="font-display text-xl max-md:text-base font-semibold text-ink">Sign in to Servox</h2>
+      <p className="mt-1 text-sm max-md:text-xs text-slate">Track and manage campus maintenance issues.</p>
 
-      <div className="mt-5 rounded-2xl border border-silver px-10 py-8">
-        <form onSubmit={submitEmail} className="flex flex-col gap-3">
+      <div className="mt-5 max-md:mt-2 rounded-2xl border border-silver px-10 py-8 max-md:px-4 max-md:py-3">
+        <form onSubmit={submitEmail} className="flex flex-col gap-3 max-md:gap-2">
           <div>
             <label className="label" htmlFor="hero-email">
               Email
@@ -80,7 +80,7 @@ export default function HeroAuthCard({ onSuccess }: HeroAuthCardProps = {}) {
               type="email"
               required
               autoComplete="email"
-              className="input"
+              className="input max-md:!py-1.5 max-md:!text-xs"
               placeholder="you@campus.edu"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -95,7 +95,7 @@ export default function HeroAuthCard({ onSuccess }: HeroAuthCardProps = {}) {
               type="password"
               required
               autoComplete="current-password"
-              className="input"
+              className="input max-md:!py-1.5 max-md:!text-xs"
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -105,7 +105,7 @@ export default function HeroAuthCard({ onSuccess }: HeroAuthCardProps = {}) {
           {error && <p className="rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger">{error}</p>}
 
           <div className="relative">
-            <button type="submit" disabled={busy} className="btn btn-brand btn-lg w-full">
+            <button type="submit" disabled={busy} className="btn btn-brand btn-lg w-full text-white! font-bold! max-md:!text-xs max-md:!px-3 max-md:!py-1.5">
               {busy ? "Signing in…" : "Sign in"}
             </button>
             <LastUsedBadge method="email" />
@@ -113,21 +113,21 @@ export default function HeroAuthCard({ onSuccess }: HeroAuthCardProps = {}) {
         </form>
       </div>
 
-      <div className="mt-4 flex items-center gap-3 text-xs text-stone">
+      <div className="mt-4 max-md:mt-2 flex items-center gap-3 text-xs text-stone">
         <span className="h-px flex-1 bg-silver" aria-hidden />
         or
         <span className="h-px flex-1 bg-silver" aria-hidden />
       </div>
 
-      <div className="relative mt-4">
-        <button type="button" onClick={() => void submitGoogle()} disabled={busy} className="btn btn-secondary btn-lg w-full max-md:whitespace-normal">
+      <div className="relative mt-4 max-md:mt-2">
+        <button type="button" onClick={() => void submitGoogle()} disabled={busy} className="btn btn-secondary btn-lg w-full max-md:!text-xs max-md:!px-3 max-md:!py-1.5 max-md:whitespace-normal">
           <GoogleIcon />
           Continue with Google
         </button>
         <LastUsedBadge method="google" />
       </div>
 
-      <Link href="/signup" className="btn btn-ghost btn-lg mt-3 w-full">
+      <Link href="/signup" className="btn btn-ghost btn-lg mt-3 max-md:mt-2 w-full max-md:!text-xs max-md:!px-3 max-md:!py-1.5">
         Create account
       </Link>
     </div>

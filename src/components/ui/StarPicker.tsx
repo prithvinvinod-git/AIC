@@ -53,7 +53,7 @@ export function StarPicker({
           disabled={disabled}
           aria-label={`${i} star${i === 1 ? "" : "s"}`}
           title={hover === null ? undefined : preview >= i - 0.5 ? `${fmtRating(hover === value ? value - 0.5 : hover)}/5` : undefined}
-          onClick={() => onChange(value === i ? i - 0.5 : i)}
+          onClick={() => { onChange(value === i ? i - 0.5 : i); setHover(null); }}
           onMouseEnter={() => setHover(i)}
           onMouseLeave={() => setHover(null)}
           onFocus={() => setHover(i)}
