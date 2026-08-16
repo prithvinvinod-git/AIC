@@ -174,8 +174,12 @@ export default function SettingsPage() {
         <p className="mt-1 text-sm text-slate">Choose how the app looks on this device.</p>
         <div className="mt-4 flex items-center justify-between gap-4">
           <div className="flex min-w-0 items-center gap-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-paper text-slate">
-              {darkMode ? <Moon className="h-4 w-4" aria-hidden /> : <Sun className="h-4 w-4" aria-hidden />}
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-paper text-slate">
+              {darkMode ? (
+                <Moon className="h-5 w-5 text-accent" aria-hidden />
+              ) : (
+                <Sun className="h-5 w-5" aria-hidden />
+              )}
             </span>
             <div className="min-w-0">
               <p className="text-sm font-medium text-graphite">Dark mode</p>

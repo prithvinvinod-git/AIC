@@ -7,6 +7,7 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
   Line,
   LineChart,
   ResponsiveContainer,
@@ -18,6 +19,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { api, ApiError } from "@/lib/clientApi";
 import { Loading, EmptyState } from "@/components/ui/States";
 import { ANALYTICS_ROLES } from "@/lib/nav";
+import { CATEGORY_COLORS } from "@/lib/chartColors";
 import { AtRiskLocationsCard } from "@/components/ai/AtRiskLocationsCard";
 
 interface SummaryResponse {
@@ -152,7 +154,11 @@ export default function AnalyticsPage() {
                 <XAxis dataKey="name" tick={{ fontSize: 11 }} stroke="#a8a29e" />
                 <YAxis allowDecimals={false} tick={{ fontSize: 11 }} stroke="#a8a29e" />
                 <Tooltip />
-                <Bar dataKey="value" name="Issues" fill="#1f1e1d" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="value" name="Issues" radius={[6, 6, 0, 0]}>
+                  {categoryData.map((_, i) => (
+                    <Cell key={i} fill={CATEGORY_COLORS[i % CATEGORY_COLORS.length]} />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>

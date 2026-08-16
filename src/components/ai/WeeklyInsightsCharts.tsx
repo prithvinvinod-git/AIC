@@ -16,17 +16,7 @@ import {
 } from "recharts";
 import { format } from "date-fns";
 import type { WeeklyInsight } from "@/lib/ai/insights";
-
-const PIE_COLORS = [
-  "#c1452e",
-  "#1f1e1d",
-  "#eab308",
-  "#3e7d4b",
-  "#7c3aed",
-  "#5b7290",
-  "#d9a05b",
-  "#a8a29e",
-];
+import { CATEGORY_COLORS } from "@/lib/chartColors";
 
 function formatDay(iso: string): string {
   const d = new Date(iso);
@@ -56,7 +46,7 @@ export function WeeklyInsightsCharts({ insight }: { insight: WeeklyInsight }) {
                     paddingAngle={2}
                   >
                     {insight.byCategory.map((_, i) => (
-                      <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                      <Cell key={i} fill={CATEGORY_COLORS[i % CATEGORY_COLORS.length]} />
                     ))}
                   </Pie>
                   <ChartTooltip
@@ -70,7 +60,7 @@ export function WeeklyInsightsCharts({ insight }: { insight: WeeklyInsight }) {
                 <li key={c.name} className="flex items-center gap-2">
                   <span
                     className="h-2.5 w-2.5 shrink-0 rounded-full"
-                    style={{ background: PIE_COLORS[i % PIE_COLORS.length] }}
+                    style={{ background: CATEGORY_COLORS[i % CATEGORY_COLORS.length] }}
                     aria-hidden
                   />
                   <span className="flex-1 text-slate">{c.name}</span>

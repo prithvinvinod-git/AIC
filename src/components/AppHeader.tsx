@@ -40,7 +40,7 @@ export default function AppHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-silver bg-white/90 backdrop-blur">
-      <div className="mx-auto flex h-[48px] w-full max-w-page items-center gap-2 pl-3 pr-2 sm:h-[70px] sm:gap-5 sm:pl-4 sm:pr-3">
+      <div className="mx-auto flex h-[48px] w-full max-w-page items-center gap-2 pl-3 pr-2 sm:h-[70px] sm:gap-5 sm:pl-4 sm:pr-3 lg:max-w-none lg:pl-6 lg:pr-4">
         <Link
           href={homeFor(claims)}
           className="flex min-w-0 shrink-0 items-center gap-2 font-brand text-lg leading-none text-ink sm:text-xl"
