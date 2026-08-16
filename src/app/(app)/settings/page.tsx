@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Moon, Sun } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { useTheme } from "@/components/ThemeProvider";
 import { api } from "@/lib/clientApi";
 import { ROLE_LABEL } from "@/lib/constants";
 import { soundEnabled, setSoundEnabled } from "@/lib/soundPref";
@@ -42,12 +43,12 @@ function Toggle({
       <span
         aria-hidden
         className={`h-[1.5em] w-[calc(2.75em+2px)] rounded-full transition-all duration-300 ease-in-out ${
-          checked ? "bg-accent" : "bg-[#cccccc]"
+          checked ? "bg-accent" : "bg-[#cccccc] dark:bg-[#3a3834]"
         }`}
       />
       <span
         aria-hidden
-        className={`pointer-events-none absolute left-[0.125em] top-[0.125em] h-[1.25em] w-[1.25em] rounded-full bg-white transition-all duration-300 ease-in-out group-active:w-[2.25em] ${
+        className={`pointer-events-none absolute left-[0.125em] top-[0.125em] h-[1.25em] w-[1.25em] rounded-full bg-white dark:bg-[#fff] transition-all duration-300 ease-in-out group-active:w-[2.25em] ${
           checked
             ? "translate-x-[calc(1.375em+2px)] shadow-[-10px_0_40px_rgba(0,0,0,0.1)] group-active:translate-x-[0.375em]"
             : "translate-x-0 shadow-[10px_0_40px_rgba(0,0,0,0.1)]"
@@ -60,6 +61,7 @@ function Toggle({
 export default function SettingsPage() {
   const { user, claims, ready } = useAuth();
   const router = useRouter();
+  const { dark: darkMode, toggle: toggleDarkMode } = useTheme();
   const [settings, setSettings] = useState<SettingsData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -165,6 +167,23 @@ export default function SettingsPage() {
         </div>
 
         {error && <p className="mt-4 rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger">{error}</p>}
+      </div>
+
+      <div className="card">
+        <h2 className="font-display text-base font-semibold text-ink">Appearance</h2>
+        <p className="mt-1 text-sm text-slate">Choose how the app looks on this device.</p>
+        <div className="mt-4 flex items-center justify-between gap-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-paper text-slate">
+              {darkMode ? <Moon className="h-4 w-4" aria-hidden /> : <Sun className="h-4 w-4" aria-hidden />}
+            </span>
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-graphite">Dark mode</p>
+              <p className="text-xs text-slate">Follows your system preference until you switch here.</p>
+            </div>
+          </div>
+          <Toggle checked={darkMode} onToggle={toggleDarkMode} label="Dark mode" />
+        </div>
       </div>
     </div>
   );

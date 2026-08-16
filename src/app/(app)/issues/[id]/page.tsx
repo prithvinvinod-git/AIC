@@ -14,16 +14,8 @@ import { AISuggestionCard } from "@/components/issues/AISuggestionCard";
 import { CloseIssueModal } from "@/components/issues/CloseIssueModal";
 import { CommentsSection } from "@/components/issues/CommentsSection";
 import { IssueActions, RequirementsPanel } from "@/components/issues/IssueActions";
+import { Timeline } from "@/components/issues/Timeline";
 import { deadlineLabel, formatDateTime, timeAgo } from "@/lib/format";
-import { STATUS_LABEL } from "@/lib/constants";
-import type { TimelineEntry } from "@/lib/types";
-
-const dotClass = (t: TimelineEntry): string => {
-  if (!t.from) return "bg-danger";
-  if (t.to === "APPROVED") return "bg-warning";
-  if (t.to === "CLOSED") return "bg-success";
-  return t.isAuto ? "bg-accent" : "bg-ink";
-};
 
 export default function IssueDetailPage() {
   const params = useParams<{ id: string }>();
@@ -186,31 +178,7 @@ export default function IssueDetailPage() {
 
           <div className="card">
             <h2 className="font-display text-lg max-md:text-base font-semibold text-ink">Timeline</h2>
-            <ol className="mt-4 flex flex-col gap-0 max-md:mt-2">
-              {timeline?.map((t, i) => (
-                <li key={i} className="relative flex gap-3 pb-5 last:pb-0 max-md:gap-2 max-md:pb-2">
-                  {i < (timeline?.length || 0) - 1 && (
-                    <span className="absolute left-[5px] top-[11px] h-full w-px bg-silver max-md:left-[3px] max-md:top-[9px]" aria-hidden />
-                  )}
-                  <span
-                    className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full max-md:mt-[3px] max-md:h-2 max-md:w-2 ${dotClass(t)}`}
-                    aria-hidden
-                  />
-                  <div className="min-w-0">
-                    <p className="text-sm max-md:text-xs">
-                      <span className="font-medium text-graphite">
-                        {t.from ? STATUS_LABEL[t.from] : "Reported"} → {STATUS_LABEL[t.to]}
-                      </span>
-                      {t.isAuto && <span className="ml-1 text-xs text-accent">auto</span>}
-                    </p>
-                    <p className="mt-0.5 text-xs text-slate max-md:text-[11px]">
-                      {t.by?.name} · {formatDateTime(t.at)}
-                    </p>
-                    {t.note && <p className="mt-1 text-sm text-slate max-md:text-xs">{t.note}</p>}
-                  </div>
-                </li>
-              ))}
-            </ol>
+            <Timeline timeline={timeline ?? []} />
           </div>
 
           {issue.rejection && (

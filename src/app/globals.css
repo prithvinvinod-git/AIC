@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @font-face {
   font-family: "TTOctosquaresBlack";
   src: url("/TT Octosquares Trial Black.ttf") format("truetype");
@@ -122,7 +124,7 @@ body {
 
 .btn-primary {
   background: var(--color-accent);
-  color: var(--color-white);
+  color: #fff;
 }
 .btn-primary:hover {
   background: var(--color-accent-hover);
@@ -149,7 +151,7 @@ body {
 
 .btn-brand {
   background: var(--color-accent-strong);
-  color: var(--color-ink);
+  color: #1f1e1d;
 }
 .btn-brand:hover {
   background: var(--color-accent);
@@ -389,8 +391,8 @@ body {
   left: 4px;
   right: 4px;
   bottom: 4px;
-  background-color: var(--color-white);
-  border: 2px solid var(--color-white);
+  background-color: #fff;
+  border: 2px solid #fff;
   border-radius: 50%;
 }
 @keyframes rotate_3922 {
@@ -584,7 +586,7 @@ body {
 }
 .ghost-wrap #eye::before {
   content: "";
-  background-color: var(--color-white);
+  background-color: #fff;
   width: 20px;
   height: 50px;
   transform: translateX(10px);
@@ -593,7 +595,7 @@ body {
 }
 .ghost-wrap #eye::after {
   content: "";
-  background-color: var(--color-white);
+  background-color: #fff;
   width: 40px;
   height: 30px;
   transform: translateY(10px);
@@ -609,7 +611,7 @@ body {
 }
 .ghost-wrap #eye1::before {
   content: "";
-  background-color: var(--color-white);
+  background-color: #fff;
   width: 20px;
   height: 50px;
   transform: translateX(10px);
@@ -618,7 +620,7 @@ body {
 }
 .ghost-wrap #eye1::after {
   content: "";
-  background-color: var(--color-white);
+  background-color: #fff;
   width: 40px;
   height: 30px;
   transform: translateY(10px);
@@ -838,4 +840,48 @@ body {
   .kpi {
     padding: 14px 16px;
   }
+}
+
+/* ============================================================
+   DARK MODE. Applied via the `dark` class on <html> (see
+   ThemeProvider + the head bootstrap script in layout.tsx).
+   Because every Tailwind color utility resolves through these
+   CSS variables, redefining them here darkens the whole app.
+   Desktop, mobile, app, login, public pages — everything.
+   ============================================================ */
+.dark {
+  /* Surfaces */
+  --color-paper: #141312;
+  --color-white: #1e1d1b;
+  --color-smoke: #262522;
+  --color-silver: #35322d;
+  --color-border: #35322d;
+
+  /* Text */
+  --color-ink: #e8e4dd;
+  --color-graphite: #cfc9c0;
+  --color-slate: #9d968c;
+  --color-stone: #7d766c;
+
+  /* Accent — brightened for contrast on dark */
+  --color-accent: #e28a6a;
+  --color-accent-hover: #d97757;
+  --color-accent-strong: #ff7d5c;
+  --color-accent-soft: #2e2620;
+  --color-info-banner-bg: #2e2620;
+
+  /* Status colors */
+  --color-danger: #e2674f;
+  --color-danger-soft: #2e1e1a;
+  --color-warning: #e0a44a;
+  --color-warning-soft: #2b2417;
+  --color-success: #57a56a;
+  --color-success-soft: #1b2a1e;
+  --color-violet: #9d68f5;
+
+  /* Shadows — darker + deeper so cards lift off the page */
+  --shadow-card: rgba(0, 0, 0, 0.35) 0px 1px 2px 0px, rgba(0, 0, 0, 0.4) 0px 8px 24px 0px;
+  --shadow-card-hover: rgba(0, 0, 0, 0.5) 0px 2px 6px -2px, rgba(0, 0, 0, 0.45) 0px 14px 32px -4px;
+
+  color-scheme: dark;
 }

@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Fraunces, Inter } from "next/font/google";
 import { AuthProvider } from "@/components/auth/AuthProvider";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import { ToastProvider } from "@/components/ui/Toast";
+import { themeBootstrapScript } from "@/lib/themePref";
 import "./globals.css";
 
 const inter = Inter({
@@ -27,11 +29,17 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       data-scroll-behavior="smooth"
+      suppressHydrationWarning
       className={`${inter.variable} ${fraunces.variable} h-full antialiased`}
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeBootstrapScript }} />
+      </head>
       <body className="min-h-full" suppressHydrationWarning>
         <ToastProvider>
-          <AuthProvider>{children}</AuthProvider>
+          <ThemeProvider>
+            <AuthProvider>{children}</AuthProvider>
+          </ThemeProvider>
         </ToastProvider>
       </body>
     </html>
