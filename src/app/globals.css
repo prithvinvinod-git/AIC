@@ -391,3 +391,64 @@ body {
     animation: none;
   }
 }
+
+/* ============================================================
+   MOBILE ONLY (<768px). Desktop is untouched: nothing below this
+   comment changes at or above 768px. See docs/mobile-sizing-plan.md.
+   ============================================================ */
+@media (max-width: 767.98px) {
+  /* Restore the standard Tailwind spacing scale on mobile. The @theme block
+     above overrides these to tiny px values (--spacing-4: 4px, etc.); on
+     small screens that makes controls unusable (10px buttons, 4px icons).
+     Desktop (>=768px) keeps the custom scale — nothing here leaks upward. */
+  :root {
+    --spacing-4: 1rem;
+    --spacing-5: 1.25rem;
+    --spacing-6: 1.5rem;
+    --spacing-8: 2rem;
+    --spacing-10: 2.5rem;
+    --spacing-12: 3rem;
+    --spacing-16: 4rem;
+    --spacing-20: 5rem;
+    --spacing-24: 6rem;
+    --spacing-28: 7rem;
+    --spacing-32: 8rem;
+    --spacing-40: 10rem;
+    --spacing-48: 12rem;
+    --spacing-80: 20rem;
+  }
+
+  .card {
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  .btn {
+    padding: 8px 16px;
+  }
+
+  .btn-sm {
+    padding: 6px 12px;
+  }
+
+  .btn-lg {
+    padding: 11px 20px;
+  }
+
+  .input {
+    padding: 9px 12px;
+  }
+
+  .label {
+    margin-bottom: 4px;
+  }
+
+  .tag {
+    padding: 2px 10px;
+    font-size: 11px;
+  }
+
+  .kpi {
+    padding: 14px 16px;
+  }
+}

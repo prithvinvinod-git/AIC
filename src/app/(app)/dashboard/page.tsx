@@ -41,7 +41,7 @@ export default function DashboardPage() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-display text-2xl font-semibold text-ink">
+          <h1 className="font-display text-2xl max-md:text-xl font-semibold text-ink">
             Hello, {claims?.name.split(" ")[0]}
           </h1>
           <p className="mt-1 text-sm text-slate">Track everything you have reported on campus.</p>
@@ -58,13 +58,13 @@ export default function DashboardPage() {
               <k.icon className="h-4 w-4" aria-hidden />
               <span className="text-xs font-medium uppercase tracking-wide">{k.label}</span>
             </div>
-            <p className="mt-2 font-display text-3xl font-semibold text-ink">{k.value}</p>
+            <p className="mt-2 font-display text-3xl max-md:text-2xl font-semibold text-ink">{k.value}</p>
           </div>
         ))}
       </div>
 
       <div className="flex items-center justify-between">
-        <h2 className="font-display text-lg font-semibold text-ink">My issues</h2>
+        <h2 className="font-display text-lg max-md:text-base font-semibold text-ink">My issues</h2>
         <button onClick={() => void reload()} className="btn btn-ghost btn-sm">
           Refresh
         </button>

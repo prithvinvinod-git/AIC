@@ -84,7 +84,7 @@ export default function AnalyticsPage() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-display text-2xl font-semibold text-ink">Analytics</h1>
+          <h1 className="font-display text-2xl max-md:text-xl font-semibold text-ink">Analytics</h1>
           <p className="mt-1 text-sm text-slate">Last {range} days of campus maintenance activity.</p>
         </div>
         <div className="flex gap-2">
@@ -104,7 +104,7 @@ export default function AnalyticsPage() {
         {kpis.map((k) => (
           <div key={k.label} className="kpi">
             <p className="text-xs font-medium uppercase tracking-wide text-slate">{k.label}</p>
-            <p className={`mt-2 font-display text-3xl font-semibold ${k.tone}`}>{k.value}</p>
+            <p className={`mt-2 font-display text-3xl max-md:text-2xl font-semibold ${k.tone}`}>{k.value}</p>
           </div>
         ))}
       </div>

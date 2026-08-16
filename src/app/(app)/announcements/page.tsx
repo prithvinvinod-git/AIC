@@ -121,9 +121,9 @@ export default function AnnouncementsPage() {
   }
 
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-8">
+    <div className="mx-auto flex max-w-4xl flex-col gap-8 max-md:gap-5">
       <div>
-        <h1 className="font-display text-2xl font-semibold text-ink">Announcements</h1>
+        <h1 className="font-display text-2xl max-md:text-xl font-semibold text-ink">Announcements</h1>
         <p className="mt-1 text-sm text-slate">
           Broadcast notices to everyone or to specific roles — they land in the recipients&apos; notification feeds.
         </p>
@@ -132,13 +132,13 @@ export default function AnnouncementsPage() {
       <section className="card flex flex-col gap-4">
         <div className="flex items-center gap-2">
           <Megaphone className="h-4 w-4 text-violet" aria-hidden />
-          <h2 className="font-display text-lg font-semibold text-ink">New announcement</h2>
+          <h2 className="font-display text-lg max-md:text-base font-semibold text-ink">New announcement</h2>
         </div>
         <AnnouncementForm submitLabel="Publish" busy={publishing} onSubmit={publish} />
       </section>
 
       <section className="flex flex-col gap-4">
-        <h2 className="font-display text-lg font-semibold text-ink">Live announcements</h2>
+        <h2 className="font-display text-lg max-md:text-base font-semibold text-ink">Live announcements</h2>
 
         {items === null ? (
           <Loading label="Loading announcements…" />
@@ -167,7 +167,7 @@ export default function AnnouncementsPage() {
                       <h3 className="font-display text-base font-semibold text-ink">{a.title}</h3>
                       <p className="mt-0.5 text-sm text-slate">{a.body}</p>
                     </div>
-                    <div className="shrink-0 text-right text-xs text-slate">
+                    <div className="shrink-0 text-right text-xs text-slate max-md:hidden">
                       <p>{formatDateTime(a.createdAt)}</p>
                       <p className="mt-1">
                         {a.author?.name}
@@ -213,7 +213,7 @@ export default function AnnouncementsPage() {
           <div className="animate-panel-in card relative max-h-[90vh] w-full max-w-lg overflow-y-auto">
             <div className="mb-4 flex items-start justify-between gap-3">
               <div>
-                <h2 className="font-display text-lg font-semibold text-ink">Edit announcement</h2>
+                <h2 className="font-display text-lg max-md:text-base font-semibold text-ink">Edit announcement</h2>
                 <p className="mt-1 text-sm text-slate">
                   Changes are saved to the announcement; only newly added audience members are notified.
                 </p>
@@ -250,7 +250,7 @@ export default function AnnouncementsPage() {
             aria-hidden
           />
           <div className="animate-panel-in card relative w-full max-w-md">
-            <h2 className="font-display text-lg font-semibold text-ink">Delete announcement?</h2>
+            <h2 className="font-display text-lg max-md:text-base font-semibold text-ink">Delete announcement?</h2>
             <p className="mt-1 text-sm text-slate">
               “{deleting.title}” will be removed. Notifications already delivered to users stay in their feeds.
             </p>

@@ -139,7 +139,7 @@ export default function NewIssuePage() {
   if (claims?.role === "reporter" && !claims.college) {
     return (
       <div className="w-full max-w-[820px]">
-        <h1 className="font-display text-2xl font-semibold text-ink">Report an issue</h1>
+        <h1 className="font-display text-2xl max-md:text-xl font-semibold text-ink">Report an issue</h1>
         <p className="mt-1 text-sm text-slate">Add your college and department to your profile first.</p>
         <div className="mt-6">
           <ProfileOnboarding required inline />
@@ -150,7 +150,7 @@ export default function NewIssuePage() {
 
   return (
     <div className="w-full max-w-[820px]">
-      <h1 className="font-display text-2xl font-semibold text-ink">Report an issue</h1>
+      <h1 className="font-display text-2xl max-md:text-xl font-semibold text-ink">Report an issue</h1>
       <p className="mt-1 text-sm text-slate">
         Describe what needs attention. AI will suggest a category and verify priority during validation.
       </p>

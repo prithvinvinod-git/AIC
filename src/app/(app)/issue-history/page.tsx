@@ -193,7 +193,7 @@ export default function IssueHistoryPage() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-4">
         <div>
-          <h1 className="font-display text-2xl font-semibold text-ink">Issue history</h1>
+          <h1 className="font-display text-2xl max-md:text-xl font-semibold text-ink">Issue history</h1>
           <p className="mt-1 text-sm text-slate">
             Every reported issue, searchable and filterable — {summary.total} shown
             {applied.statuses.length || applied.from || applied.to || applied.department || applied.category
@@ -205,7 +205,7 @@ export default function IssueHistoryPage() {
 
         <div className="flex flex-wrap gap-2">
           {kpis.map((k) => (
-            <div key={k.label} className="card flex flex-1 flex-col gap-0.5 px-4 py-3 sm:max-w-[150px]">
+            <div key={k.label} className="card flex flex-1 flex-col gap-0.5 px-4 py-3 max-md:px-3 max-md:py-2 sm:max-w-[150px]">
               <span className="text-xl font-semibold text-ink">{k.value}</span>
               <span className="text-xs text-slate">{k.label}</span>
             </div>
@@ -251,19 +251,19 @@ export default function IssueHistoryPage() {
           <table className="w-full min-w-[820px] text-left text-sm">
             <thead>
               <tr className="border-b border-silver text-xs uppercase tracking-wide text-slate">
-                <th className="px-4 py-3 font-medium">Issue</th>
-                <th className="px-4 py-3 font-medium">Department</th>
-                <th className="px-4 py-3 font-medium">Category</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium">Priority</th>
-                <th className="px-4 py-3 font-medium">Board</th>
-                <th className="px-4 py-3 font-medium">Reported</th>
+                <th className="px-4 py-3 max-md:px-3 max-md:py-2 font-medium">Issue</th>
+                <th className="px-4 py-3 max-md:px-3 max-md:py-2 font-medium">Department</th>
+                <th className="px-4 py-3 max-md:px-3 max-md:py-2 font-medium">Category</th>
+                <th className="px-4 py-3 max-md:px-3 max-md:py-2 font-medium">Status</th>
+                <th className="px-4 py-3 max-md:px-3 max-md:py-2 font-medium">Priority</th>
+                <th className="px-4 py-3 max-md:px-3 max-md:py-2 font-medium">Board</th>
+                <th className="px-4 py-3 max-md:px-3 max-md:py-2 font-medium">Reported</th>
               </tr>
             </thead>
             <tbody>
               {issues.map((i) => (
                 <tr key={i.id} className="border-b border-silver last:border-0 hover:bg-paper">
-                  <td className="max-w-[260px] px-4 py-3">
+                  <td className="max-w-[260px] px-4 py-3 max-md:px-3 max-md:py-2">
                     <Link href={`/issues/${i.id}`} className="group block">
                       <span className="text-xs text-slate">{i.issueNo}</span>
                       <span className="block truncate font-medium text-ink group-hover:text-primary">
@@ -271,15 +271,15 @@ export default function IssueHistoryPage() {
                       </span>
                     </Link>
                   </td>
-                  <td className="px-4 py-3 text-graphite">{i.department}</td>
-                  <td className="px-4 py-3 text-slate">{i.routing?.categoryName || "—"}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 max-md:px-3 max-md:py-2 text-graphite">{i.department}</td>
+                  <td className="px-4 py-3 max-md:px-3 max-md:py-2 text-slate">{i.routing?.categoryName || "—"}</td>
+                  <td className="px-4 py-3 max-md:px-3 max-md:py-2">
                     <StatusBadge status={i.status} />
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 max-md:px-3 max-md:py-2">
                     <PriorityBadge priority={i.priority} />
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 max-md:px-3 max-md:py-2">
                     {boardEligible(i) ? (
                       <div className="flex items-center gap-1.5">
                         <button
@@ -305,7 +305,7 @@ export default function IssueHistoryPage() {
                       <span className="text-xs text-stone">—</span>
                     )}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 max-md:px-3 max-md:py-2">
                     <span className="block text-graphite">{formatDate(i.createdAt)}</span>
                     <span className="block text-xs text-slate">{i.reporter?.name || "Unknown"}</span>
                   </td>
@@ -322,7 +322,7 @@ export default function IssueHistoryPage() {
           <div className="animate-panel-in card relative w-full max-w-lg">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h2 className="font-display text-lg font-semibold text-ink">Filters</h2>
+                <h2 className="font-display text-lg max-md:text-base font-semibold text-ink">Filters</h2>
                 <p className="mt-1 text-sm text-slate">Narrow the history below.</p>
               </div>
               <button type="button" className="btn btn-ghost btn-sm" onClick={() => setOpen(false)} aria-label="Close">

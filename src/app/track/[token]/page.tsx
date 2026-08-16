@@ -153,7 +153,7 @@ function TrackContent({ data }: { data: TrackData }) {
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="flex flex-col gap-4 lg:col-span-2">
           <div className="card">
-            <h2 className="font-display text-lg font-semibold text-ink">{issue.title}</h2>
+            <h2 className="font-display text-lg max-md:text-base font-semibold text-ink">{issue.title}</h2>
             <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-slate">
               {issue.description}
             </p>
@@ -171,7 +171,7 @@ function TrackContent({ data }: { data: TrackData }) {
             </div>
             {issue.images.length > 0 && (
               <div className="mt-4">
-                <IssuePhotos images={issue.images} size={148} />
+                <IssuePhotos images={issue.images} size={148} mobileSize={100} />
               </div>
             )}
           </div>
@@ -180,7 +180,7 @@ function TrackContent({ data }: { data: TrackData }) {
         <div className="flex flex-col gap-4">
           {(sla?.responseDeadline || sla?.resolutionDeadline) && (
             <div className="card">
-              <h2 className="font-display text-lg font-semibold text-ink">
+              <h2 className="font-display text-lg max-md:text-base font-semibold text-ink">
                 Service-level agreement
               </h2>
               <div className="mt-3 flex flex-col gap-3">
@@ -191,7 +191,7 @@ function TrackContent({ data }: { data: TrackData }) {
           )}
 
           <div className="card">
-            <h2 className="font-display text-lg font-semibold text-ink">Timeline</h2>
+            <h2 className="font-display text-lg max-md:text-base font-semibold text-ink">Timeline</h2>
             <ol className="mt-4 flex flex-col gap-0">
               {timeline.map((t, i) => (
                 <li key={i} className="relative flex gap-3 pb-5 last:pb-0">
@@ -223,7 +223,7 @@ function TrackContent({ data }: { data: TrackData }) {
 
           {issue.feedback && (
             <div className="card">
-              <h2 className="font-display text-lg font-semibold text-ink">Feedback</h2>
+              <h2 className="font-display text-lg max-md:text-base font-semibold text-ink">Feedback</h2>
               <div className="mt-2 flex items-center gap-1.5">
                 <FeedbackStars rating={issue.feedback.rating} size={20} />
               </div>
@@ -247,7 +247,7 @@ function SlaStat({ label, iso }: { label: string; iso: string }) {
       <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-slate">
         <Clock3 className="h-3.5 w-3.5" aria-hidden /> {label}
       </p>
-      <p className={`mt-1.5 font-display text-lg font-semibold ${toneClass}`}>{d.text}</p>
+      <p className={`mt-1.5 font-display text-lg max-md:text-base font-semibold ${toneClass}`}>{d.text}</p>
       <p className="mt-0.5 text-xs text-slate">{formatDateTime(iso)}</p>
     </div>
   );

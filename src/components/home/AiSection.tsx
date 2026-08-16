@@ -52,16 +52,16 @@ export default function AiSection() {
             Powered by AI
           </span>
         </div>
-        <h2 className="mt-3 font-display text-2xl font-semibold text-ink">What AI does for you</h2>
+        <h2 className="mt-3 font-display text-2xl max-md:text-xl font-semibold text-ink">What AI does for you</h2>
         <p className="mt-1 max-w-2xl text-sm text-slate">
           Every step that can be automated is — here is exactly what is implemented with AI in this
           app.
         </p>
 
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-8 grid gap-4 max-md:gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {AI_FEATURES.map((f) => (
             <div key={f.title} className="card">
-              <span className="flex h-14 w-14 items-center justify-center rounded-xl bg-paper text-graphite">
+              <span className="flex h-14 w-14 max-md:h-12 max-md:w-12 items-center justify-center rounded-xl bg-paper text-graphite">
                 <f.icon className="h-7 w-7" aria-hidden />
               </span>
               <h3 className="mt-4 font-display text-base font-medium text-graphite">{f.title}</h3>

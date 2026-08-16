@@ -26,7 +26,7 @@ export default function RecentIssuesPanel() {
   const canReport = claims ? portalRoles(claims).includes("reporter") : false;
 
   return (
-    <div className="card flex h-full min-h-[460px] flex-col overflow-hidden">
+    <div className="card flex h-full min-h-[460px] max-md:min-h-[380px] flex-col overflow-hidden">
       <div className="flex items-center justify-between px-5 py-4">
         <div>
           <h2 className="font-display text-base font-semibold text-ink">{feed.title}</h2>

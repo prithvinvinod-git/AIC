@@ -142,7 +142,7 @@ export function CommentsSection({ issueId, comments, onReload }: Props) {
   return (
     <div className="card">
       <div className="flex items-center justify-between gap-2">
-        <h2 className="font-display text-lg font-semibold text-ink">Comments</h2>
+        <h2 className="font-display text-lg max-md:text-base font-semibold text-ink">Comments</h2>
         <span className="text-xs text-slate">{items.length}</span>
       </div>
 
@@ -183,7 +183,7 @@ export function CommentsSection({ issueId, comments, onReload }: Props) {
           <div className="animate-panel-in card relative flex max-h-[80vh] w-full max-w-lg flex-col">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h2 className="font-display text-lg font-semibold text-ink">Comments</h2>
+                <h2 className="font-display text-lg max-md:text-base font-semibold text-ink">Comments</h2>
                 <p className="mt-1 text-sm text-slate">{items.length} total</p>
               </div>
               <button type="button" onClick={() => close()} disabled={busy} className="btn btn-ghost btn-sm" aria-label="Close">

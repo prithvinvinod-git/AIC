@@ -66,7 +66,7 @@ export default function PurchasePage() {
     return (
       <div className="flex flex-col gap-6">
         <div>
-          <h1 className="font-display text-2xl font-semibold text-ink">Purchases</h1>
+          <h1 className="font-display text-2xl max-md:text-xl font-semibold text-ink">Purchases</h1>
           <p className="mt-1 text-sm text-slate">Items flagged by maintenance teams for purchase approval.</p>
         </div>
         <BoardErrorState message={error} onRetry={() => void reload()} />
@@ -77,7 +77,7 @@ export default function PurchasePage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="font-display text-2xl font-semibold text-ink">Purchases</h1>
+        <h1 className="font-display text-2xl max-md:text-xl font-semibold text-ink">Purchases</h1>
         <p className="mt-1 text-sm text-slate">
           Approve or reject purchase requests. Approved items are marked resolved on the job automatically.
         </p>
@@ -117,7 +117,7 @@ export default function PurchasePage() {
                 <ul className="flex flex-col gap-2">
                   {flagged.map((r) =>
                     r.approvalStatus === "approved" ? (
-                      <li key={r.id} className="flex items-center justify-between gap-2 rounded-lg bg-success-soft px-3 py-2 text-sm">
+                      <li key={r.id} className="flex items-center justify-between gap-2 rounded-lg bg-success-soft px-3 py-2 text-sm max-md:flex-wrap">
                         <span className="text-success">
                           {r.item} ×{r.qty}
                         </span>
@@ -129,7 +129,7 @@ export default function PurchasePage() {
                     ) : r.approvalStatus === "rejected" ? (
                       <li
                         key={r.id}
-                        className="flex items-center justify-between gap-2 rounded-lg bg-danger-soft px-3 py-2 text-sm"
+                        className="flex items-center justify-between gap-2 rounded-lg bg-danger-soft px-3 py-2 text-sm max-md:flex-wrap"
                         title={r.rejectReason}
                       >
                         <span className="text-danger">
@@ -148,7 +148,7 @@ export default function PurchasePage() {
                             pending approval
                           </span>
                         </p>
-                        <div className="mt-2 flex items-center gap-2">
+                        <div className="mt-2 flex items-center gap-2 max-md:flex-wrap">
                           <label className="flex items-center gap-1 text-xs text-slate">
                             ₹
                             <input

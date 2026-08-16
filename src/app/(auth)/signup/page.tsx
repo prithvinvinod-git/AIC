@@ -184,7 +184,7 @@ export default function SignupPage() {
       </div>
 
       <div className="relative mt-4">
-        <button type="button" onClick={() => void submitGoogle()} disabled={busy} className="btn btn-secondary btn-lg w-full">
+        <button type="button" onClick={() => void submitGoogle()} disabled={busy} className="btn btn-secondary btn-lg w-full max-md:whitespace-normal">
           <GoogleIcon />
           Continue with Google
         </button>

@@ -96,7 +96,7 @@ export function WeeklyInsightsCard() {
         {kpis.map((k) => (
           <div key={k.label} className="kpi">
             <p className="text-xs font-medium uppercase tracking-wide text-slate">{k.label}</p>
-            <p className={`mt-2 font-display text-3xl font-semibold ${k.tone}`}>{k.value}</p>
+            <p className={`mt-2 font-display text-3xl max-md:text-2xl font-semibold ${k.tone}`}>{k.value}</p>
           </div>
         ))}
       </div>

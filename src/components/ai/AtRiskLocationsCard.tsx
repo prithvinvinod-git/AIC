@@ -23,7 +23,7 @@ export function AtRiskLocationsCard() {
   return (
     <div className="card">
       <div className="flex items-center justify-between gap-3">
-        <h3 className="font-display text-lg font-semibold text-ink">AI At-Risk Locations</h3>
+        <h3 className="font-display text-lg max-md:text-base font-semibold text-ink">AI At-Risk Locations</h3>
         <button
           onClick={load}
           disabled={busy}

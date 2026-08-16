@@ -25,7 +25,7 @@ export default function DashboardHero() {
           <span className="tag self-start border border-accent !bg-transparent text-accent!">
             {ROLE_LABEL[claims?.role ?? "reporter"]}
           </span>
-          <h1 className="mt-4 font-valve text-5xl leading-tight tracking-tight text-ink sm:text-6xl lg:text-7xl">
+          <h1 className="mt-4 font-valve text-5xl max-md:text-4xl leading-tight tracking-tight text-ink sm:text-6xl lg:text-7xl">
             Welcome back,
             <br />
             <span className="text-accent">{firstName}.</span>

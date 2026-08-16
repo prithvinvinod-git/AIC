@@ -8,7 +8,7 @@ export default function CompactIssueRow({ issue }: { issue: Issue }) {
   return (
     <Link
       href={`/issues/${issue.id}`}
-      className="group flex items-center gap-4 rounded-xl border border-silver px-5 py-3.5 transition-colors hover:border-stone hover:bg-paper"
+      className="group flex items-center gap-4 rounded-xl border border-silver px-5 py-3.5 max-md:px-3 max-md:py-2.5 transition-colors hover:border-stone hover:bg-paper"
     >
       <div className="min-w-0 flex-1">
         <p className="text-xs text-slate">{issue.issueNo}</p>
@@ -20,7 +20,9 @@ export default function CompactIssueRow({ issue }: { issue: Issue }) {
       </div>
       <div className="flex shrink-0 items-center gap-2">
         <StatusBadge status={issue.status} />
-        <PriorityBadge priority={issue.priority} />
+        <span className="max-[400px]:hidden">
+          <PriorityBadge priority={issue.priority} />
+        </span>
       </div>
     </Link>
   );

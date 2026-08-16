@@ -53,7 +53,7 @@ export default function AdminPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="font-display text-2xl font-semibold text-ink">Admin</h1>
+        <h1 className="font-display text-2xl max-md:text-xl font-semibold text-ink">Admin</h1>
         <p className="mt-1 text-sm text-slate">Manage users, teams, categories and SLA defaults.</p>
       </div>
 
@@ -223,23 +223,23 @@ function UsersTab() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-silver text-left text-xs uppercase tracking-wide text-slate">
-              <th className="px-4 py-3">User</th>
-              <th className="px-4 py-3">College</th>
-              <th className="px-4 py-3">Department</th>
-              <th className="px-4 py-3">Role</th>
-              <th className="px-4 py-3 text-right">Actions</th>
+              <th className="px-4 py-3 max-md:px-3 max-md:py-2">User</th>
+              <th className="px-4 py-3 max-md:px-3 max-md:py-2">College</th>
+              <th className="px-4 py-3 max-md:px-3 max-md:py-2">Department</th>
+              <th className="px-4 py-3 max-md:px-3 max-md:py-2">Role</th>
+              <th className="px-4 py-3 max-md:px-3 max-md:py-2 text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
             {visible.map((u) => (
               <tr key={u.uid} className="border-b border-silver last:border-0">
-                <td className="px-4 py-3">
+                <td className="px-4 py-3 max-md:px-3 max-md:py-2">
                   <p className="font-medium text-graphite">{u.name}</p>
                   <p className="text-xs text-slate">{u.email}</p>
                 </td>
-                <td className="px-4 py-3 text-slate">{u.college || "—"}</td>
-                <td className="px-4 py-3 text-slate">{u.department || "—"}</td>
-                <td className="px-4 py-3">
+                <td className="px-4 py-3 max-md:px-3 max-md:py-2 text-slate">{u.college || "—"}</td>
+                <td className="px-4 py-3 max-md:px-3 max-md:py-2 text-slate">{u.department || "—"}</td>
+                <td className="px-4 py-3 max-md:px-3 max-md:py-2">
                   <select
                     className="input w-auto py-1 text-xs"
                     value={u.role}
@@ -252,7 +252,7 @@ function UsersTab() {
                     ))}
                   </select>
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-4 py-3 max-md:px-3 max-md:py-2">
                   <div className="flex items-center justify-end gap-2">
                     <button
                       className={`btn btn-sm ${u.isActive ? "btn-ghost" : "btn-primary"}`}
@@ -416,19 +416,19 @@ function TeamsTab() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-silver text-left text-xs uppercase tracking-wide text-slate">
-              <th className="px-4 py-3">Team</th>
-              <th className="px-4 py-3">Category</th>
-              <th className="px-4 py-3">Members</th>
-              <th className="px-4 py-3">Status</th>
+              <th className="px-4 py-3 max-md:px-3 max-md:py-2">Team</th>
+              <th className="px-4 py-3 max-md:px-3 max-md:py-2">Category</th>
+              <th className="px-4 py-3 max-md:px-3 max-md:py-2">Members</th>
+              <th className="px-4 py-3 max-md:px-3 max-md:py-2">Status</th>
             </tr>
           </thead>
           <tbody>
             {teams.map((t) => (
               <tr key={t.id} className="border-b border-silver last:border-0">
-                <td className="px-4 py-3 font-medium text-graphite">{t.name}</td>
-                <td className="px-4 py-3 text-slate">{t.categoryId}</td>
-                <td className="px-4 py-3 text-slate">{(t.members || []).length} staff</td>
-                <td className="px-4 py-3">
+                <td className="px-4 py-3 max-md:px-3 max-md:py-2 font-medium text-graphite">{t.name}</td>
+                <td className="px-4 py-3 max-md:px-3 max-md:py-2 text-slate">{t.categoryId}</td>
+                <td className="px-4 py-3 max-md:px-3 max-md:py-2 text-slate">{(t.members || []).length} staff</td>
+                <td className="px-4 py-3 max-md:px-3 max-md:py-2">
                   <span className={`tag ${t.isActive ? "" : "bg-danger-soft text-danger"}`}>
                     {t.isActive ? "Active" : "Inactive"}
                   </span>
@@ -533,18 +533,18 @@ function CategoriesTab() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-silver text-left text-xs uppercase tracking-wide text-slate">
-              <th className="px-4 py-3">Name</th>
-              <th className="px-4 py-3">Category head</th>
-              <th className="px-4 py-3">Response SLA (h)</th>
-              <th className="px-4 py-3">Resolution SLA (h)</th>
-              <th className="px-4 py-3">Status</th>
+              <th className="px-4 py-3 max-md:px-3 max-md:py-2">Name</th>
+              <th className="px-4 py-3 max-md:px-3 max-md:py-2">Category head</th>
+              <th className="px-4 py-3 max-md:px-3 max-md:py-2">Response SLA (h)</th>
+              <th className="px-4 py-3 max-md:px-3 max-md:py-2">Resolution SLA (h)</th>
+              <th className="px-4 py-3 max-md:px-3 max-md:py-2">Status</th>
             </tr>
           </thead>
           <tbody>
             {categories.map((c) => (
               <tr key={c.id} className="border-b border-silver last:border-0">
-                <td className="px-4 py-3 font-medium text-graphite">{c.name}</td>
-                <td className="px-4 py-3">
+                <td className="px-4 py-3 max-md:px-3 max-md:py-2 font-medium text-graphite">{c.name}</td>
+                <td className="px-4 py-3 max-md:px-3 max-md:py-2">
                   <select
                     className="input w-auto py-1 text-xs"
                     value={c.headUid || ""}
@@ -558,9 +558,9 @@ function CategoriesTab() {
                     ))}
                   </select>
                 </td>
-                <td className="px-4 py-3 text-slate">{c.slaResponseHours}</td>
-                <td className="px-4 py-3 text-slate">{c.slaResolutionHours}</td>
-                <td className="px-4 py-3">
+                <td className="px-4 py-3 max-md:px-3 max-md:py-2 text-slate">{c.slaResponseHours}</td>
+                <td className="px-4 py-3 max-md:px-3 max-md:py-2 text-slate">{c.slaResolutionHours}</td>
+                <td className="px-4 py-3 max-md:px-3 max-md:py-2">
                   <span className={`tag ${c.isActive ? "" : "bg-danger-soft text-danger"}`}>
                     {c.isActive ? "Active" : "Inactive"}
                   </span>
@@ -636,7 +636,7 @@ function ConfigTab() {
 
   return (
     <form onSubmit={save} className="card flex max-w-xl flex-col gap-4">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 max-md:grid-cols-1 gap-4">
         <div>
           <label className="label" htmlFor="grace">
             Feedback grace (hours)

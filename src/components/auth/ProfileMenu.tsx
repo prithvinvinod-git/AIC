@@ -58,14 +58,14 @@ export default function ProfileMenu() {
             src={user.photoURL}
             alt=""
             referrerPolicy="no-referrer"
-            className="h-[38px] w-[38px] shrink-0 rounded-full object-cover ring-1 ring-black/5 sm:h-[38px] sm:w-[38px]"
+            className="h-[32px] w-[32px] shrink-0 rounded-full object-cover ring-1 ring-black/5 sm:h-[32px] sm:w-[32px]"
           />
         ) : (
-          <span className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full bg-ink text-sm font-semibold text-white sm:h-[38px] sm:w-[38px] sm:text-base">
+          <span className="flex h-[32px] w-[32px] shrink-0 items-center justify-center rounded-full bg-ink text-sm font-semibold text-white sm:h-[32px] sm:w-[32px] sm:text-base">
             {initials(claims.name)}
           </span>
         )}
-        <span className="ml-2.5 flex min-w-0 flex-col items-start leading-tight sm:ml-3">
+        <span className="ml-2.5 flex min-w-0 flex-col items-start leading-tight max-md:hidden sm:ml-3">
           <span className="max-w-[90px] truncate text-sm font-medium text-graphite sm:max-w-[120px]">
             {claims.name}
           </span>

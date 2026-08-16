@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthProvider";
 import ProfileOnboarding from "@/components/auth/ProfileOnboarding";
 import AppHeader from "@/components/AppHeader";
+import MobileNav from "@/components/MobileNav";
 import { Loading } from "@/components/ui/States";
 
 export default function AppShell({ children }: { children: ReactNode }) {
@@ -28,6 +29,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
       <AppHeader />
       <main className="mx-auto w-full max-w-page px-[20px] py-6 sm:px-6 sm:py-10">{children}</main>
       <ProfileOnboarding />
+      <MobileNav />
     </div>
   );
 }

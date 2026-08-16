@@ -65,6 +65,16 @@ export function portalRoles(claims: { role: Role; portal?: Role }): Role[] {
   return [claims.portal, claims.role];
 }
 
+/** Nav items an account can see, filtered by role + portal claims. Shared by
+ *  the inline navbar (AppHeader) and the floating mobile menu (MobileNav). */
+export function filterNavItems(claims: { role: Role; portal?: Role }): NavItem[] {
+  const accessRoles = portalRoles(claims);
+  return NAV_ITEMS.filter((i) => {
+    if (i.roles) return i.roles.some((r) => accessRoles.includes(r));
+    return i.role === "all" || (i.role ? accessRoles.includes(i.role) : false);
+  });
+}
+
 /** Landing page after login — prefers the `portal` claim, else the role.
  *  Falls back defensively for stale claims (e.g. removed roles). */
 export function homeFor(claims: { role: Role; portal?: Role }): string {

@@ -177,7 +177,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               }`}
             >
               <div
-                className={`flex w-full items-start gap-2.5 rounded-xl border border-silver bg-white px-3.5 py-[22px] shadow-card transition-shadow hover:shadow-[var(--shadow-card-hover)] ${
+                className={`flex w-full items-start gap-2.5 rounded-xl border border-silver bg-white px-3.5 py-[22px] max-md:py-4 shadow-card transition-shadow hover:shadow-[var(--shadow-card-hover)] ${
                   t.link ? "cursor-pointer" : ""
                 }`}
                 onClick={

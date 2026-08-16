@@ -32,15 +32,15 @@ export default function PrincipalPage() {
   };
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-8 max-md:gap-5">
       <div>
-        <h1 className="font-display text-2xl font-semibold text-ink">Principal approvals</h1>
+        <h1 className="font-display text-2xl max-md:text-xl font-semibold text-ink">Principal approvals</h1>
         <p className="mt-1 text-sm text-slate">Approve critical escalations and track approved work.</p>
       </div>
 
       <section className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <h2 className="font-display text-lg font-semibold text-ink">Awaiting your approval</h2>
+          <h2 className="font-display text-lg max-md:text-base font-semibold text-ink">Awaiting your approval</h2>
           <Link href="/analytics" className="link-blue text-sm">
             Open analytics
           </Link>
@@ -61,7 +61,7 @@ export default function PrincipalPage() {
       </section>
 
       <section className="flex flex-col gap-4">
-        <h2 className="font-display text-lg font-semibold text-ink">Approved & in progress</h2>
+        <h2 className="font-display text-lg max-md:text-base font-semibold text-ink">Approved & in progress</h2>
         {approvedError ? (
           <BoardErrorState message={approvedError} onRetry={() => void reloadApproved()} />
         ) : approved.length === 0 ? (

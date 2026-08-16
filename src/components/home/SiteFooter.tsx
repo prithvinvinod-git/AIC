@@ -27,7 +27,7 @@ export default function SiteFooter() {
   return (
     <footer id="footer" className="scroll-mt-24 border-t border-silver bg-white">
       <div className="mx-auto w-full max-w-page px-[20px] py-12 sm:px-6">
-        <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
+        <div className="grid gap-10 max-md:gap-6 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>
             <div className="flex items-center gap-2 font-brand text-lg leading-none text-ink">
               {/* eslint-disable-next-line @next/next/no-img-element */}

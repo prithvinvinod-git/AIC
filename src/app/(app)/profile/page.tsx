@@ -92,7 +92,7 @@ export default function ProfilePage() {
         <ArrowLeft className="h-3.5 w-3.5" aria-hidden /> Back
       </button>
       <div>
-        <h1 className="font-display text-2xl font-semibold text-ink">Profile</h1>
+        <h1 className="font-display text-2xl max-md:text-xl font-semibold text-ink">Profile</h1>
         <p className="mt-1 text-sm text-slate">Edit your details. Changes apply to all portals instantly.</p>
       </div>
 
@@ -104,10 +104,10 @@ export default function ProfilePage() {
               src={user.photoURL}
               alt=""
               referrerPolicy="no-referrer"
-              className="h-16 w-16 rounded-full object-cover"
+              className="h-16 w-16 max-md:h-12 max-md:w-12 rounded-full object-cover"
             />
           ) : (
-            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-ink text-xl font-semibold text-white">
+            <span className="flex h-16 w-16 max-md:h-12 max-md:w-12 items-center justify-center rounded-full bg-ink text-xl font-semibold text-white">
               {initials(claims.name)}
             </span>
           )}

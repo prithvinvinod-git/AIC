@@ -23,7 +23,7 @@ export function RootCauseAnalysisCard() {
   return (
     <div className="card">
       <div className="flex items-center justify-between gap-3">
-        <h3 className="font-display text-lg font-semibold text-ink">AI Root-Cause Analysis</h3>
+        <h3 className="font-display text-lg max-md:text-base font-semibold text-ink">AI Root-Cause Analysis</h3>
         <button
           onClick={analyze}
           disabled={busy}

@@ -113,9 +113,9 @@ export default function ValidatePage() {
   const blocked = issues.filter((i) => i.status === "PENDING");
 
   return (
-    <div className="flex flex-col gap-10">
+    <div className="flex flex-col gap-10 max-md:gap-6">
       <div>
-        <h1 className="font-display text-2xl font-semibold text-ink">Validate & manage</h1>
+        <h1 className="font-display text-2xl max-md:text-xl font-semibold text-ink">Validate & manage</h1>
         <p className="mt-1 text-sm text-slate">
           {claims.department} · Review reports, route approved work, and verify completed jobs.
         </p>
@@ -128,7 +128,7 @@ export default function ValidatePage() {
       ) : (
         <>
           <section className="flex flex-col gap-4">
-            <h2 className="font-display text-lg font-semibold text-ink">
+            <h2 className="font-display text-lg max-md:text-base font-semibold text-ink">
               Validate queue <span className="text-sm font-normal text-slate">({validateQueue.length})</span>
             </h2>
         {validateQueue.length === 0 ? (
@@ -181,7 +181,7 @@ export default function ValidatePage() {
       </section>
 
       <section className="flex flex-col gap-4">
-        <h2 className="font-display text-lg font-semibold text-ink">
+        <h2 className="font-display text-lg max-md:text-base font-semibold text-ink">
           Active jobs <span className="text-sm font-normal text-slate">({active.length})</span>
         </h2>
         {active.length === 0 ? (
@@ -196,7 +196,7 @@ export default function ValidatePage() {
       </section>
 
       <section className="flex flex-col gap-4">
-        <h2 className="font-display text-lg font-semibold text-ink">
+        <h2 className="font-display text-lg max-md:text-base font-semibold text-ink">
           Route queue <span className="text-sm font-normal text-slate">({assignQueue.length})</span>
         </h2>
         {assignQueue.length === 0 ? (
@@ -211,7 +211,7 @@ export default function ValidatePage() {
       </section>
 
       <section className="flex flex-col gap-4">
-        <h2 className="font-display text-lg font-semibold text-ink">
+        <h2 className="font-display text-lg max-md:text-base font-semibold text-ink">
           Final verification <span className="text-sm font-normal text-slate">({verifyQueue.length})</span>
         </h2>
         {verifyQueue.length === 0 ? (
@@ -226,7 +226,7 @@ export default function ValidatePage() {
       </section>
 
       <section className="flex flex-col gap-4">
-        <h2 className="font-display text-lg font-semibold text-ink">
+        <h2 className="font-display text-lg max-md:text-base font-semibold text-ink">
           Blocked <span className="text-sm font-normal text-slate">({blocked.length})</span>
         </h2>
         {blocked.length === 0 ? (

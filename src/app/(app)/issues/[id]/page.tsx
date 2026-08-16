@@ -74,7 +74,7 @@ export default function IssueDetailPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-slate">{issue.issueNo}</p>
-          <h1 className="mt-1 font-display text-2xl font-semibold leading-tight text-ink">{issue.title}</h1>
+          <h1 className="mt-1 font-display text-2xl max-md:text-xl font-semibold leading-tight text-ink">{issue.title}</h1>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <StatusBadge status={issue.status} />
             <PriorityBadge priority={issue.priority} />
@@ -99,7 +99,7 @@ export default function IssueDetailPage() {
               <Clock3 className="h-3.5 w-3.5" aria-hidden /> Resolution SLA
             </p>
             <p
-              className={`mt-1.5 font-display text-lg font-semibold ${
+              className={`mt-1.5 font-display text-lg max-md:text-base font-semibold ${
                 slaDeadline.tone === "over" ? "text-danger" : slaDeadline.tone === "warn" ? "text-warning" : "text-ink"
               }`}
             >
@@ -132,7 +132,7 @@ export default function IssueDetailPage() {
         <div className="flex flex-col gap-4 lg:col-span-2">
           <div className="card">
             <div className="flex items-start justify-between gap-3">
-              <h2 className="font-display text-lg font-semibold text-ink">Description</h2>
+              <h2 className="font-display text-lg max-md:text-base font-semibold text-ink">Description</h2>
               {issue.feedback?.rating ? (
                 <FeedbackStars rating={issue.feedback.rating} size={20} />
               ) : null}
@@ -152,7 +152,7 @@ export default function IssueDetailPage() {
             </div>
             {issue.images.length > 0 && (
               <div className="mt-4">
-                <IssuePhotos images={issue.images} size={148} />
+                <IssuePhotos images={issue.images} size={148} mobileSize={100} />
               </div>
             )}
           </div>
@@ -178,7 +178,7 @@ export default function IssueDetailPage() {
           )}
 
           <div className="card">
-            <h2 className="font-display text-lg font-semibold text-ink">Timeline</h2>
+            <h2 className="font-display text-lg max-md:text-base font-semibold text-ink">Timeline</h2>
             <ol className="mt-4 flex flex-col gap-0">
               {timeline?.map((t, i) => (
                 <li key={i} className="relative flex gap-3 pb-5 last:pb-0">
@@ -208,7 +208,7 @@ export default function IssueDetailPage() {
 
           {issue.rejection && (
             <div className="card">
-              <h2 className="font-display text-lg font-semibold text-ink">Rejected</h2>
+              <h2 className="font-display text-lg max-md:text-base font-semibold text-ink">Rejected</h2>
               <p className="mt-2 text-sm text-slate">{issue.rejection.reason}</p>
               <p className="mt-1 text-xs text-slate">by {issue.rejection.by?.name} · {formatDateTime(issue.rejection.at)}</p>
             </div>
@@ -216,7 +216,7 @@ export default function IssueDetailPage() {
 
           {issue.completion && (
             <div className="card">
-              <h2 className="font-display text-lg font-semibold text-ink">Completion</h2>
+              <h2 className="font-display text-lg max-md:text-base font-semibold text-ink">Completion</h2>
               <p className="mt-2 whitespace-pre-wrap text-sm text-slate">{issue.completion.report}</p>
               <p className="mt-1 text-xs text-slate">{formatDateTime(issue.completion.completedAt)}</p>
             </div>

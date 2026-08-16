@@ -39,7 +39,7 @@ export default function DispatchPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="font-display text-2xl font-semibold text-ink">
+        <h1 className="font-display text-2xl max-md:text-xl font-semibold text-ink">
           {isMaintHead ? "Dispatch" : "Assign jobs"}
         </h1>
         <p className="mt-1 text-sm text-slate">

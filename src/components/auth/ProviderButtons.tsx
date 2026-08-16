@@ -37,11 +37,11 @@ export function ProviderChooser({
 }) {
   return (
     <div className="mt-6 flex flex-col gap-3">
-      <button type="button" onClick={onGoogle} disabled={busy} className="btn btn-secondary btn-lg">
+      <button type="button" onClick={onGoogle} disabled={busy} className="btn btn-secondary btn-lg max-md:whitespace-normal">
         <GoogleIcon />
         Continue with Google
       </button>
-      <button type="button" onClick={onEmail} disabled={busy} className="btn btn-secondary btn-lg">
+      <button type="button" onClick={onEmail} disabled={busy} className="btn btn-secondary btn-lg max-md:whitespace-normal">
         <Mail className="h-3.5 w-3.5 shrink-0 text-slate" aria-hidden />
         Continue with email
       </button>

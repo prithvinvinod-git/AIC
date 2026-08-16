@@ -6,7 +6,7 @@ const DotGrid = dynamic(() => import("@/components/home/DotGrid"), { ssr: false 
 /** Split hero — fills the first viewport; "How it works" follows below the fold. */
 export default function PublicHero() {
   return (
-    <section className="relative flex min-h-[100svh] w-full items-center overflow-hidden px-[20px] pb-14 pt-[112px] sm:px-6">
+    <section className="relative flex min-h-[100svh] w-full items-center overflow-hidden px-[20px] pb-14 max-md:pb-10 pt-[112px] max-md:pt-[96px] sm:px-6">
       <div className="absolute inset-0 -z-10">
         <DotGrid
           dotSize={8}
@@ -22,7 +22,7 @@ export default function PublicHero() {
       </div>
       <div className="mx-auto grid w-full max-w-page items-center gap-10 lg:-mt-[200px] lg:grid-cols-[1.1fr_0.9fr]">
         <div>
-          <h1 className="font-valve text-5xl leading-tight tracking-tight text-ink sm:text-7xl">
+          <h1 className="font-valve text-5xl max-md:text-4xl leading-tight tracking-tight text-ink sm:text-7xl">
             Report it once.
             <br />
             Watch it close.

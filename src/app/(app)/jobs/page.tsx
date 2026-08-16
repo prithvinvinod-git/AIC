@@ -26,7 +26,7 @@ export default function JobsPage() {
     return (
       <div className="flex flex-col gap-6">
         <div>
-          <h1 className="font-display text-2xl font-semibold text-ink">Jobs</h1>
+          <h1 className="font-display text-2xl max-md:text-xl font-semibold text-ink">Jobs</h1>
           <p className="mt-1 text-sm text-slate">Your team&apos;s assignments across the campus.</p>
         </div>
         <BoardErrorState message={error} onRetry={() => void reload()} />
@@ -41,7 +41,7 @@ export default function JobsPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="font-display text-2xl font-semibold text-ink">Jobs</h1>
+        <h1 className="font-display text-2xl max-md:text-xl font-semibold text-ink">Jobs</h1>
         <p className="mt-1 text-sm text-slate">Your team&apos;s assignments across the campus.</p>
       </div>
 

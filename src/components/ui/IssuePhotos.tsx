@@ -17,16 +17,21 @@ export function IssuePhotos({
   size = 72,
   limit = 4,
   placeholder = false,
+  mobileSize,
 }: {
   images: ImageRef[];
   size?: number;
   limit?: number;
   placeholder?: boolean;
+  mobileSize?: number;
 }) {
   const [openIdx, setOpenIdx] = useState<number | null>(null);
   const lightboxRef = useRef<HTMLDivElement | null>(null);
   const visible = images.slice(0, limit);
   const extra = images.length - visible.length;
+
+  const mobileClass =
+    mobileSize === 100 ? "max-md:h-[100px]! max-md:w-[100px]!" : "max-md:h-14! max-md:w-14!";
 
   useFocusTrap(lightboxRef, openIdx !== null);
 
@@ -55,7 +60,7 @@ export function IssuePhotos({
       <div className="flex flex-wrap gap-2">
         {images.length === 0 ? (
           <div
-            className="flex items-center justify-center rounded-xl border border-dashed border-silver bg-paper text-slate"
+            className={`flex items-center justify-center rounded-xl border border-dashed border-silver bg-paper text-slate ${mobileClass}`}
             style={{ width: size, height: size }}
             role="img"
             aria-label="No image"
@@ -69,7 +74,7 @@ export function IssuePhotos({
               key={i}
               type="button"
               onClick={() => setOpenIdx(i)}
-              className="overflow-hidden rounded-xl border border-silver transition-opacity hover:opacity-80"
+              className={`overflow-hidden rounded-xl border border-silver transition-opacity hover:opacity-80 ${mobileClass}`}
               style={{ width: size, height: size }}
               aria-label={`View photo ${i + 1}`}
             >
@@ -82,7 +87,7 @@ export function IssuePhotos({
           <button
             type="button"
             onClick={() => setOpenIdx(limit)}
-            className="flex items-center justify-center rounded-xl border border-silver bg-paper text-sm font-medium text-slate transition-colors hover:bg-silver"
+            className={`flex items-center justify-center rounded-xl border border-silver bg-paper text-sm font-medium text-slate transition-colors hover:bg-silver ${mobileClass}`}
             style={{ width: size, height: size }}
           >
             +{extra}
@@ -137,7 +142,7 @@ export function IssuePhotos({
           <button
             type="button"
             onClick={() => setOpenIdx(null)}
-            className="absolute right-5 top-5 flex h-[50px] w-[50px] items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
+            className="absolute right-5 top-5 flex h-[50px] w-[50px] max-md:h-10 max-md:w-10 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
             aria-label="Close viewer"
           >
             <X className="h-7 w-7" aria-hidden />

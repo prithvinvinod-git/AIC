@@ -121,7 +121,7 @@ export default function SettingsPage() {
         <ArrowLeft className="h-3.5 w-3.5" aria-hidden /> Back
       </button>
       <div>
-        <h1 className="font-display text-2xl font-semibold text-ink">Settings</h1>
+        <h1 className="font-display text-2xl max-md:text-xl font-semibold text-ink">Settings</h1>
         <p className="mt-1 text-sm text-slate">Manage your account and notification preferences.</p>
       </div>
 

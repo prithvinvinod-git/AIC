@@ -7,7 +7,7 @@ export default function NotFound() {
 
       <div>
         <p className="font-valve text-7xl leading-none tracking-tight text-accent sm:text-8xl">404</p>
-        <h1 className="mt-4 font-display text-2xl font-semibold text-ink sm:text-3xl">
+        <h1 className="mt-4 font-display text-2xl max-md:text-xl font-semibold text-ink sm:text-3xl">
           This page got lost on campus.
         </h1>
         <p className="mx-auto mt-2 max-w-md text-sm text-slate">
