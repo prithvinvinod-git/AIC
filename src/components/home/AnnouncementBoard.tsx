@@ -7,6 +7,7 @@ import { api, ApiError } from "@/lib/clientApi";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { portalRoles } from "@/lib/nav";
 import { ROLE_LABEL } from "@/lib/constants";
+import { EASTER_EGG_META } from "@/lib/types";
 import { timeAgo } from "@/lib/format";
 import { EmptyState, Loading } from "@/components/ui/States";
 import { AnnouncementModal } from "@/components/announcements/AnnouncementModal";
@@ -95,7 +96,19 @@ export default function AnnouncementBoard() {
             >
               <div className="flex items-center justify-between gap-3">
                 <p className="font-medium text-ink">{a.title}</p>
-                <span className="shrink-0 text-xs text-slate">{timeAgo(a.createdAt)}</span>
+                <div className="flex items-center gap-2">
+                  {a.easterEgg && EASTER_EGG_META[a.easterEgg] && (
+                    <Link
+                      href={`/${a.easterEgg}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent transition-transform hover:scale-110"
+                      title={EASTER_EGG_META[a.easterEgg].label}
+                    >
+                      {(() => { const Icon = EASTER_EGG_META[a.easterEgg!].Icon; return <Icon className="h-3.5 w-3.5" aria-hidden />; })()}
+                    </Link>
+                  )}
+                  <span className="shrink-0 text-xs text-slate">{timeAgo(a.createdAt)}</span>
+                </div>
               </div>
               <p className="mt-1 line-clamp-3 text-sm leading-relaxed text-slate">{a.body}</p>
               <p className="mt-2 text-xs text-stone">

@@ -104,7 +104,7 @@ export function IssuePhotos({
           ref={lightboxRef}
         >
           <div
-            className="animate-overlay-in absolute inset-0 bg-ink/70 backdrop-blur-sm"
+            className="animate-overlay-in absolute inset-0 bg-black/70 backdrop-blur-sm dark:bg-black/70"
             onClick={() => setOpenIdx(null)}
             aria-hidden
           />

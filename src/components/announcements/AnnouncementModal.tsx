@@ -40,7 +40,7 @@ export function AnnouncementModal({ announcement, onClose }: { announcement: Ann
       aria-label={announcement.title}
       ref={dialogRef}
     >
-      <div className="animate-overlay-in absolute inset-0 bg-ink/40 backdrop-blur-sm" onClick={onClose} aria-hidden />
+      <div className="animate-overlay-in absolute inset-0 bg-black/40 backdrop-blur-sm dark:bg-black/60" onClick={onClose} aria-hidden />
       <div className="animate-panel-in card relative flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden p-0">
         <div className="flex items-start justify-between gap-3 border-b border-silver px-5 py-4">
           <div className="min-w-0">

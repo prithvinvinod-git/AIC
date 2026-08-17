@@ -41,7 +41,7 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
       ref={dialogRef}
     >
       <div
-        className="animate-overlay-in absolute inset-0 bg-ink/40 backdrop-blur-sm"
+        className="animate-overlay-in absolute inset-0 bg-black/40 backdrop-blur-sm dark:bg-black/60"
         onClick={onClose}
         aria-hidden
       />

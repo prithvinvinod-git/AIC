@@ -179,7 +179,7 @@ export function CommentsSection({ issueId, comments, onReload }: Props) {
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" ref={dialogRef}>
-          <div className="animate-overlay-in absolute inset-0 bg-ink/40 backdrop-blur-sm" onClick={() => close()} aria-hidden />
+          <div className="animate-overlay-in absolute inset-0 bg-black/40 backdrop-blur-sm dark:bg-black/60" onClick={() => close()} aria-hidden />
           <div className="animate-panel-in card relative flex max-h-[80vh] w-full max-w-lg flex-col">
             <div className="flex items-start justify-between gap-3">
               <div>

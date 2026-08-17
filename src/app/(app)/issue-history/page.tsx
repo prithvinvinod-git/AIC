@@ -318,7 +318,7 @@ export default function IssueHistoryPage() {
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Filters" ref={dialogRef}>
-          <div className="animate-overlay-in absolute inset-0 bg-ink/40 backdrop-blur-sm" onClick={() => setOpen(false)} aria-hidden />
+          <div className="animate-overlay-in absolute inset-0 bg-black/40 backdrop-blur-sm dark:bg-black/60" onClick={() => setOpen(false)} aria-hidden />
           <div className="animate-panel-in card relative w-full max-w-lg">
             <div className="flex items-start justify-between gap-3">
               <div>

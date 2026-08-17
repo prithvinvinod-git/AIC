@@ -4,7 +4,7 @@ import { requireAuth } from "@/lib/auth";
 import { handleError, json, parseBody } from "@/lib/api";
 import { adminDb } from "@/lib/firebaseAdmin";
 import { ANNOUNCER_ROLES, publishAnnouncement } from "@/lib/announcements";
-import { ROLES, type Announcement } from "@/lib/types";
+import { ROLES, EASTER_EGG_SLUGS, type Announcement } from "@/lib/types";
 
 const audienceSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("all") }),
@@ -19,6 +19,7 @@ const bodySchema = z.object({
     .max(2, "You can attach at most 2 images.")
     .default([]),
   audience: audienceSchema,
+  easterEgg: z.enum([...EASTER_EGG_SLUGS] as const).nullable().optional(),
 });
 
 /**

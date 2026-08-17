@@ -1,3 +1,6 @@
+import type { LucideIcon } from "lucide-react";
+import { Flag, Sparkles, Flower2, TreePine, Moon, Paintbrush, Egg, Leaf, Wrench, GraduationCap, Bot } from "lucide-react";
+
 export type Role =
   | "reporter"
   | "validator"
@@ -254,6 +257,35 @@ export interface Notification {
   at: string;
 }
 
+export type EasterEggEvent =
+  | "republic-day"
+  | "independence-day"
+  | "onam"
+  | "christmas"
+  | "eid"
+  | "holi"
+  | "easter"
+  | "environment-day"
+  | "engineers-day"
+  | "freshers-day"
+  | "tech-fest";
+
+export const EASTER_EGG_META: Record<EasterEggEvent, { label: string; Icon: LucideIcon; description: string }> = {
+  "republic-day":       { label: "Republic Day",       Icon: Flag,          description: "Celebrating the constitution and spirit of the nation" },
+  "independence-day":   { label: "Independence Day",   Icon: Sparkles,      description: "Honoring the freedom and resilience of the country" },
+  "onam":               { label: "Onam",               Icon: Flower2,       description: "The harvest festival of flowers, food and folklore" },
+  "christmas":          { label: "Christmas",          Icon: TreePine,      description: "A season of joy, giving and togetherness" },
+  "eid":                { label: "Eid",                Icon: Moon,          description: "Celebrating faith, community and gratitude" },
+  "holi":               { label: "Holi",               Icon: Paintbrush,    description: "The festival of colors, love and new beginnings" },
+  "easter":             { label: "Easter",             Icon: Egg,           description: "A celebration of renewal and hope" },
+  "environment-day":    { label: "Environment Day",    Icon: Leaf,          description: "Reflecting on our planet and our duty to protect it" },
+  "engineers-day":      { label: "Engineers Day",      Icon: Wrench,        description: "Celebrating the builders, innovators and problem-solvers" },
+  "freshers-day":       { label: "Freshers Day",       Icon: GraduationCap, description: "Welcoming the newest members of our campus community" },
+  "tech-fest":          { label: "Tech Fest",          Icon: Bot,           description: "Where code meets creativity and ideas take flight" },
+};
+
+export const EASTER_EGG_SLUGS = Object.keys(EASTER_EGG_META) as EasterEggEvent[];
+
 /** Who an announcement is broadcast to: everyone, or only users with given roles. */
 export type AnnouncementAudience =
   | { kind: "all" }
@@ -267,6 +299,7 @@ export interface Announcement {
   images: string[];
   audience: AnnouncementAudience;
   author: { uid: string; name: string; role: Role };
+  easterEgg?: EasterEggEvent | null;
   createdAt: string;
   updatedAt?: string;
 }

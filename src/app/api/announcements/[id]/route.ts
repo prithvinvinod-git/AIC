@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireAuth } from "@/lib/auth";
 import { handleError, json, parseBody } from "@/lib/api";
 import { ANNOUNCER_ROLES, deleteAnnouncement, updateAnnouncement } from "@/lib/announcements";
-import { ROLES } from "@/lib/types";
+import { ROLES, EASTER_EGG_SLUGS } from "@/lib/types";
 
 const audienceSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("all") }),
@@ -18,6 +18,7 @@ const patchSchema = z.object({
     .max(2, "You can attach at most 2 images.")
     .optional(),
   audience: audienceSchema.optional(),
+  easterEgg: z.enum([...EASTER_EGG_SLUGS] as const).nullable().optional(),
 });
 
 async function gate(req: NextRequest) {

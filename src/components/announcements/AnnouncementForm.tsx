@@ -6,7 +6,8 @@ import { api } from "@/lib/clientApi";
 import { useToast } from "@/components/ui/Toast";
 import { fileToCompressedBase64 } from "@/lib/upload";
 import { ROLE_LABEL } from "@/lib/constants";
-import { ROLES, type AnnouncementAudience, type Role } from "@/lib/types";
+import { ROLES, type AnnouncementAudience, type EasterEggEvent, type Role } from "@/lib/types";
+import EventPicker from "./EventPicker";
 
 const MAX_IMAGES = 2;
 
@@ -16,6 +17,7 @@ export interface AnnouncementFormValue {
   /** `/api/images/{id}` URLs; up to 2, first is the thumbnail. */
   images: string[];
   audience: AnnouncementAudience;
+  easterEgg?: EasterEggEvent | null;
 }
 
 interface Props {
@@ -48,6 +50,7 @@ export default function AnnouncementForm({ initial, submitLabel, busy, onSubmit 
   const [roles, setRoles] = useState<Role[]>(
     initial?.audience.kind === "roles" ? initial.audience.roles : []
   );
+  const [easterEgg, setEasterEgg] = useState<EasterEggEvent | null>(initial?.easterEgg ?? null);
 
   const applyPreset = (key: "all" | "leadership" | "maintenance" | "custom") => {
     if (key === "all") {
@@ -111,6 +114,7 @@ export default function AnnouncementForm({ initial, submitLabel, busy, onSubmit 
       body,
       images: images.filter((im) => im.url).map((im) => im.url),
       audience: kind === "all" ? { kind: "all" } : { kind: "roles", roles },
+      easterEgg: easterEgg || undefined,
     };
     void onSubmit(value);
   };
@@ -247,6 +251,12 @@ export default function AnnouncementForm({ initial, submitLabel, busy, onSubmit 
           })}
         </div>
       )}
+
+      <div>
+        <p className="label">Easter egg (optional)</p>
+        <p className="text-xs text-slate mb-2">Attach a festive event to this announcement. Users will see a special sticker they can click.</p>
+        <EventPicker value={easterEgg} onChange={setEasterEgg} />
+      </div>
 
       <div className="flex items-center justify-between gap-3">
         <button type="submit" disabled={!ready} className="btn btn-primary btn-sm">

@@ -2,7 +2,7 @@ import "server-only";
 
 import { adminDb } from "./firebaseAdmin";
 import { notifyMany } from "./notifications";
-import type { Announcement, AnnouncementAudience, Role } from "./types";
+import type { Announcement, AnnouncementAudience, EasterEggEvent, Role } from "./types";
 
 /** Roles allowed to publish and manage campus-wide announcements. */
 export const ANNOUNCER_ROLES: Role[] = ["admin", "principal", "hod"];
@@ -13,6 +13,7 @@ export interface AnnouncementInput {
   /** `/api/images/{id}` URLs; up to 2, first is the card thumbnail. */
   images?: string[];
   audience: AnnouncementAudience;
+  easterEgg?: EasterEggEvent | null;
 }
 
 export interface AnnouncementAuthor {
@@ -52,6 +53,7 @@ export async function publishAnnouncement(
     images: input.images ?? [],
     audience: input.audience,
     author,
+    easterEgg: input.easterEgg ?? null,
     createdAt: new Date().toISOString(),
   };
 
@@ -74,7 +76,7 @@ export async function publishAnnouncement(
  */
 export async function updateAnnouncement(
   id: string,
-  patch: { title?: string; body?: string; images?: string[]; audience?: AnnouncementAudience }
+  patch: { title?: string; body?: string; images?: string[]; audience?: AnnouncementAudience; easterEgg?: EasterEggEvent | null }
 ): Promise<Announcement> {
   const ref = adminDb().collection("announcements").doc(id);
   const snap = await ref.get();
@@ -91,6 +93,7 @@ export async function updateAnnouncement(
     images: patch.images ?? existing.images ?? [],
     audience: patch.audience ?? existing.audience,
     author: existing.author,
+    easterEgg: patch.easterEgg !== undefined ? patch.easterEgg : (existing.easterEgg ?? null),
     createdAt: existing.createdAt,
     updatedAt: new Date().toISOString(),
   };

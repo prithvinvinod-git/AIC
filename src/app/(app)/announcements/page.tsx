@@ -4,12 +4,14 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Megaphone, Pencil, ShieldAlert, Trash2 } from "lucide-react";
+import Link from "next/link";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { api } from "@/lib/clientApi";
 import { useToast } from "@/components/ui/Toast";
 import { Loading, EmptyState } from "@/components/ui/States";
 import AnnouncementForm, { type AnnouncementFormValue } from "@/components/announcements/AnnouncementForm";
 import { ROLE_LABEL } from "@/lib/constants";
+import { EASTER_EGG_META } from "@/lib/types";
 import { formatDateTime } from "@/lib/format";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import type { Announcement, AnnouncementAudience, Role } from "@/lib/types";
@@ -160,7 +162,16 @@ export default function AnnouncementsPage() {
         ) : (
           <div className="flex flex-col gap-4">
             {items.map((a) => (
-              <article key={a.id} className="card overflow-hidden p-0">
+              <article key={a.id} className="card relative overflow-hidden p-0">
+                {a.easterEgg && EASTER_EGG_META[a.easterEgg] && (
+                  <Link
+                    href={`/${a.easterEgg}`}
+                    className="absolute right-0 top-0 z-10 flex items-center gap-1 rounded-bl-xl bg-accent px-3 py-1.5 text-xs font-bold text-white shadow-md transition-all hover:bg-accent-strong hover:scale-105"
+                  >
+                    <span>{(() => { const Icon = EASTER_EGG_META[a.easterEgg!].Icon; return <Icon className="h-4 w-4" aria-hidden />; })()}</span>
+                    <span className="max-md:hidden">{EASTER_EGG_META[a.easterEgg].label}</span>
+                  </Link>
+                )}
                 <div className="flex flex-col gap-3 p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
@@ -206,7 +217,7 @@ export default function AnnouncementsPage() {
       {editing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" ref={editDialogRef}>
           <div
-            className="animate-overlay-in absolute inset-0 bg-ink/40 backdrop-blur-sm"
+            className="animate-overlay-in absolute inset-0 bg-black/40 backdrop-blur-sm dark:bg-black/60"
             onClick={() => !savingEdit && setEditing(null)}
             aria-hidden
           />
@@ -233,6 +244,7 @@ export default function AnnouncementsPage() {
                 body: editing.body,
                 images: editing.images ?? [],
                 audience: editing.audience,
+                easterEgg: editing.easterEgg,
               }}
               submitLabel="Save changes"
               busy={savingEdit}
@@ -245,7 +257,7 @@ export default function AnnouncementsPage() {
       {deleting && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="alertdialog" aria-modal="true" aria-label="Delete announcement" ref={deleteDialogRef}>
           <div
-            className="animate-overlay-in absolute inset-0 bg-ink/40 backdrop-blur-sm"
+            className="animate-overlay-in absolute inset-0 bg-black/40 backdrop-blur-sm dark:bg-black/60"
             onClick={() => !deletingBusy && setDeleting(null)}
             aria-hidden
           />
