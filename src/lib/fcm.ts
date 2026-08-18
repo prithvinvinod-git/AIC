@@ -1,19 +1,18 @@
 "use client";
 
-import { getToken, onMessage, type MessagePayload } from "firebase/messaging";
-import { getClientAuth, getApp } from "@/lib/firebase";
+import { getToken, onMessage, getMessaging, deleteToken, type MessagePayload } from "firebase/messaging";
+import { getApp } from "@/lib/firebase";
 
 /**
  * Returns the Firebase Messaging instance (lazy-initialized).
  * Returns null when the browser doesn't support FCM or the user denied permission.
  */
-let messagingInstance: ReturnType<typeof import("firebase/messaging")["getMessaging"]> | null = null;
+let messagingInstance: ReturnType<typeof getMessaging> | null = null;
 
 function getMessagingInstance() {
   if (messagingInstance) return messagingInstance;
   if (typeof window === "undefined") return null;
   try {
-    const { getMessaging } = require("firebase/messaging");
     messagingInstance = getMessaging(getApp());
     return messagingInstance;
   } catch {
@@ -90,7 +89,6 @@ export async function deleteFcmToken(): Promise<boolean> {
   const messaging = getMessagingInstance();
   if (!messaging) return false;
   try {
-    const { deleteToken } = require("firebase/messaging");
     return await deleteToken(messaging);
   } catch {
     return false;
