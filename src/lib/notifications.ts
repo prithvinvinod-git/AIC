@@ -160,15 +160,30 @@ export function notifyRecipientsForIssue(issue: Issue, oldStatus: string, newSta
       break;
     case "ASSIGNED":
       toReporter("Issue assigned", `${issue.issueNo} assigned to a maintenance team.`);
-      notifyRole(["validator", "maintenance"], {
+      notifyRole(["validator"], {
         type: "assignment",
         title: "New job assigned",
         body: `${issue.issueNo} routed to ${issue.routing?.categoryName || "team"}.`,
         link,
       });
+      /* Notify assigned staff directly */
+      if (issue.routing?.staff?.length) {
+        for (const s of issue.routing.staff) {
+          notify(s.uid, {
+            type: "assignment",
+            title: "New job assigned to you",
+            body: `${issue.issueNo} — ${issue.routing?.categoryName || "team"}. ${issue.title}`,
+            link,
+          });
+        }
+      }
       break;
     case "ONGOING":
-      toReporter("Work started", `${issue.issueNo} is being worked on.`);
+      if (oldStatus === "COMPLETED" || oldStatus === "INSPECTED" || oldStatus === "HEAD_APPROVED") {
+        toReporter("Work revised", `${issue.issueNo} was sent back for revision.`);
+      } else {
+        toReporter("Work started", `${issue.issueNo} is being worked on.`);
+      }
       break;
     case "PENDING":
       toReporter("Issue on hold", `${issue.issueNo} is pending a blocker.`);
@@ -188,6 +203,7 @@ export function notifyRecipientsForIssue(issue: Issue, oldStatus: string, newSta
       });
       break;
     case "COMPLETED":
+      toReporter("Work completed", `${issue.issueNo} has been completed and is awaiting verification.`);
       if (issue.routing?.categoryHeadUid) {
         notify(issue.routing.categoryHeadUid, {
           type: "verification",

@@ -8,7 +8,7 @@ export default function PublicNav() {
         <div className="flex shrink-0 items-center gap-2">
           <span className="font-brand text-2xl max-md:text-xl leading-none tracking-wide text-ink font-bold! max-md:hidden">Servox</span>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/servoxlogo.png" alt="Servox" className="h-[34px] w-auto sm:h-[38px]" />
+          <img src="/servoxlogo.png" alt="Servox" className="h-[34px] w-auto sm:h-[32px]" />
         </div>
 
         <nav className="hidden flex-1 items-center justify-center gap-[52px] text-sm font-medium text-slate lg:flex">

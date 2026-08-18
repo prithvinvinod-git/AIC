@@ -50,6 +50,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBootstrapScript }} />
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6865869538408644"
+          crossOrigin="anonymous"
+        />
       </head>
       <body className="min-h-full" suppressHydrationWarning>
         <ToastProvider>

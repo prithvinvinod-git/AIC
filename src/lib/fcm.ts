@@ -88,10 +88,13 @@ export async function requestFcmToken(): Promise<{ token: string | null; error: 
   if (!reg) return { token: null, error: "Service worker failed to register." };
 
   try {
+    console.log("[FCM] getToken vapidKey:", vapidKey ? "present" : "MISSING", "swReg:", reg.scope);
     const token = await getToken(messaging, { vapidKey, serviceWorkerRegistration: reg });
+    console.log("[FCM] token obtained:", token ? token.slice(0, 20) + "..." : "null");
     return { token, error: null };
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : "";
+  } catch (e: unknown) {
+    console.error("[FCM] getToken failed:", e);
+    const msg = e instanceof Error ? e.message : String(e);
     if (msg.includes("messaging/unsupported-browser")) return { token: null, error: "Your browser doesn't support push notifications." };
     if (msg.includes("messaging/permission-blocked")) return { token: null, error: "Notifications are blocked. Enable them in browser settings." };
     if (msg.includes("messaging/failed-service-worker-registration")) return { token: null, error: "Service worker registration failed." };
