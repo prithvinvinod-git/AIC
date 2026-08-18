@@ -1,9 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Fraunces, Inter } from "next/font/google";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ToastProvider } from "@/components/ui/Toast";
 import { themeBootstrapScript } from "@/lib/themePref";
+import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
 import "./globals.css";
 
 const inter = Inter({
@@ -23,6 +24,21 @@ export const metadata: Metadata = {
   description:
     "Closed-loop complaint management for a professional integrated campus. Report, route, execute, verify and close maintenance issues with AI assistance.",
   icons: { icon: "/servoxlogo.png" },
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Servox",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#d97757",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  display: "standalone",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -39,7 +55,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full" suppressHydrationWarning>
         <ToastProvider>
           <ThemeProvider>
-            <AuthProvider>{children}</AuthProvider>
+            <AuthProvider>
+              <ServiceWorkerRegistrar />
+              {children}
+            </AuthProvider>
           </ThemeProvider>
         </ToastProvider>
       </body>

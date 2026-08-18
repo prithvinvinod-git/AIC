@@ -1,6 +1,7 @@
 import "server-only";
 
-import { adminDb } from "./firebaseAdmin";
+import { adminDb, adminApp } from "./firebaseAdmin";
+import { getMessaging } from "firebase-admin/messaging";
 import type { Issue, Role } from "./types";
 
 export interface NotificationInput {
@@ -8,6 +9,43 @@ export interface NotificationInput {
   title: string;
   body: string;
   link: string;
+}
+
+/** Best-effort FCM push — never breaks the flow. */
+async function sendPushNotification(
+  uid: string,
+  title: string,
+  body: string,
+  link: string,
+  type: string
+): Promise<void> {
+  try {
+    const userDoc = await adminDb().doc(`users/${uid}`).get();
+    const data = userDoc.data();
+    if (!data?.fcmToken || data?.pushEnabled === false) return;
+
+    await getMessaging(adminApp()).send({
+      token: data.fcmToken,
+      notification: { title, body },
+      data: { link, type },
+      webpush: {
+        notification: {
+          icon: "/servoxlogo.png",
+          badge: "/servoxlogo.png",
+          tag: `servox-${type}`,
+          renotify: true,
+        },
+        fcmOptions: { link },
+      },
+    });
+  } catch (e: unknown) {
+    // Token may be stale — clear it so the client can re-register next visit.
+    const msg = e instanceof Error ? e.message : "";
+    if (msg.includes("registration-token-not-registered") || msg.includes("Invalid registration token")) {
+      await adminDb().doc(`users/${uid}`).set({ fcmToken: null }, { merge: true }).catch(() => {});
+    }
+    // Never throw — push is best-effort.
+  }
 }
 
 export async function notify(uid: string, input: NotificationInput): Promise<void> {
@@ -21,6 +59,9 @@ export async function notify(uid: string, input: NotificationInput): Promise<voi
     // Notifications must never break the primary flow.
     console.error("notify failed", uid, e);
   }
+
+  // Fire-and-forget push — don't await, don't block.
+  void sendPushNotification(uid, input.title, input.body, input.link, input.type);
 }
 
 export async function notifyMany(uids: string[], input: NotificationInput): Promise<void> {

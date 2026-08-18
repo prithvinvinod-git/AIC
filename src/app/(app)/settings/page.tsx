@@ -2,12 +2,13 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Moon, Sun } from "lucide-react";
+import { ArrowLeft, Bell, Moon, Sun } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useTheme } from "@/components/ThemeProvider";
 import { api } from "@/lib/clientApi";
 import { ROLE_LABEL } from "@/lib/constants";
 import { soundEnabled, setSoundEnabled } from "@/lib/soundPref";
+import { isPushSupported, requestFcmToken, deleteFcmToken } from "@/lib/fcm";
 import { Loading } from "@/components/ui/States";
 
 interface SettingsData {
@@ -17,6 +18,7 @@ interface SettingsData {
   department?: string;
   college?: string;
   notifyEmail?: boolean;
+  pushEnabled?: boolean;
 }
 
 function Toggle({
@@ -66,13 +68,18 @@ export default function SettingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [sound, setSound] = useState(soundEnabled);
+  const [push, setPush] = useState(false);
+  const pushSupported = isPushSupported();
 
   useEffect(() => {
     if (!ready) return;
     let cancelled = false;
     api<SettingsData>("/api/profile")
       .then((s) => {
-        if (!cancelled) setSettings(s);
+        if (!cancelled) {
+          setSettings(s);
+          setPush(Boolean(s.pushEnabled));
+        }
       })
       .catch((e) => {
         if (!cancelled) setError(e instanceof Error ? e.message : "Failed to load settings.");
@@ -105,6 +112,40 @@ export default function SettingsPage() {
     setSoundEnabled(next);
     setSound(next);
   }, []);
+
+  const togglePush = useCallback(
+    async (next: boolean) => {
+      setError(null);
+      setBusy(true);
+      try {
+        if (next) {
+          const token = await requestFcmToken();
+          if (!token) {
+            setError("Push notifications were blocked. Please allow them in your browser settings.");
+            setBusy(false);
+            return;
+          }
+          await api("/api/profile", {
+            method: "PATCH",
+            body: JSON.stringify({ fcmToken: token, pushEnabled: true }),
+          });
+          setPush(true);
+        } else {
+          await deleteFcmToken().catch(() => {});
+          await api("/api/profile", {
+            method: "PATCH",
+            body: JSON.stringify({ fcmToken: null, pushEnabled: false }),
+          });
+          setPush(false);
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Couldn't update push preference.");
+      } finally {
+        setBusy(false);
+      }
+    },
+    []
+  );
 
   if (!ready) return <Loading label="Loading settings…" />;
   if (!user || !claims) return null;
@@ -165,6 +206,23 @@ export default function SettingsPage() {
           </div>
           <Toggle checked={sound} onToggle={toggleSound} label="Notification sound" />
         </div>
+
+        {pushSupported && (
+          <div className="mt-4 flex items-center justify-between gap-4 border-t border-silver pt-4">
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-graphite flex items-center gap-1.5">
+                <Bell className="h-3.5 w-3.5 text-accent" aria-hidden />
+                Push notifications
+              </p>
+              <p className="text-xs text-slate">
+                {push
+                  ? "Device notifications are on."
+                  : "Get notified even when the app is closed."}
+              </p>
+            </div>
+            <Toggle checked={push} onToggle={(next) => void togglePush(next)} disabled={busy} label="Push notifications" />
+          </div>
+        )}
 
         {error && <p className="mt-4 rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger">{error}</p>}
       </div>

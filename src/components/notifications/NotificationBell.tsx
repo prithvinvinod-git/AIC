@@ -43,6 +43,16 @@ export default function NotificationBell() {
     setOpen(false);
   }, [pathname]);
 
+  // Listen for foreground FCM messages dispatched by ServiceWorkerRegistrar.
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { title, body, link } = (e as CustomEvent).detail;
+      show({ type: "info", title, message: body, link });
+    };
+    window.addEventListener("fcm-message", handler);
+    return () => window.removeEventListener("fcm-message", handler);
+  }, [show]);
+
   useEffect(() => {
     if (!open) return;
     const onPointerDown = (e: MouseEvent) => {

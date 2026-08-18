@@ -16,6 +16,8 @@ const profileSchema = z.object({
   department: z.string().trim().max(80).optional(),
   profilePromptDismissed: z.boolean().optional(),
   hasPassword: z.boolean().optional(),
+  fcmToken: z.string().trim().max(512).nullable().optional(),
+  pushEnabled: z.boolean().optional(),
 });
 
 /**
@@ -68,14 +70,17 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
     if (body.profilePromptDismissed !== undefined)
       userData.profilePromptDismissed = body.profilePromptDismissed;
     if (body.hasPassword !== undefined) userData.hasPassword = body.hasPassword;
+    if (body.fcmToken !== undefined) userData.fcmToken = body.fcmToken;
+    if (body.pushEnabled !== undefined) userData.pushEnabled = body.pushEnabled;
 
-    if (body.college !== undefined || body.department !== undefined || body.profilePromptDismissed !== undefined || body.hasPassword !== undefined) {
+    if (body.college !== undefined || body.department !== undefined || body.profilePromptDismissed !== undefined || body.hasPassword !== undefined || body.pushEnabled !== undefined) {
       const claims = { ...((await adminAuth().getUser(user.uid)).customClaims || {}) };
       if (body.college !== undefined) claims.college = body.college;
       if (body.department !== undefined) claims.department = body.department;
       if (body.profilePromptDismissed !== undefined)
         claims.profilePromptDismissed = body.profilePromptDismissed;
       if (body.hasPassword !== undefined) claims.hasPassword = body.hasPassword;
+      if (body.pushEnabled !== undefined) claims.pushEnabled = body.pushEnabled;
       await adminAuth().setCustomUserClaims(user.uid, claims);
     }
 
