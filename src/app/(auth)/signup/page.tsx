@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { createUserWithEmailAndPassword, fetchSignInMethodsForEmail, updateProfile } from "firebase/auth";
 import { getClientAuth } from "@/lib/firebase";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { GoogleIcon } from "@/components/auth/ProviderButtons";
@@ -13,6 +13,17 @@ import { api } from "@/lib/clientApi";
 import { capitalizeName } from "@/lib/format";
 import { setLastAuthMethod } from "@/lib/lastAuthMethod";
 import { COLLEGES, DEPARTMENTS_BY_COLLEGE, type College } from "@/lib/constants";
+import PasswordSetupModal from "@/components/auth/PasswordSetupModal";
+
+function friendlyAuthError(err: unknown): string {
+  const msg = err instanceof Error ? err.message : "";
+  if (msg.includes("email-already-in-use")) return "An account with this email already exists.";
+  if (msg.includes("invalid-email")) return "Please enter a valid email address.";
+  if (msg.includes("weak-password")) return "Password is too weak. Use at least 6 characters.";
+  if (msg.includes("operation-not-allowed") || msg.includes("popup-blocked") || msg.includes("unauthorized-domain"))
+    return "Google sign-in isn't ready yet — enable the Google provider in Firebase Console → Authentication → Sign-in method.";
+  return "Sign up failed. Please try again.";
+}
 
 export default function SignupPage() {
   const { loginWithGoogle, refreshClaims } = useAuth();
@@ -24,11 +35,14 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [showGoogleGlow, setShowGoogleGlow] = useState(false);
+  const [needsPassword, setNeedsPassword] = useState(false);
 
   const submit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
       setError(null);
+      setShowGoogleGlow(false);
       setBusy(true);
       try {
         const auth = getClientAuth();
@@ -50,7 +64,7 @@ export default function SignupPage() {
         setLastAuthMethod("email");
         router.replace("/dashboard");
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Sign up failed.");
+        setError(friendlyAuthError(err));
       } finally {
         setBusy(false);
       }
@@ -60,28 +74,54 @@ export default function SignupPage() {
 
   const submitGoogle = useCallback(async () => {
     setError(null);
+    setShowGoogleGlow(false);
     setBusy(true);
     try {
-      await loginWithGoogle();
+      const result = await loginWithGoogle();
       await ensureReporterProvisioned();
       setLastAuthMethod("google");
+
+      const user = getClientAuth().currentUser;
+      if (user) {
+        const hasPwProvider = user.providerData.some((p) => p.providerId === "password");
+        if (!hasPwProvider && !result.hasPassword) {
+          setBusy(false);
+          setNeedsPassword(true);
+          return;
+        }
+      }
+
       await refreshClaims();
       router.replace("/dashboard");
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message.includes("operation-not-allowed") ||
-            err.message.includes("popup-blocked") ||
-            err.message.includes("unauthorized-domain")
-            ? "Google sign-in isn't ready yet — enable the Google provider in Firebase Console → Authentication → Sign-in method."
-            : err.message
-          : "Google sign-up failed."
-      );
+      const emailAddr = email.trim().toLowerCase();
+      if (emailAddr) {
+        try {
+          const methods = await fetchSignInMethodsForEmail(getClientAuth(), emailAddr);
+          if (methods.length > 0 && !methods.includes("password")) {
+            setError("This account uses Google Sign-In. Please sign in with Google.");
+            setShowGoogleGlow(true);
+            setBusy(false);
+            return;
+          }
+        } catch {
+          // fall through to generic error
+        }
+      }
+      setError(friendlyAuthError(err));
       setBusy(false);
     }
-  }, [loginWithGoogle, refreshClaims, router]);
+  }, [loginWithGoogle, refreshClaims, router, email]);
+
+  const handlePasswordSetupComplete = useCallback(async () => {
+    setNeedsPassword(false);
+    setBusy(false);
+    await refreshClaims();
+    router.replace("/dashboard");
+  }, [refreshClaims, router]);
 
   return (
+    <>
     <div className="card w-full">
       <h2 className="font-display text-xl font-semibold text-ink">Create your account</h2>
       <p className="mt-1 text-sm text-slate">Report issues and track their resolution.</p>
@@ -184,7 +224,7 @@ export default function SignupPage() {
       </div>
 
       <div className="relative mt-4">
-        <button type="button" onClick={() => void submitGoogle()} disabled={busy} className="btn btn-secondary btn-lg w-full max-md:whitespace-normal">
+        <button type="button" onClick={() => void submitGoogle()} disabled={busy} className={`btn btn-secondary btn-lg w-full max-md:whitespace-normal ${showGoogleGlow ? "animate-google-glow" : ""}`}>
           <GoogleIcon />
           Continue with Google
         </button>
@@ -195,5 +235,8 @@ export default function SignupPage() {
         Already registered? Sign in
       </Link>
     </div>
+
+    <PasswordSetupModal open={needsPassword} onComplete={() => void handlePasswordSetupComplete()} />
+    </>
   );
 }

@@ -4,12 +4,13 @@ import { useEffect, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthProvider";
 import ProfileOnboarding from "@/components/auth/ProfileOnboarding";
+import PasswordSetupModal from "@/components/auth/PasswordSetupModal";
 import AppHeader from "@/components/AppHeader";
 import MobileNav from "@/components/MobileNav";
 import { Loading } from "@/components/ui/States";
 
 export default function AppShell({ children }: { children: ReactNode }) {
-  const { user, claims, ready } = useAuth();
+  const { user, claims, ready, needsPasswordSetup, clearNeedsPasswordSetup } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -30,6 +31,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
       <main className="mx-auto w-full max-w-page px-[20px] py-6 max-lg:pb-[88px] sm:px-6 sm:py-10">{children}</main>
       <ProfileOnboarding />
       <MobileNav />
+      <PasswordSetupModal open={needsPasswordSetup} onComplete={clearNeedsPasswordSetup} />
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useAuth } from "@/components/auth/AuthProvider";
 import ProfileOnboarding from "@/components/auth/ProfileOnboarding";
+import PasswordSetupModal from "@/components/auth/PasswordSetupModal";
 import { Loading } from "@/components/ui/States";
 import AppHeader from "@/components/AppHeader";
 import MobileNav from "@/components/MobileNav";
@@ -15,7 +16,7 @@ import IssueBoard from "@/components/home/IssueBoard";
 import AnnouncementBoard from "@/components/home/AnnouncementBoard";
 
 export default function Home() {
-  const { user, claims, ready } = useAuth();
+  const { user, claims, ready, needsPasswordSetup, clearNeedsPasswordSetup } = useAuth();
 
   if (!ready) {
     return (
@@ -59,6 +60,7 @@ export default function Home() {
       </main>
       <ProfileOnboarding />
       <MobileNav />
+      <PasswordSetupModal open={needsPasswordSetup} onComplete={clearNeedsPasswordSetup} />
     </div>
   );
 }

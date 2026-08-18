@@ -15,6 +15,7 @@ const profileSchema = z.object({
   college: z.string().trim().max(60).optional(),
   department: z.string().trim().max(80).optional(),
   profilePromptDismissed: z.boolean().optional(),
+  hasPassword: z.boolean().optional(),
 });
 
 /**
@@ -66,13 +67,15 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
     if (body.department !== undefined) userData.department = body.department;
     if (body.profilePromptDismissed !== undefined)
       userData.profilePromptDismissed = body.profilePromptDismissed;
+    if (body.hasPassword !== undefined) userData.hasPassword = body.hasPassword;
 
-    if (body.college !== undefined || body.department !== undefined || body.profilePromptDismissed !== undefined) {
+    if (body.college !== undefined || body.department !== undefined || body.profilePromptDismissed !== undefined || body.hasPassword !== undefined) {
       const claims = { ...((await adminAuth().getUser(user.uid)).customClaims || {}) };
       if (body.college !== undefined) claims.college = body.college;
       if (body.department !== undefined) claims.department = body.department;
       if (body.profilePromptDismissed !== undefined)
         claims.profilePromptDismissed = body.profilePromptDismissed;
+      if (body.hasPassword !== undefined) claims.hasPassword = body.hasPassword;
       await adminAuth().setCustomUserClaims(user.uid, claims);
     }
 

@@ -28,16 +28,19 @@ export interface SessionClaims {
   college?: string;
   name: string;
   profilePromptDismissed?: boolean;
+  hasPassword?: boolean;
 }
 
 interface AuthContextValue {
   user: User | null;
   claims: SessionClaims | null;
   ready: boolean;
+  needsPasswordSetup: boolean;
   login: (email: string, password: string) => Promise<SessionClaims>;
   loginWithGoogle: () => Promise<SessionClaims>;
   logout: () => Promise<void>;
   refreshClaims: () => Promise<SessionClaims>;
+  clearNeedsPasswordSetup: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -46,6 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [claims, setClaims] = useState<SessionClaims | null>(null);
   const [ready, setReady] = useState(false);
+  const [needsPasswordSetup, setNeedsPasswordSetup] = useState(false);
 
   const refreshClaims = useCallback(async (): Promise<SessionClaims> => {
     const auth = getClientAuth();
@@ -63,6 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       department: (result.claims.department as string) || "",
       college: result.claims.college as string | undefined,
       profilePromptDismissed: Boolean(result.claims.profilePromptDismissed),
+      hasPassword: Boolean(result.claims.hasPassword),
       name:
         (result.claims.name as string) ||
         current.displayName ||
@@ -78,10 +83,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const unsub = onAuthStateChanged(auth, (u) => {
       setUser(u);
       if (u) {
-        void refreshClaims().finally(() => setReady(true));
+        void refreshClaims().then((c) => {
+          const hasPwProvider = u.providerData.some((p) => p.providerId === "password");
+          setNeedsPasswordSetup(!hasPwProvider && !c.hasPassword);
+          setReady(true);
+        });
       } else {
         setClaims(null);
         setAuthToken(null);
+        setNeedsPasswordSetup(false);
         setReady(true);
       }
     });
@@ -118,9 +128,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await signOut(getClientAuth());
   }, []);
 
+  const clearNeedsPasswordSetup = useCallback(() => {
+    setNeedsPasswordSetup(false);
+  }, []);
+
   const value = useMemo(
-    () => ({ user, claims, ready, login, loginWithGoogle, logout, refreshClaims }),
-    [user, claims, ready, login, loginWithGoogle, logout, refreshClaims]
+    () => ({ user, claims, ready, needsPasswordSetup, login, loginWithGoogle, logout, refreshClaims, clearNeedsPasswordSetup }),
+    [user, claims, ready, needsPasswordSetup, login, loginWithGoogle, logout, refreshClaims, clearNeedsPasswordSetup]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
