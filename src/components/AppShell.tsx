@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthProvider";
 import ProfileOnboarding from "@/components/auth/ProfileOnboarding";
 import PasswordSetupModal from "@/components/auth/PasswordSetupModal";
+import { useNativePushPrompt } from "@/components/auth/PushNotificationPrompt";
 import AppHeader from "@/components/AppHeader";
 import MobileNav from "@/components/MobileNav";
 import { Loading } from "@/components/ui/States";
@@ -13,6 +14,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const { user, claims, ready, needsPasswordSetup, clearNeedsPasswordSetup } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  useNativePushPrompt();
 
   useEffect(() => {
     if (!ready) return;

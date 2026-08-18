@@ -3,6 +3,7 @@
 import { useAuth } from "@/components/auth/AuthProvider";
 import ProfileOnboarding from "@/components/auth/ProfileOnboarding";
 import PasswordSetupModal from "@/components/auth/PasswordSetupModal";
+import { useNativePushPrompt } from "@/components/auth/PushNotificationPrompt";
 import { Loading } from "@/components/ui/States";
 import AppHeader from "@/components/AppHeader";
 import MobileNav from "@/components/MobileNav";
@@ -17,6 +18,7 @@ import AnnouncementBoard from "@/components/home/AnnouncementBoard";
 
 export default function Home() {
   const { user, claims, ready, needsPasswordSetup, clearNeedsPasswordSetup } = useAuth();
+  useNativePushPrompt();
 
   if (!ready) {
     return (
