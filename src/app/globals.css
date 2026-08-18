@@ -3,6 +3,14 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @font-face {
+  font-family: "AmericanCaptain";
+  src: url("/American Captain.ttf") format("truetype");
+  font-weight: 400 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
   font-family: "TTOctosquaresBlack";
   src: url("/TT Octosquares Trial Black.ttf") format("truetype");
   font-weight: 900;
@@ -19,7 +27,7 @@
 
 @theme {
   /* Fonts */
-  --font-brand: "Fraunces", "Inter", ui-serif, ui-sans-serif, serif;
+  --font-brand: "AmericanCaptain", "Fraunces", "Inter", ui-serif, ui-sans-serif, serif;
   --font-valve: "ValveBd", "Poppins", ui-sans-serif, sans-serif;
 
   /* Colors — warm "Claude" neutrals + terracotta accent */

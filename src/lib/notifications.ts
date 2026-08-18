@@ -28,6 +28,10 @@ async function sendPushNotification(
       token: data.fcmToken,
       notification: { title, body },
       data: { link, type },
+      android: {
+        priority: "high",
+        ttl: 4 * 60 * 60 * 1000, // 4 hours
+      },
       webpush: {
         notification: {
           icon: "/servoxlogo.png",

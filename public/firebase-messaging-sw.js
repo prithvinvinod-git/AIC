@@ -42,13 +42,39 @@ function initFirebase() {
       tag: "servox-" + (payload.data?.type || "general"),
       renotify: true,
     });
+
+    /* Increment badge count */
+    self.registration.getNotifications({ silent: true }).then((notifications) => {
+      const count = notifications.length;
+      if (self.registration.setAppBadge) {
+        self.registration.setAppBadge(count);
+      }
+    });
   });
 }
 
-/* Tap handler — opens the link embedded in the notification */
+/* Badge on notification show (covers both background and foreground) */
+self.addEventListener("notificationshow", (event) => {
+  event.waitUntil(
+    self.registration.getNotifications({ silent: true }).then((notifications) => {
+      const count = notifications.length;
+      if (self.registration.setAppBadge) {
+        self.registration.setAppBadge(count);
+      }
+    })
+  );
+});
+
+/* Tap handler — opens the link embedded in the notification and clears badge */
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const link = event.notification.data?.link || "/dashboard";
+
+  /* Clear badge */
+  if (self.registration.clearAppBadge) {
+    self.registration.clearAppBadge();
+  }
+
   event.waitUntil(
     clients.matchAll({ type: "window", includeUncontrolled: true }).then((windowClients) => {
       for (const client of windowClients) {
@@ -59,6 +85,20 @@ self.addEventListener("notificationclick", (event) => {
         }
       }
       return clients.openWindow(link);
+    })
+  );
+});
+
+/* Dismiss handler — update badge when user swipes away a notification */
+self.addEventListener("notificationclose", (event) => {
+  event.waitUntil(
+    self.registration.getNotifications({ silent: true }).then((notifications) => {
+      const count = notifications.length;
+      if (count === 0 && self.registration.clearAppBadge) {
+        self.registration.clearAppBadge();
+      } else if (self.registration.setAppBadge) {
+        self.registration.setAppBadge(count);
+      }
     })
   );
 });
