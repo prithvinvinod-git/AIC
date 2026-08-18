@@ -4,7 +4,7 @@ import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
 import {
   getAuth,
   setPersistence,
-  browserSessionPersistence,
+  browserLocalPersistence,
   type Auth,
 } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
@@ -31,10 +31,9 @@ export function getApp(): FirebaseApp {
 export function getClientAuth(): Auth {
   if (!auth) {
     auth = getAuth(getApp());
-    // Per-tab sessions (sessionStorage): each tab keeps its own signed-in
-    // user, so different people can use separate tabs simultaneously. The
-    // session survives refreshes within the tab and ends when it closes.
-    void setPersistence(auth, browserSessionPersistence);
+    // localStorage-backed sessions survive PWA restarts and Android killing
+    // the process from Recents. Different tabs still share the same user.
+    void setPersistence(auth, browserLocalPersistence);
   }
   return auth;
 }

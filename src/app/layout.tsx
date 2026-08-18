@@ -22,6 +22,7 @@ export const metadata: Metadata = {
   title: "Servox Φ",
   description:
     "Closed-loop complaint management for a professional integrated campus. Report, route, execute, verify and close maintenance issues with AI assistance.",
+  icons: { icon: "/servoxlogo.png" },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
