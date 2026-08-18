@@ -50,6 +50,8 @@ type DotGridProps = {
   maxSpeed?: number;
   resistance?: number;
   returnDuration?: number;
+  bulgeRadius?: number;
+  bulgeStrength?: number;
   className?: string;
   style?: React.CSSProperties;
 };

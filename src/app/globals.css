@@ -391,8 +391,8 @@ body {
   left: 4px;
   right: 4px;
   bottom: 4px;
-  background-color: var(--color-paper);
-  border: 2px solid var(--color-paper);
+  background-color: transparent;
+  border: none;
   border-radius: 50%;
 }
 @keyframes rotate_3922 {
