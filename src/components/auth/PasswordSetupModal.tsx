@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, useState } from "react";
 import { ShieldCheck } from "lucide-react";
+import { updatePassword } from "firebase/auth";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { api } from "@/lib/clientApi";
@@ -41,7 +42,7 @@ export default function PasswordSetupModal({ open, onComplete }: PasswordSetupMo
 
       setBusy(true);
       try {
-        await user.updatePassword(password);
+        await updatePassword(user, password);
         await api("/api/profile", {
           method: "PATCH",
           body: JSON.stringify({ hasPassword: true }),

@@ -38,7 +38,6 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
   userScalable: true,
-  display: "standalone",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

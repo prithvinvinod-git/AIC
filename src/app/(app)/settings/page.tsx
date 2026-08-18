@@ -119,9 +119,9 @@ export default function SettingsPage() {
       setBusy(true);
       try {
         if (next) {
-          const token = await requestFcmToken();
+          const { token, error } = await requestFcmToken();
           if (!token) {
-            setError("Push notifications were blocked. Please allow them in your browser settings.");
+            setError(error || "Could not enable push notifications.");
             setBusy(false);
             return;
           }

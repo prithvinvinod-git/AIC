@@ -2,11 +2,11 @@
 /* eslint-disable no-undef */
 
 self.__FIREBASE_CONFIG = {};
+self.__FIREBASE_READY = false;
 
 self.addEventListener("message", (event) => {
   if (event.data?.type === "SET_FIREBASE_CONFIG") {
     self.__FIREBASE_CONFIG = event.data.config || {};
-    // Initialize Firebase after config is received
     if (!self.__FIREBASE_INIT) {
       self.__FIREBASE_INIT = true;
       initFirebase();
@@ -21,6 +21,12 @@ function initFirebase() {
   firebase.initializeApp(self.__FIREBASE_CONFIG);
 
   const messaging = firebase.messaging();
+  self.__FIREBASE_READY = true;
+
+  /* Notify client that SW is ready */
+  self.clients.matchAll().then((clients) => {
+    clients.forEach((client) => client.postMessage({ type: "SW_READY" }));
+  });
 
   /* Background handler — called when the app is NOT in the foreground */
   messaging.onBackgroundMessage((payload) => {

@@ -3,10 +3,6 @@
 import { getToken, onMessage, getMessaging, deleteToken, type MessagePayload } from "firebase/messaging";
 import { getApp } from "@/lib/firebase";
 
-/**
- * Returns the Firebase Messaging instance (lazy-initialized).
- * Returns null when the browser doesn't support FCM or the user denied permission.
- */
 let messagingInstance: ReturnType<typeof getMessaging> | null = null;
 
 function getMessagingInstance() {
@@ -33,7 +29,7 @@ export function getPermissionState(): NotificationPermission | "unsupported" {
 
 /**
  * Register the service worker and inject the Firebase config it needs.
- * Call once on app mount.
+ * Returns a promise that resolves once the SW signals it is ready.
  */
 let swRegistration: ServiceWorkerRegistration | null = null;
 
@@ -52,8 +48,21 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
   const reg = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
   await navigator.serviceWorker.ready;
 
-  // Inject config into the SW scope so the compat scripts can read it.
+  // Wait for the SW to acknowledge config before returning.
+  const ready = new Promise<void>((resolve) => {
+    const handler = (e: MessageEvent) => {
+      if (e.data?.type === "SW_READY") {
+        navigator.serviceWorker.removeEventListener("message", handler);
+        resolve();
+      }
+    };
+    navigator.serviceWorker.addEventListener("message", handler);
+    // Fallback: resolve after 3s if SW never acks (e.g. cached SW).
+    setTimeout(resolve, 3000);
+  });
+
   reg.active?.postMessage({ type: "SET_FIREBASE_CONFIG", config });
+  await ready;
 
   swRegistration = reg;
   return reg;
@@ -61,26 +70,32 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
 
 /**
  * Request notification permission, get an FCM token, and return it.
- * Returns null if permission was denied or something failed.
+ * Returns null on failure and sets `error` to a user-facing message.
  */
-export async function requestFcmToken(): Promise<string | null> {
+export async function requestFcmToken(): Promise<{ token: string | null; error: string | null }> {
+  if (!isPushSupported()) return { token: null, error: "Push notifications are not supported on this device." };
+
   const messaging = getMessagingInstance();
-  if (!messaging) return null;
+  if (!messaging) return { token: null, error: "Could not initialize messaging." };
+
+  const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
+  if (!vapidKey) return { token: null, error: "Push notifications are not configured. Contact your admin." };
 
   const permission = await Notification.requestPermission();
-  if (permission !== "granted") return null;
+  if (permission !== "granted") return { token: null, error: "Permission denied. Enable notifications in your browser settings." };
 
   const reg = await registerServiceWorker();
-  if (!reg) return null;
+  if (!reg) return { token: null, error: "Service worker failed to register." };
 
   try {
-    const token = await getToken(messaging, {
-      vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
-      serviceWorkerRegistration: reg,
-    });
-    return token;
-  } catch {
-    return null;
+    const token = await getToken(messaging, { vapidKey, serviceWorkerRegistration: reg });
+    return { token, error: null };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "";
+    if (msg.includes("messaging/unsupported-browser")) return { token: null, error: "Your browser doesn't support push notifications." };
+    if (msg.includes("messaging/permission-blocked")) return { token: null, error: "Notifications are blocked. Enable them in browser settings." };
+    if (msg.includes("messaging/failed-service-worker-registration")) return { token: null, error: "Service worker registration failed." };
+    return { token: null, error: "Could not enable push notifications. Try again later." };
   }
 }
 
