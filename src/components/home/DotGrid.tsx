@@ -69,6 +69,8 @@ const DotGrid = ({
   maxSpeed = 5000,
   resistance = 750,
   returnDuration = 1.5,
+  bulgeRadius = 180,
+  bulgeStrength = 2.5,
   className = "",
   style,
 }: DotGridProps) => {
@@ -164,6 +166,7 @@ const DotGrid = ({
     let rafId: number;
     let running = !document.hidden;
     const proxSq = proximity * proximity;
+    const bulgeRadiusSq = bulgeRadius * bulgeRadius;
 
     const draw = () => {
       const canvas = canvasRef.current;
@@ -182,6 +185,7 @@ const DotGrid = ({
         const dsq = dx * dx + dy * dy;
 
         let fill = effectiveBaseColor;
+        let bulgeT = 0;
         if (dsq <= proxSq) {
           const dist = Math.sqrt(dsq);
           const t = 1 - dist / proximity;
@@ -189,11 +193,19 @@ const DotGrid = ({
           const g = Math.round(baseRgb.g + (activeRgb.g - baseRgb.g) * t);
           const b = Math.round(baseRgb.b + (activeRgb.b - baseRgb.b) * t);
           fill = `rgb(${r},${g},${b})`;
+          bulgeT = t;
+        } else if (dsq <= bulgeRadiusSq) {
+          const dist = Math.sqrt(dsq);
+          bulgeT = 1 - dist / bulgeRadius;
         }
 
         ctx.save();
         if (mobileRef.current) ctx.globalAlpha = 0.85;
         ctx.translate(ox, oy);
+        if (bulgeT > 0.01) {
+          const s = 1 + bulgeT * bulgeStrength;
+          ctx.scale(s, s);
+        }
         ctx.fillStyle = fill;
         ctx.fill(circlePath);
         ctx.restore();
@@ -217,7 +229,7 @@ const DotGrid = ({
       cancelAnimationFrame(rafId);
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [proximity, effectiveBaseColor, activeRgb, baseRgb, circlePath]);
+  }, [proximity, effectiveBaseColor, activeRgb, baseRgb, circlePath, bulgeRadius, bulgeStrength]);
 
   useEffect(() => {
     buildGrid();
@@ -365,13 +377,92 @@ const DotGrid = ({
     window.addEventListener("mousemove", throttledMove, { passive: true });
     window.addEventListener("click", onClick);
 
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length !== 1) return;
+      const touch = e.touches[0];
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const pr = pointerRef.current;
+      pr.x = touch.clientX - rect.left;
+      pr.y = touch.clientY - rect.top;
+      pr.lastX = touch.clientX;
+      pr.lastY = touch.clientY;
+      pr.lastTime = performance.now();
+      pr.speed = 0;
+    };
+
+    const throttledTouchMove = throttle((e: TouchEvent) => {
+      if (e.touches.length !== 1) return;
+      const touch = e.touches[0];
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const pr = pointerRef.current;
+      const now = performance.now();
+      const dt = pr.lastTime ? now - pr.lastTime : 16;
+      const dx = touch.clientX - pr.lastX;
+      const dy = touch.clientY - pr.lastY;
+      let vx = (dx / dt) * 1000;
+      let vy = (dy / dt) * 1000;
+      let speed = Math.hypot(vx, vy);
+      if (speed > maxSpeed) {
+        const s = maxSpeed / speed;
+        vx *= s;
+        vy *= s;
+        speed = maxSpeed;
+      }
+      pr.lastTime = now;
+      pr.lastX = touch.clientX;
+      pr.lastY = touch.clientY;
+      pr.vx = vx;
+      pr.vy = vy;
+      pr.speed = speed;
+      pr.x = touch.clientX - rect.left;
+      pr.y = touch.clientY - rect.top;
+
+      for (const dot of dotsRef.current) {
+        const dist = Math.hypot(dot.cx - pr.x, dot.cy - pr.y);
+        if (speed > speedTrigger && dist < proximity && !dot._inertiaApplied) {
+          dot._inertiaApplied = true;
+          gsap.killTweensOf(dot);
+          const pushX = dot.cx - pr.x + vx * 0.005;
+          const pushY = dot.cy - pr.y + vy * 0.005;
+          gsap.to(dot, {
+            inertia: { xOffset: pushX, yOffset: pushY, resistance },
+            onComplete: () => {
+              gsap.to(dot, {
+                xOffset: 0,
+                yOffset: 0,
+                duration: returnDuration,
+                ease: "elastic.out(1,0.75)",
+              });
+              dot._inertiaApplied = false;
+            },
+          });
+        }
+      }
+    }, 50);
+
+    const onTouchEnd = () => {
+      const pr = pointerRef.current;
+      pr.speed = 0;
+    };
+
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchmove", throttledTouchMove, { passive: true });
+    window.addEventListener("touchend", onTouchEnd, { passive: true });
+
     return () => {
       stopAutoAnimate();
       mq.removeEventListener("change", onChange);
       window.removeEventListener("mousemove", throttledMove);
       window.removeEventListener("click", onClick);
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchmove", throttledTouchMove);
+      window.removeEventListener("touchend", onTouchEnd);
     };
-  }, [maxSpeed, speedTrigger, proximity, resistance, returnDuration, shockRadius, shockStrength]);
+  }, [maxSpeed, speedTrigger, proximity, resistance, returnDuration, shockRadius, shockStrength, bulgeRadius, bulgeStrength]);
 
   return (
     <div className={`${styles.grid} ${className}`} style={style} aria-hidden="true">
