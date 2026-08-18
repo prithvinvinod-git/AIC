@@ -120,7 +120,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const loginWithGoogle = useCallback(async (): Promise<SessionClaims> => {
-    await signInWithPopup(getClientAuth(), new GoogleAuthProvider());
+    const provider = new GoogleAuthProvider();
+    provider.addScope("email");
+    provider.addScope("profile");
+    await signInWithPopup(getClientAuth(), provider);
     return refreshClaims();
   }, [refreshClaims]);
 

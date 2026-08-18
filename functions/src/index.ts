@@ -2,6 +2,7 @@ import { onSchedule } from "firebase-functions/v2/scheduler";
 import { logger } from "firebase-functions";
 import { initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
+import { getMessaging } from "firebase-admin/messaging";
 
 /**
  * Scheduled maintenance for servox-phi.
@@ -19,6 +20,34 @@ const OPEN_STATUSES = ["ASSIGNED", "ONGOING", "PENDING"];
 const DIGEST_ROLES = ["admin", "hod", "principal"];
 const SYSTEM_ACTOR = { uid: "system", name: "SLA Monitor", role: "admin" };
 
+async function sendPushNotification(uid: string, title: string, body: string, link: string, type: string): Promise<void> {
+  try {
+    const userDoc = await db.doc(`users/${uid}`).get();
+    const data = userDoc.data();
+    if (!data?.fcmToken || data?.pushEnabled === false) return;
+
+    await getMessaging().send({
+      token: data.fcmToken,
+      notification: { title, body },
+      data: { link, type },
+      webpush: {
+        notification: {
+          icon: "/servoxlogo.png",
+          badge: "/servoxlogo.png",
+          tag: `servox-${type}`,
+          renotify: true,
+        },
+        fcmOptions: { link },
+      },
+    });
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "";
+    if (msg.includes("registration-token-not-registered") || msg.includes("Invalid registration token")) {
+      await db.doc(`users/${uid}`).set({ fcmToken: null }, { merge: true }).catch(() => {});
+    }
+  }
+}
+
 async function notifyUser(uid: string, type: string, title: string, body: string, link: string): Promise<void> {
   try {
     await db.collection(`notifications/${uid}/items`).add({
@@ -32,6 +61,8 @@ async function notifyUser(uid: string, type: string, title: string, body: string
   } catch (e) {
     logger.warn("notify failed", uid, e);
   }
+
+  void sendPushNotification(uid, title, body, link, type);
 }
 
 async function notifyRoles(roles: string[], type: string, title: string, body: string, link: string): Promise<void> {

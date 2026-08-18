@@ -5,6 +5,7 @@ const scheduler_1 = require("firebase-functions/v2/scheduler");
 const firebase_functions_1 = require("firebase-functions");
 const app_1 = require("firebase-admin/app");
 const firestore_1 = require("firebase-admin/firestore");
+const messaging_1 = require("firebase-admin/messaging");
 /**
  * Scheduled maintenance for servox-phi.
  *
@@ -17,6 +18,34 @@ const db = (0, firestore_1.getFirestore)();
 const OPEN_STATUSES = ["ASSIGNED", "ONGOING", "PENDING"];
 const DIGEST_ROLES = ["admin", "hod", "principal"];
 const SYSTEM_ACTOR = { uid: "system", name: "SLA Monitor", role: "admin" };
+async function sendPushNotification(uid, title, body, link, type) {
+    try {
+        const userDoc = await db.doc(`users/${uid}`).get();
+        const data = userDoc.data();
+        if (!data?.fcmToken || data?.pushEnabled === false)
+            return;
+        await (0, messaging_1.getMessaging)().send({
+            token: data.fcmToken,
+            notification: { title, body },
+            data: { link, type },
+            webpush: {
+                notification: {
+                    icon: "/servoxlogo.png",
+                    badge: "/servoxlogo.png",
+                    tag: `servox-${type}`,
+                    renotify: true,
+                },
+                fcmOptions: { link },
+            },
+        });
+    }
+    catch (e) {
+        const msg = e instanceof Error ? e.message : "";
+        if (msg.includes("registration-token-not-registered") || msg.includes("Invalid registration token")) {
+            await db.doc(`users/${uid}`).set({ fcmToken: null }, { merge: true }).catch(() => { });
+        }
+    }
+}
 async function notifyUser(uid, type, title, body, link) {
     try {
         await db.collection(`notifications/${uid}/items`).add({
@@ -31,6 +60,7 @@ async function notifyUser(uid, type, title, body, link) {
     catch (e) {
         firebase_functions_1.logger.warn("notify failed", uid, e);
     }
+    void sendPushNotification(uid, title, body, link, type);
 }
 async function notifyRoles(roles, type, title, body, link) {
     try {
