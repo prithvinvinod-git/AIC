@@ -24,7 +24,6 @@ export const STATUS_LABEL: Record<IssueStatus, string> = {
   PENDING: "Pending",
   COMPLETED: "Completed",
   INSPECTED: "Inspected",
-  HEAD_APPROVED: "Head approved",
   VERIFIED: "Verified",
   REJECTED: "Rejected",
   CLOSED: "Closed",
@@ -41,7 +40,6 @@ export const STATUS_STEP_ORDER: IssueStatus[] = [
   "ONGOING",
   "COMPLETED",
   "INSPECTED",
-  "HEAD_APPROVED",
   "VERIFIED",
   "CLOSED",
 ];

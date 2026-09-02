@@ -42,11 +42,14 @@ export async function PATCH(
     const ref = db.doc(`issues/${id}`);
     const now = new Date().toISOString();
 
+    let issueCollege: string | undefined;
+
     await db.runTransaction(async (tx) => {
       const snap = await tx.get(ref);
       if (!snap.exists) throw new Error("issue-missing");
       const data = snap.data() as Issue;
       if (data.status === "CLOSED") throw new Error("issue-closed");
+      issueCollege = data.college;
       const requirements: Requirement[] = Array.isArray(data.requirements) ? [...data.requirements] : [];
       const idx = requirements.findIndex((r) => r.id === reqId);
       if (idx === -1) throw new Error("requirement-missing");
@@ -86,12 +89,16 @@ export async function PATCH(
     });
 
     if (hasEdit) {
-      void notifyRole(["purchase"], {
-        type: "purchase",
-        title: "Purchase approval requested again",
-        body: `Resubmitted for approval: ${editInfo?.item ?? "item"} ×${editInfo?.qty ?? "?"}.`,
-        link: `/issues/${id}`,
-      });
+      void notifyRole(
+        ["purchase"],
+        {
+          type: "purchase",
+          title: "Purchase approval requested again",
+          body: `Resubmitted for approval: ${editInfo?.item ?? "item"} ×${editInfo?.qty ?? "?"}.`,
+          link: `/issues/${id}`,
+        },
+        issueCollege
+      );
     }
 
     return json({ ok: true });

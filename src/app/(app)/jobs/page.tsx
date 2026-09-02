@@ -13,7 +13,6 @@ const TABS: { key: IssueStatus | "all"; label: string }[] = [
   { key: "PENDING", label: "Pending" },
   { key: "COMPLETED", label: "Done" },
   { key: "INSPECTED", label: "Inspected" },
-  { key: "HEAD_APPROVED", label: "Head approved" },
   { key: "VERIFIED", label: "Verified" },
 ];
 
@@ -36,7 +35,7 @@ export default function JobsPage() {
 
   const count = (s: IssueStatus) => issues.filter((i) => i.status === s).length;
   const visible = issues.filter((i) => tab === "all" || i.status === tab);
-  const showDone = ["COMPLETED", "INSPECTED", "HEAD_APPROVED", "VERIFIED"].includes(tab);
+  const showDone = ["COMPLETED", "INSPECTED", "VERIFIED"].includes(tab);
 
   return (
     <div className="flex flex-col gap-6">

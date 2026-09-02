@@ -48,13 +48,15 @@ export async function findDuplicatesFlow(input: {
   description: string;
   location: string;
   threshold?: number;
+  college?: string;
 }): Promise<DuplicateResult> {
   const threshold = input.threshold ?? 0.45;
   const similar: { id: string; issueNo: string; score: number }[] = [];
 
   try {
-    const snap = await adminDb()
-      .collection("issues")
+    const base = adminDb().collection("issues");
+    const scoped = input.college ? base.where("college", "==", input.college) : base;
+    const snap = await scoped
       .where("location.name", "==", input.location)
       .limit(50)
       .get();

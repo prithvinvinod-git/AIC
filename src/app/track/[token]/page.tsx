@@ -89,8 +89,8 @@ function TrackContent({ data }: { data: TrackData }) {
   const steps = useMemo<IssueStatus[]>(
     () =>
       escalated
-        ? ["NEW", "VALIDATED", "ESCALATED", "APPROVED", "ASSIGNED", "ONGOING", "COMPLETED", "INSPECTED", "HEAD_APPROVED", "VERIFIED", "CLOSED"]
-        : ["NEW", "VALIDATED", "ASSIGNED", "ONGOING", "COMPLETED", "INSPECTED", "HEAD_APPROVED", "VERIFIED", "CLOSED"],
+        ? ["NEW", "VALIDATED", "ESCALATED", "APPROVED", "ASSIGNED", "ONGOING", "COMPLETED", "INSPECTED", "VERIFIED", "CLOSED"]
+        : ["NEW", "VALIDATED", "ASSIGNED", "ONGOING", "COMPLETED", "INSPECTED", "VERIFIED", "CLOSED"],
     [escalated]
   );
   const statusIdx = issue.status === "PENDING" ? "ONGOING" : issue.status;

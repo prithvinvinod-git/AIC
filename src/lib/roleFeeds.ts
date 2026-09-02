@@ -76,7 +76,7 @@ export function feedFor(role: Role, department?: string): RoleFeed {
         params: { status: "ROUTED" },
         emptyTitle: "Nothing to dispatch",
         emptyBody: "Validated P3–5 issues will land here for you to forward to a category team.",
-        pick: (issues) => issues.filter((i) => ["ROUTED", "INSPECTED"].includes(i.status)),
+        pick: (issues) => issues.filter((i) => ["ROUTED"].includes(i.status)),
       };
     case "category_head":
       return {

@@ -53,7 +53,7 @@ export default function IssueDetailPage() {
   if (!issue || !claims) return <Loading label="Loading issue…" />;
 
   const slaDeadline =
-    issue.sla?.resolutionDeadline && ["ASSIGNED", "ONGOING", "PENDING", "COMPLETED", "INSPECTED", "HEAD_APPROVED"].includes(issue.status)
+    issue.sla?.resolutionDeadline && ["ASSIGNED", "ONGOING", "PENDING", "COMPLETED", "INSPECTED"].includes(issue.status)
       ? deadlineLabel(issue.sla.resolutionDeadline)
       : null;
 

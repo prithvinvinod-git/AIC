@@ -11,7 +11,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       return json({ error: "Not allowed." }, 403);
     }
     
-    const result = await rootCauseFlow();
+    const result = await rootCauseFlow({
+      college: user.role === "admin" ? undefined : user.college,
+    });
     return json({ result });
   } catch (e) {
     return handleError(e);

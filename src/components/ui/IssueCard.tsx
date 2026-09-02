@@ -11,7 +11,7 @@ import { FeedbackStars } from "./FeedbackStars";
 export function IssueCard({ issue, onClose }: { issue: Issue; onClose?: () => void }) {
   const sla = issue.sla;
   const deadline =
-    sla?.resolutionDeadline && ["ASSIGNED", "ONGOING", "PENDING", "COMPLETED", "INSPECTED", "HEAD_APPROVED"].includes(issue.status)
+    sla?.resolutionDeadline && ["ASSIGNED", "ONGOING", "PENDING", "COMPLETED", "INSPECTED"].includes(issue.status)
       ? deadlineLabel(sla.resolutionDeadline)
       : null;
   const canClose = issue.status === "VERIFIED" && !!onClose;

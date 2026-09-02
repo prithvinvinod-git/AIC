@@ -141,28 +141,7 @@ const checkInspectSendBack = (issue: Issue, actor: Actor, input: TransitionInput
     : "A send-back reason is required.";
 };
 
-/** Maintenance head signs off the inspected work. */
-const checkHeadApprove = (issue: Issue, actor: Actor): string | null => {
-  if (
-    actor.role === "maintenance_head" &&
-    issue.routing?.maintenanceHeadUid &&
-    issue.routing.maintenanceHeadUid !== actor.uid
-  )
-    return "This issue belongs to another maintenance head.";
-  return null;
-};
 
-const checkHeadSendBack = (issue: Issue, actor: Actor, input: TransitionInput): string | null => {
-  if (
-    actor.role === "maintenance_head" &&
-    issue.routing?.maintenanceHeadUid &&
-    issue.routing.maintenanceHeadUid !== actor.uid
-  )
-    return "This issue belongs to another maintenance head.";
-  return input.sendBackReason && input.sendBackReason.trim().length >= 3
-    ? null
-    : "A send-back reason is required.";
-};
 
 /** Spec §3.1 — the one authoritative transition table. */
 export const TRANSITION_RULES: Record<IssueStatus, TransitionRule[]> = {
@@ -243,7 +222,7 @@ export const TRANSITION_RULES: Record<IssueStatus, TransitionRule[]> = {
     },
     {
       to: "ASSIGNED",
-      roles: ["maintenance_head", "admin"],
+      roles: ["admin"],
       check: never,
     },
   ],
@@ -332,36 +311,7 @@ export const TRANSITION_RULES: Record<IssueStatus, TransitionRule[]> = {
       check: checkInspectSendBack,
     },
   ],
-  INSPECTED: [
-    {
-      to: "HEAD_APPROVED",
-      roles: ["maintenance_head", "admin"],
-      check: checkHeadApprove,
-    },
-    {
-      to: "ONGOING",
-      roles: ["maintenance_head", "admin"],
-      check: checkHeadSendBack,
-    },
-  ],
-  HEAD_APPROVED: [
-    {
-      to: "VERIFIED",
-      roles: ["validator", "admin"],
-      check: (_i, _a, input) =>
-        input.verdict && input.verdict.trim().length >= 2
-          ? null
-          : "A short verification note is required.",
-    },
-    {
-      to: "ONGOING",
-      roles: ["validator", "admin"],
-      check: (_i, _a, input) =>
-        input.sendBackReason && input.sendBackReason.trim().length >= 3
-          ? null
-          : "A send-back reason is required.",
-    },
-  ],
+  INSPECTED: [],
   VERIFIED: [
     {
       to: "CLOSED",
@@ -708,14 +658,17 @@ export async function applyTransition(
           verdict: input.verdict || note || "Inspected",
           ...(input.note ? { note: input.note } : {}),
         };
-        break;
-      }
-      case "HEAD_APPROVED": {
-        patches.headApproval = {
-          approvedBy: { uid: actor.uid, name: actor.name },
-          approvedAt: nowIso(),
+        finalStatus = "VERIFIED";
+        patches.verification = {
+          verifiedBy: { uid: actor.uid, name: actor.name },
+          verifiedAt: nowIso(),
+          verdict: input.verdict || note || "Verified by category head inspection",
           ...(input.note ? { note: input.note } : {}),
         };
+        steps.push(timelineEntry(issue.status, "INSPECTED", actor, input.verdict || note, false));
+        steps.push(
+          timelineEntry("INSPECTED", "VERIFIED", actor, "Auto-verified after category head inspection", true)
+        );
         break;
       }
       case "VERIFIED": {
@@ -738,7 +691,7 @@ export async function applyTransition(
       }
     }
 
-    if (input.to === "ONGOING" && ["COMPLETED", "INSPECTED", "HEAD_APPROVED"].includes(issue.status)) {
+    if (input.to === "ONGOING" && ["COMPLETED"].includes(issue.status)) {
       patches.verification = {
         verifiedBy: { uid: actor.uid, name: actor.name },
         verifiedAt: nowIso(),

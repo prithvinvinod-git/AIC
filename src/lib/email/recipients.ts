@@ -28,10 +28,15 @@ function clean(emails: string[]): string[] {
   ];
 }
 
-/** Active users holding one of the roles, optionally scoped to a department.
- *  While EMAIL_TEST_RECIPIENT is set, every role's mail routes to that single
- *  inbox (ordered principal/HOD > validator > maintenance). */
-export async function getRecipientEmails(roles: Role[], department?: string): Promise<string[]> {
+/** Active users holding one of the roles, optionally scoped to a department
+ *  and/or a college. While EMAIL_TEST_RECIPIENT is set, every role's mail
+ *  routes to that single inbox (ordered principal/HOD > validator >
+ *  maintenance). */
+export async function getRecipientEmails(
+  roles: Role[],
+  department?: string,
+  college?: string
+): Promise<string[]> {
   if (TEST_RECIPIENT) return [...roles].sort(byPriority).length ? [TEST_RECIPIENT] : [];
   try {
     const snap = await db
@@ -43,6 +48,9 @@ export async function getRecipientEmails(roles: Role[], department?: string): Pr
         const u = d.data();
         if (!roles.includes(u.role as Role)) return false;
         if (department && u.department && u.department !== department) return false;
+        // Skip only when a college is requested and the user has a (different)
+        // college — lets matching or unset accounts receive it.
+        if (college && u.college && u.college !== college) return false;
         if (u.notifyEmail === false) return false;
         return true;
       })

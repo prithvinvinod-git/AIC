@@ -57,12 +57,15 @@ function fallbackPredictive(rows: { location: string; category: string }[]): AtR
  * F7 — Predictive maintenance for identifying at-risk locations.
  * Uses Gemini when available; otherwise a deterministic frequency fallback.
  */
-export async function predictiveMaintenanceFlow(): Promise<PredictiveResult> {
+export async function predictiveMaintenanceFlow(
+  input: { college?: string } = {}
+): Promise<PredictiveResult> {
   const since = new Date();
   since.setDate(since.getDate() - 45);
 
-  const snap = await adminDb()
-    .collection("issues")
+  const base = adminDb().collection("issues");
+  const query = input.college ? base.where("college", "==", input.college) : base;
+  const snap = await query
     .where("createdAt", ">=", since.toISOString())
     .orderBy("createdAt", "desc")
     .limit(1000)

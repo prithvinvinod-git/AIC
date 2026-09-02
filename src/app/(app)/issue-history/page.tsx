@@ -16,7 +16,7 @@ import { STATUSES } from "@/lib/types";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import type { Category, Issue, IssueStatus } from "@/lib/types";
 
-const HISTORY_ROLES = ["admin", "principal"];
+const HISTORY_ROLES = ["admin", "principal", "validator"];
 
 /** Issues at P3 or above (priority number ≤ 3) are board-eligible. */
 const BOARD_MAX_PRIORITY = 3;

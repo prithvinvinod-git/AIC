@@ -12,11 +12,12 @@ service cloud.firestore {
                     && request.auth.token.role == 'reporter'
                     && request.resource.data.status == 'NEW';
       allow update: if request.auth != null && (
-                    (request.auth.token.role == 'validator'    && resource.data.status == 'NEW')
+                    (request.auth.token.role == 'validator'    && resource.data.status in ['NEW', 'VALIDATED', 'APPROVED', 'PENDING', 'ASSIGNED', 'ONGOING'])
                  || (request.auth.token.role == 'hod'          && resource.data.status == 'ESCALATED')
-                 || (request.auth.token.role in ['principal']  && resource.data.status == 'ESCALATED')
+                 || (request.auth.token.role == 'principal'    && resource.data.status == 'ESCALATED')
+                 || (request.auth.token.role == 'maintenance_head' && resource.data.status in ['ROUTED', 'PENDING_ASSIGN'])
+                 || (request.auth.token.role == 'category_head'   && resource.data.status in ['PENDING_ASSIGN', 'COMPLETED'])
                  || (request.auth.token.role == 'maintenance'  && resource.data.status in ['ASSIGNED', 'ONGOING'])
-                 || (request.auth.token.role == 'validator'    && resource.data.status in ['COMPLETED', 'PENDING', 'ASSIGNED'])
                  || (request.auth.token.role == 'admin'));
       allow read: if request.auth != null;
     }

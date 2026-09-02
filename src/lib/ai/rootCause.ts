@@ -19,12 +19,13 @@ interface IssueRow {
   status: string;
 }
 
-async function loadRecentIssues(days: number): Promise<IssueRow[]> {
+async function loadRecentIssues(days: number, college?: string): Promise<IssueRow[]> {
   const since = new Date();
   since.setDate(since.getDate() - days);
 
-  const snap = await adminDb()
-    .collection("issues")
+  const base = adminDb().collection("issues");
+  const query = college ? base.where("college", "==", college) : base;
+  const snap = await query
     .where("createdAt", ">=", since.toISOString())
     .orderBy("createdAt", "desc")
     .limit(1000)
@@ -100,8 +101,8 @@ function fallbackRootCause(issues: IssueRow[]): RootCauseResult {
  * Analyzes historical issues to identify possible underlying causes.
  * Uses Gemini when available; otherwise a deterministic cluster fallback.
  */
-export async function rootCauseFlow(): Promise<RootCauseResult> {
-  const issues = await loadRecentIssues(30);
+export async function rootCauseFlow(input: { college?: string } = {}): Promise<RootCauseResult> {
+  const issues = await loadRecentIssues(30, input.college);
 
   if (!aiEnabled()) return fallbackRootCause(issues);
 

@@ -7,7 +7,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { api } from "@/lib/clientApi";
 import { Loading, EmptyState, BoardErrorState } from "@/components/ui/States";
 import { AISuggestionCard } from "@/components/issues/AISuggestionCard";
-import { VerifyCard, RouteToHeadCard } from "@/components/issues/HeadCards";
+import { RouteToHeadCard } from "@/components/issues/HeadCards";
 import { MaintenanceJobCard } from "@/components/issues/MaintenanceJobCard";
 import { RootCauseAnalysisCard } from "@/components/ai/RootCauseAnalysisCard";
 import { PriorityBadge, StatusBadge } from "@/components/ui/Badge";
@@ -109,7 +109,6 @@ export default function ValidatePage() {
   const validateQueue = issues.filter((i) => i.status === "NEW");
   const active = issues.filter((i) => ["ASSIGNED", "ONGOING"].includes(i.status));
   const assignQueue = issues.filter((i) => i.status === "APPROVED");
-  const verifyQueue = issues.filter((i) => i.status === "HEAD_APPROVED");
   const blocked = issues.filter((i) => i.status === "PENDING");
 
   return (
@@ -205,21 +204,6 @@ export default function ValidatePage() {
           <div className="grid items-start gap-4 lg:grid-cols-2">
             {assignQueue.map((issue) => (
               <RouteToHeadCard key={issue.id} issue={issue} onRefresh={() => void reload()} />
-            ))}
-          </div>
-        )}
-      </section>
-
-      <section className="flex flex-col gap-4">
-        <h2 className="font-display text-lg max-md:text-base font-semibold text-ink">
-          Final verification <span className="text-sm font-normal text-slate">({verifyQueue.length})</span>
-        </h2>
-        {verifyQueue.length === 0 ? (
-          <EmptyState title="Nothing to verify" body="Inspected jobs approved by the maintenance head will appear here for your final check." />
-        ) : (
-          <div className="grid items-start gap-4 lg:grid-cols-2">
-            {verifyQueue.map((issue) => (
-              <VerifyCard key={issue.id} issue={issue} onRefresh={() => void reload()} />
             ))}
           </div>
         )}

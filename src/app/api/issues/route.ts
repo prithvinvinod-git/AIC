@@ -89,12 +89,16 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     after(async () => {
       await Promise.all([
         import("@/lib/ai").then((ai) => ai.runAiOnCreate(ref.id)),
-        notifyRole(["validator"], {
-          type: "issue",
-          title: "New issue to review",
-          body: `${issueNo}: ${title}`,
-          link: `/issues/${ref.id}`,
-        }),
+        notifyRole(
+          ["validator"],
+          {
+            type: "issue",
+            title: "New issue to review",
+            body: `${issueNo}: ${title}`,
+            link: `/issues/${ref.id}`,
+          },
+          body.college || undefined
+        ),
         incrementStatusCount("NEW"),
         incrementCategoryCount(cat.name),
       ]);
@@ -137,6 +141,9 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     let query: Query = db.collection("issues");
 
     if (board) {
+      if (user.role !== "admin" && user.college) {
+        query = query.where("college", "==", user.college);
+      }
       const snap = await query.orderBy("createdAt", "desc").limit(200).get();
       const issues: Issue[] = snap.docs
         .map((d) => {
@@ -156,6 +163,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     }
 
     if (user.role === "purchase") {
+      query = query.where("college", "==", user.college || "");
       const snap = await query.orderBy("createdAt", "desc").limit(500).get();
       const issues: Issue[] = snap.docs
         .map((d) => {
@@ -170,15 +178,19 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
     if (user.role === "reporter" || mine) {
       query = query.where("reporter.uid", "==", user.uid);
+      if (user.college) query = query.where("college", "==", user.college);
     } else if (user.role === "validator") {
+      query = query.where("college", "==", user.college || "");
       query = query.where("department", "==", user.department);
     } else if (user.role === "maintenance_head") {
       query = query.where("routing.maintenanceHeadUid", "==", user.uid);
+      if (user.college) query = query.where("college", "==", user.college);
     } else if (user.role === "category_head") {
       const catSnap = await db.collection("categories").where("headUid", "==", user.uid).get();
       const categoryIds = catSnap.docs.map((d) => d.id);
       if (!categoryIds.length) return json({ issues: [] });
       query = query.where("routing.categoryId", "in", categoryIds.slice(0, 10));
+      if (user.college) query = query.where("college", "==", user.college);
     } else if (user.role === "maintenance") {
       const teamSnap = await db
         .collection("teams")
@@ -187,6 +199,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       const teamIds = teamSnap.docs.map((d) => d.id);
       if (teamIds.length) query = query.where("routing.teamId", "in", teamIds);
       else return json({ issues: [] });
+      if (user.college) query = query.where("college", "==", user.college);
     }
 
     if (status && status !== "all") query = query.where("status", "==", status);

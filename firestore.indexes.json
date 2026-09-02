@@ -72,6 +72,86 @@
       ] },
     { "collectionGroup": "issues", "queryScope": "COLLECTION",
       "fields": [
+        { "fieldPath": "college", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ] },
+    { "collectionGroup": "issues", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "college", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ] },
+    { "collectionGroup": "issues", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "college", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "ASCENDING" }
+      ] },
+    { "collectionGroup": "issues", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "college", "order": "ASCENDING" },
+        { "fieldPath": "department", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ] },
+    { "collectionGroup": "issues", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "college", "order": "ASCENDING" },
+        { "fieldPath": "department", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ] },
+    { "collectionGroup": "issues", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "reporter.uid", "order": "ASCENDING" },
+        { "fieldPath": "college", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ] },
+    { "collectionGroup": "issues", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "reporter.uid", "order": "ASCENDING" },
+        { "fieldPath": "college", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ] },
+    { "collectionGroup": "issues", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "routing.maintenanceHeadUid", "order": "ASCENDING" },
+        { "fieldPath": "college", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ] },
+    { "collectionGroup": "issues", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "routing.maintenanceHeadUid", "order": "ASCENDING" },
+        { "fieldPath": "college", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ] },
+    { "collectionGroup": "issues", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "routing.categoryId", "order": "ASCENDING" },
+        { "fieldPath": "college", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ] },
+    { "collectionGroup": "issues", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "routing.categoryId", "order": "ASCENDING" },
+        { "fieldPath": "college", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ] },
+    { "collectionGroup": "issues", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "routing.teamId", "order": "ASCENDING" },
+        { "fieldPath": "college", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ] },
+    { "collectionGroup": "issues", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "routing.teamId", "order": "ASCENDING" },
+        { "fieldPath": "college", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ] },
+    { "collectionGroup": "issues", "queryScope": "COLLECTION",
+      "fields": [
         { "fieldPath": "routing.staff", "order": "ASCENDING" },
         { "fieldPath": "status", "order": "ASCENDING" }
       ] },

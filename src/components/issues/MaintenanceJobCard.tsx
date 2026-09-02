@@ -331,12 +331,7 @@ export function MaintenanceJobCard({
         In-site verified{issue.inspection?.inspectedBy ? ` by ${issue.inspection.inspectedBy.name}` : ""}
       </p>
       {issue.inspection?.verdict && <p className="mt-1">{issue.inspection.verdict}</p>}
-      <p className="mt-1 text-slate">Awaiting maintenance head approval.</p>
     </div>
-  ) : issue.status === "HEAD_APPROVED" ? (
-    <p className="rounded-lg bg-warning-soft px-3 py-2 text-xs text-warning">
-      Awaiting final verification by the department validator.
-    </p>
   ) : issue.status === "VERIFIED" && issue.verification ? (
     <div className="rounded-lg bg-success-soft px-3 py-2 text-xs text-success">
       <p className="font-medium">Verified by {issue.verification.verifiedBy.name}</p>

@@ -71,17 +71,6 @@ export function IssueActions({ issue, onChanged }: Props) {
         </div>
       );
     }
-    if (issue.status === "HEAD_APPROVED") {
-      return (
-        <VerifyPanel
-          issue={issue}
-          onChanged={onChanged}
-          to="VERIFIED"
-          title="Final verification"
-          verifyLabel="Verify"
-        />
-      );
-    }
   }
 
   if (["hod", "principal"].includes(role) && issue.status === "ESCALATED") {
@@ -120,16 +109,8 @@ export function IssueActions({ issue, onChanged }: Props) {
       return (
         <div className="card">
           <p className="text-sm text-success">
-            In-site verified by {issue.inspection?.inspectedBy.name || "the category head"} — awaiting maintenance
-            head approval.
+            In-site verified by {issue.inspection?.inspectedBy.name || "the category head"} — awaiting reporter review.
           </p>
-        </div>
-      );
-    }
-    if (issue.status === "HEAD_APPROVED") {
-      return (
-        <div className="card">
-          <p className="text-sm text-slate">Awaiting final verification by the department validator.</p>
         </div>
       );
     }
@@ -151,9 +132,6 @@ export function IssueActions({ issue, onChanged }: Props) {
           {issue.status === "PENDING_ASSIGN" && <AssignPanel issue={issue} onChanged={onChanged} />}
         </div>
       );
-    }
-    if (issue.status === "INSPECTED") {
-      return <ApprovePanel issue={issue} onChanged={onChanged} />;
     }
   }
 
@@ -295,58 +273,6 @@ function VerifyPanel({
         <div className="flex gap-2">
           <button className="btn btn-primary btn-sm" disabled={busy} onClick={() => void act("verify")}>
             {busy ? "Saving…" : verifyLabel}
-          </button>
-          <button className="btn btn-ghost btn-sm" disabled={busy || sendBack.trim().length < 3} onClick={() => void act("sendback")}>
-            Send back
-          </button>
-        </div>
-      </div>
-      {errorEl}
-    </div>
-  );
-}
-
-function ApprovePanel({ issue, onChanged }: { issue: Issue; onChanged: () => void }) {
-  const [note, setNote] = useState("");
-  const [sendBack, setSendBack] = useState("");
-  const [busy, setBusy] = useState(false);
-  const { showError, errorEl } = useActionError();
-
-  const act = useCallback(
-    async (kind: "approve" | "sendback") => {
-      setBusy(true);
-      try {
-        if (kind === "approve") {
-          await api(`/api/issues/${issue.id}/head-approve`, {
-            method: "POST",
-            body: JSON.stringify({ note: note || undefined }),
-          });
-        } else {
-          await api(`/api/issues/${issue.id}/sendback`, { method: "POST", body: JSON.stringify({ sendBackReason: sendBack }) });
-        }
-        onChanged();
-      } catch (e) {
-        showError(e);
-      } finally {
-        setBusy(false);
-      }
-    },
-    [issue.id, note, sendBack, onChanged, showError]
-  );
-
-  return (
-    <div className="card">
-      <p className="font-medium text-graphite">Approve inspected work</p>
-      <p className="mt-1 text-xs text-slate">
-        {issue.inspection?.inspectedBy.name || "The category head"} verified the work on site — confirm before it
-        goes to the department validator.
-      </p>
-      <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
-        <input className="input flex-1" placeholder="Approval note (optional)" value={note} onChange={(e) => setNote(e.target.value)} />
-        <input className="input flex-1" placeholder="Send-back reason" value={sendBack} onChange={(e) => setSendBack(e.target.value)} />
-        <div className="flex gap-2">
-          <button className="btn btn-primary btn-sm" disabled={busy} onClick={() => void act("approve")}>
-            {busy ? "Approving…" : "Approve"}
           </button>
           <button className="btn btn-ghost btn-sm" disabled={busy || sendBack.trim().length < 3} onClick={() => void act("sendback")}>
             Send back

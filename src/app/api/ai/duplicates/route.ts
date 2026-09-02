@@ -20,6 +20,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       description: issue.description,
       location: issue.location?.name || "",
       threshold: 0.45,
+      college: issue.college || undefined,
     });
     await writeDuplicates(body.issueId, result);
     return json({ result });

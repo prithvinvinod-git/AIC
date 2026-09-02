@@ -92,7 +92,7 @@ export function DispatchCard({
   const selectedTeam = teams.find((t) => t.id === teamId);
 
   const review = useCallback(
-    async (kind: "inspect" | "approve" | "sendback") => {
+    async (kind: "inspect" | "sendback") => {
       setReviewBusy(true);
       try {
         if (kind === "inspect") {
@@ -100,8 +100,6 @@ export function DispatchCard({
             method: "POST",
             body: JSON.stringify({ verdict: verdict || "Verified." }),
           });
-        } else if (kind === "approve") {
-          await api(`/api/issues/${issue.id}/head-approve`, { method: "POST", body: JSON.stringify({}) });
         } else {
           await api(`/api/issues/${issue.id}/sendback`, {
             method: "POST",
@@ -278,28 +276,6 @@ export function DispatchCard({
           <div className="flex gap-2">
             <button className="btn btn-primary btn-sm" disabled={reviewBusy} onClick={() => void review("inspect")}>
               {reviewBusy ? "Saving…" : "Verify"}
-            </button>
-            <button
-              className="btn btn-ghost btn-sm"
-              disabled={reviewBusy || sendBack.trim().length < 3}
-              onClick={() => void review("sendback")}
-            >
-              Send back
-            </button>
-          </div>
-          {errorEl}
-        </div>
-      )}
-
-      {isMaintHead && issue.status === "INSPECTED" && (
-        <div className="mt-auto flex flex-col gap-2 rounded-xl bg-paper p-3">
-          <p className="text-xs text-slate">
-            {issue.inspection?.inspectedBy.name || "The category head"} verified this on site — approve to send to
-            the department validator.
-          </p>
-          <div className="flex gap-2">
-            <button className="btn btn-primary btn-sm" disabled={reviewBusy} onClick={() => void review("approve")}>
-              {reviewBusy ? "Approving…" : "Approve"}
             </button>
             <button
               className="btn btn-ghost btn-sm"

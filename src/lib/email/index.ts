@@ -13,14 +13,15 @@ const db = adminDb();
 export async function sendIssueReportedEmail(issue: Issue, priority: number): Promise<void> {
   if (!mailEnabled()) return;
   const dept = issue.department;
+  const college = issue.college;
   const urgent = priority >= 1 && priority <= 2;
   const recipients = urgent
     ? [
-        ...(await getRecipientEmails(["principal"])),
-        ...(await getRecipientEmails(["hod"], dept)),
-        ...(await getRecipientEmails(["validator"], dept)),
+        ...(await getRecipientEmails(["principal"], undefined, college)),
+        ...(await getRecipientEmails(["hod"], dept, college)),
+        ...(await getRecipientEmails(["validator"], dept, college)),
       ]
-    : await getRecipientEmails(["validator"], dept);
+    : await getRecipientEmails(["validator"], dept, college);
 
   const t = reportedTemplate(issue, priority);
   await sendMail({
@@ -35,8 +36,8 @@ export async function sendIssueReportedEmail(issue: Issue, priority: number): Pr
 export async function sendIssueApprovedEmail(issue: Issue): Promise<void> {
   if (!mailEnabled()) return;
   const recipients = [
-    ...(await getRecipientEmails(["hod"], issue.department)),
-    ...(await getRecipientEmails(["principal"])),
+    ...(await getRecipientEmails(["hod"], issue.department, issue.college)),
+    ...(await getRecipientEmails(["principal"], undefined, issue.college)),
   ];
   const t = approvedTemplate(issue);
   await sendMail({
@@ -73,7 +74,7 @@ export async function sendFeedbackEmail(issue: Issue): Promise<void> {
   const teamRecipients = issue.routing?.teamId
     ? await getTeamEmails(issue.routing.teamId, staffUids)
     : await getTeamEmails("", staffUids);
-  const validatorRecipients = await getRecipientEmails(["validator"], issue.department);
+  const validatorRecipients = await getRecipientEmails(["validator"], issue.department, issue.college);
   const recipients = [...new Set([...teamRecipients, ...validatorRecipients])];
   if (recipients.length === 0) return;
 

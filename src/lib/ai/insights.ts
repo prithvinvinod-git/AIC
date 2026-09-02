@@ -44,7 +44,9 @@ const TERMINAL_STATUSES = ["CLOSED", "VERIFIED", "REJECTED"];
  * (AI when enabled, deterministic summary otherwise). Powers the HOD
  * "trending complaints" panel and the weekly report email.
  */
-export async function weeklyInsightsFlow(input: { weekStart?: string }): Promise<WeeklyInsight> {
+export async function weeklyInsightsFlow(
+  input: { weekStart?: string; college?: string } = {}
+): Promise<WeeklyInsight> {
   const end = new Date();
   const start = input.weekStart ? new Date(input.weekStart) : new Date();
   if (!input.weekStart) start.setDate(end.getDate() - 6);
@@ -52,9 +54,15 @@ export async function weeklyInsightsFlow(input: { weekStart?: string }): Promise
 
   const db = adminDb();
   const since = start.toISOString();
+
+  const createdBase = db.collection("issues");
+  const resolvedBase = db.collection("issues");
+  const createdQuery = input.college ? createdBase.where("college", "==", input.college) : createdBase;
+  const resolvedQuery = input.college ? resolvedBase.where("college", "==", input.college) : resolvedBase;
+
   const [createdSnap, resolvedSnap] = await Promise.all([
-    db.collection("issues").where("createdAt", ">=", since).limit(1000).get(),
-    db.collection("issues").where("status", "in", ["VERIFIED", "CLOSED"]).limit(1000).get(),
+    createdQuery.where("createdAt", ">=", since).limit(1000).get(),
+    resolvedQuery.where("status", "in", ["VERIFIED", "CLOSED"]).limit(1000).get(),
   ]);
 
   const byCategory: Record<string, number> = {};

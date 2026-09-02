@@ -24,6 +24,8 @@ export async function POST(
     const db = adminDb();
     const ref = db.doc(`issues/${id}`);
 
+    let issueCollege: string | undefined;
+
     const now = new Date().toISOString();
     const requirement: Record<string, unknown> = {
       id: db.collection("ids").doc().id,
@@ -39,6 +41,7 @@ export async function POST(
       if (!snap.exists) throw new Error("issue-missing");
       const data = snap.data() as Issue;
       if (data.status === "CLOSED") throw new Error("issue-closed");
+      issueCollege = data.college;
       await tx.update(ref, {
         requirements: [...(data.requirements || []), requirement],
         pendingPurchaseCount:
@@ -48,12 +51,16 @@ export async function POST(
     });
 
     if (body.needsApproval) {
-      void notifyRole(["purchase"], {
-        type: "purchase",
-        title: "Purchase approval needed",
-        body: `Approval requested for ${requirement.item} ×${requirement.qty}.`,
-        link: `/issues/${id}`,
-      });
+      void notifyRole(
+        ["purchase"],
+        {
+          type: "purchase",
+          title: "Purchase approval needed",
+          body: `Approval requested for ${requirement.item} ×${requirement.qty}.`,
+          link: `/issues/${id}`,
+        },
+        issueCollege
+      );
     }
 
     return json({ requirement }, 201);

@@ -1,7 +1,7 @@
 // Smoke test: full lifecycle over the real HTTP API against the live cloud
 // project. Minted ID tokens (via admin SDK) drive each role through:
-//   NEW -> VALIDATED(auto-ESCALATED P2) -> APPROVED -> ASSIGNED -> ONGOING
-//      -> COMPLETED -> VERIFIED -> CLOSED
+//   NEW -> VALIDATED(auto-ESCALATED P2) -> APPROVED -> ROUTED -> PENDING_ASSIGN
+//      -> ASSIGNED -> ONGOING -> COMPLETED -> INSPECTED(auto-VERIFIED) -> CLOSED
 // Usage: node scripts/smoke-lifecycle.mjs  (requires `npm run dev` on :3000)
 import { readFileSync } from "node:fs";
 import { cert, initializeApp, getApps } from "firebase-admin/app";
@@ -69,7 +69,7 @@ const report = (label, ok, extra = "") => {
   if (!ok) process.exitCode = 1;
 };
 
-let reporterToken, validatorToken, hodToken, maintToken;
+let reporterToken, validatorToken, hodToken, maintToken, catHeadToken;
 let reporterUid;
 let issueId = null;
 
@@ -78,6 +78,7 @@ try {
   const validator = await adminAuth.getUserByEmail("validator@gmail.com");
   const hod = await adminAuth.getUserByEmail("hod@gmail.com");
   const maint = await adminAuth.getUserByEmail("mainten@gmail.com");
+  const catHead = await adminAuth.getUserByEmail("cathead@gmail.com");
 
   // Throwaway reporter (real uid) so the create route's role gate passes.
   const reporterEmail = `smoke.${Date.now()}@campuscare.local`;
@@ -108,6 +109,9 @@ try {
   });
   maintToken = await getIdToken(maint.uid, {
     role: "maintenance", name: "Smoke Maint", department: "Engineering",
+  });
+  catHeadToken = await getIdToken(catHead.uid, {
+    role: "category_head", name: "Smoke CatHead", department: "Engineering",
   });
 
   // 1. Reporter creates issue (P2 electrical so it auto-escalates).
@@ -140,49 +144,66 @@ try {
   });
   report("approve -> APPROVED", appr.issue.status === "APPROVED", `(got ${appr.issue.status})`);
 
-  // 4. Validator assigns to Electrical team.
+  // 4. Validator routes to maintenance head -> ROUTED.
+  const fwd = await api(validatorToken, "POST", `/api/issues/${issueId}/forward`, {
+    to: "ROUTED",
+    categoryId: cat.id,
+    note: "Routed for smoke test.",
+  });
+  report("route -> ROUTED", fwd.issue.status === "ROUTED", `(got ${fwd.issue.status})`);
+
+  // 5. Maintenance head forwards to category head -> PENDING_ASSIGN.
+  const fwd2 = await api(hodToken, "POST", `/api/issues/${issueId}/forward`, {
+    to: "PENDING_ASSIGN",
+    categoryId: cat.id,
+    note: "Forwarded to category.",
+  });
+  report("forward -> PENDING_ASSIGN", fwd2.issue.status === "PENDING_ASSIGN", `(got ${fwd2.issue.status})`);
+
+  // 6. Category head assigns team -> ASSIGNED.
   const teamSnap = await db
     .collection("teams").where("categoryId", "==", cat.id).where("isActive", "==", true).limit(1).get();
   if (teamSnap.empty) throw new Error("No active Electrical team in live DB");
   const team = teamSnap.docs[0];
-  const ass = await api(validatorToken, "POST", `/api/issues/${issueId}/assign`, {
+  const ass = await api(catHeadToken, "POST", `/api/issues/${issueId}/assign`, {
     teamId: team.id,
     staff: [maint.uid],
     note: "Assigned for smoke test.",
   });
   report("assign -> ASSIGNED", ass.issue.status === "ASSIGNED", `(team ${team.id})`);
 
-  // 5. Maintenance starts.
+  // 7. Maintenance starts -> ONGOING.
   const ong = await api(maintToken, "POST", `/api/issues/${issueId}/status`, {
     to: "ONGOING",
     note: "Work started.",
   });
   report("start -> ONGOING", ong.issue.status === "ONGOING", `(got ${ong.issue.status})`);
 
-  // 6. Maintenance completes.
+  // 8. Maintenance completes -> COMPLETED.
   const comp = await api(maintToken, "POST", `/api/issues/${issueId}/complete`, {
     note: "Replaced faulty switch, verified all outputs.",
   });
   report("complete -> COMPLETED", comp.issue.status === "COMPLETED", `(got ${comp.issue.status})`);
 
-  // 7. Validator verifies.
-  const ver = await api(validatorToken, "POST", `/api/issues/${issueId}/verify`, {
-    verdict: "Looks good.",
+  // 9. Category head inspects -> INSPECTED (auto-cascades to VERIFIED).
+  const insp = await api(catHeadToken, "POST", `/api/issues/${issueId}/inspect`, {
+    verdict: "Work looks good on site.",
   });
-  report("verify -> VERIFIED", ver.issue.status === "VERIFIED", `(got ${ver.issue.status})`);
+  report("inspect -> VERIFIED (auto)", insp.issue.status === "VERIFIED", `(got ${insp.issue.status})`);
 
-  // 8. Reporter rates -> CLOSED.
+  // 10. Reporter rates -> CLOSED.
   const clo = await api(reporterToken, "POST", `/api/issues/${issueId}/feedback`, {
     rating: 5,
     comment: "Fixed, thanks.",
   });
   report("feedback -> CLOSED", clo.issue.status === "CLOSED", `(got ${clo.issue.status})`);
 
-  // 9. Sanity: timeline captured the whole chain in order.
+  // 11. Sanity: timeline captured the whole chain in order.
   const detail = await api(reporterToken, "GET", `/api/issues/${issueId}`);
   const events = ((detail.timeline || [])).map((t) => `${t.from}->${t.to}`);
   const chain = ["->NEW", "NEW->VALIDATED", "VALIDATED->ESCALATED", "ESCALATED->APPROVED",
-    "APPROVED->ASSIGNED", "ASSIGNED->ONGOING", "ONGOING->COMPLETED", "COMPLETED->VERIFIED",
+    "APPROVED->ROUTED", "ROUTED->PENDING_ASSIGN", "PENDING_ASSIGN->ASSIGNED",
+    "ASSIGNED->ONGOING", "ONGOING->COMPLETED", "COMPLETED->INSPECTED", "INSPECTED->VERIFIED",
     "VERIFIED->CLOSED"];
   const missing = chain.filter((c) => !events.includes(c));
   const orderOk =

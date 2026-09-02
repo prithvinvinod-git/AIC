@@ -8,6 +8,7 @@ export interface AuthUser {
   name: string;
   role: Role;
   department: string;
+  college?: string;
 }
 
 /**
@@ -32,6 +33,7 @@ export async function getAuthUser(req: NextRequest): Promise<AuthUser | null> {
       name,
       role,
       department,
+      college: (decoded.college as string) || undefined,
     };
   } catch {
     return null;

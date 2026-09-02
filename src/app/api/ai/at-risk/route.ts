@@ -11,7 +11,9 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       return json({ error: "Not allowed." }, 403);
     }
     
-    const result = await predictiveMaintenanceFlow();
+    const result = await predictiveMaintenanceFlow({
+      college: user.role === "admin" ? undefined : user.college,
+    });
     return json({ result });
   } catch (e) {
     return handleError(e);

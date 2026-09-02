@@ -8,7 +8,7 @@ const db = adminDb();
 const OPEN_STATUSES = ["NEW", "VALIDATED", "ESCALATED", "APPROVED", "ASSIGNED", "ONGOING", "PENDING"];
 
 const CACHE_TTL_MS = 60_000;
-const cache = new Map<number, { at: number; payload: unknown }>();
+const cache = new Map<string, { at: number; payload: unknown }>();
 
 /**
  * GET /api/analytics/summary?range=7|30 — aggregates over the requested window.
@@ -26,16 +26,23 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     const range = Number(req.nextUrl.searchParams.get("range") || 7);
     const since = new Date(Date.now() - range * 24 * 3600 * 1000).toISOString();
 
-    const cached = cache.get(range);
+    // Non-admin (validator/hod/principal) analytics are scoped to their own
+    // college; admins see the whole campus. Empty college falls back to all so
+    // a misconfigured account doesn't hide everything until it's fixed.
+    const college = user.role === "admin" ? "" : user.college || "";
+
+    const cacheKey = `${college || "*"}:${range}`;
+    const cached = cache.get(cacheKey);
     if (cached && Date.now() - cached.at < CACHE_TTL_MS) {
       return json(cached.payload);
     }
 
+    const collegeFilter = college ? db.collection("issues").where("college", "==", college) : db.collection("issues");
     const [issueSnap, resolvedSnap, openSnap, totalSnap] = await Promise.all([
-      db.collection("issues").where("createdAt", ">=", since).limit(500).get(),
-      db.collection("issues").where("status", "in", ["VERIFIED", "CLOSED"]).limit(500).get(),
-      db.collection("issues").where("status", "in", OPEN_STATUSES).limit(1000).get(),
-      db.collection("issues").limit(1000).get(),
+      collegeFilter.where("createdAt", ">=", since).limit(500).get(),
+      collegeFilter.where("status", "in", ["VERIFIED", "CLOSED"]).limit(500).get(),
+      collegeFilter.where("status", "in", OPEN_STATUSES).limit(1000).get(),
+      collegeFilter.limit(1000).get(),
     ]);
 
     const byStatus: Record<string, number> = {};
@@ -122,7 +129,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       },
     };
 
-    cache.set(range, { at: Date.now(), payload });
+    cache.set(cacheKey, { at: Date.now(), payload });
     return json(payload);
   } catch (e) {
     return handleError(e);

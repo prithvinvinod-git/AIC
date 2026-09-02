@@ -38,3 +38,16 @@ Working list of the 10 tasks agreed in session. Status updated as each task comp
 - [ ] **P8. Background data sync** — On app open: show cached data immediately → fetch latest → compare → update local cache → UI refreshes. Keeps the app fast on poor network.
 - [ ] **P9. Offline UI** — Don't just show "Network Error". Show: "You're offline — showing your latest saved information. Last updated: 10:42 AM" with a "Back online — data updated" toast when reconnected.
 - [ ] **P10. Mobile-native interactions** — Bottom navigation, swipe-friendly cards, pull-to-refresh, haptic feedback where supported, touch-friendly buttons, bottom sheets, proper safe-area padding, keyboard-aware layouts. Don't just narrow the desktop site.
+
+---
+
+## Cleanup & Fixes (from audit 2026-09-02)
+
+- [x] **C1. Remove HEAD_APPROVED from state machine** — INSPECTED now auto-cascades to VERIFIED (category_head inspects → reporter can close directly). Removed maintenance_head approval + validator verification steps. *(Done.)*
+- [x] **C2. Delete empty `head-approve` route directory** — `src/app/api/issues/[id]/head-approve/` was an empty dir after removing the HEAD_APPROVED status. *(Done.)*
+- [x] **C3. Remove dead `/verify` route** — `POST /api/issues/[id]/verify` is unreachable now (no role can trigger COMPLETED → VERIFIED). Delete the route file and its `VerifyCard` in HeadCards.tsx. *(Done.)*
+- [x] **C4. Remove unused `AssignCard` and `VerifyCard` from HeadCards.tsx** — Both are dead exports (never imported). Only `RouteToHeadCard` is used. *(Done.)*
+- [x] **C5. Add validator to issue history nav** — Validator role is missing from `issue-history` nav item. Should be `["admin", "principal", "validator"]` so validators can search/filter all issues in their department scope. *(Done.)*
+- [x] **C6. Fix maintenance_head direct-assign bug** — `ROUTED → ASSIGNED` transition is allowed for `maintenance_head`, letting them assign workers directly instead of forwarding to a category head via `PENDING_ASSIGN`. Remove that transition; maintenance_head should only forward, not assign. *(Done.)*
+- [x] **C7. Update Firestore rules** — Rules are stale: missing `maintenance_head`, `category_head` roles and `ROUTED`, `PENDING_ASSIGN`, `INSPECTED`, `VERIFIED` statuses. Defense-in-depth is broken. *(Done.)*
+- [x] **C8. Update smoke test** — `scripts/smoke-lifecycle.mjs` drives `COMPLETED → VERIFIED` (validator verify) which no longer exists. Must use the new flow: `COMPLETED → INSPECTED` (category_head) which auto-cascades to VERIFIED. *(Done.)*

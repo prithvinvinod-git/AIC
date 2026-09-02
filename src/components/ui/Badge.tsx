@@ -13,7 +13,6 @@ const STATUS_TONE: Record<IssueStatus, string> = {
   PENDING: "bg-warning-soft text-warning",
   COMPLETED: "bg-success-soft text-success",
   INSPECTED: "bg-success-soft text-success",
-  HEAD_APPROVED: "bg-accent-soft text-accent",
   VERIFIED: "bg-success-soft text-success",
   REJECTED: "bg-danger-soft text-danger",
   CLOSED: "bg-success-soft text-success",

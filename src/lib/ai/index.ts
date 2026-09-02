@@ -63,6 +63,7 @@ export async function runAiOnCreate(issueId: string): Promise<void> {
       description: issue.description || "",
       location: issue.location?.name || "",
       threshold: 0.45,
+      college: issue.college || undefined,
     });
     await writeDuplicates(issueId, dupe);
   } catch (e) {

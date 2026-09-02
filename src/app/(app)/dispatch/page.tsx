@@ -30,7 +30,7 @@ export default function DispatchPage() {
   const isMaintHead = role === "maintenance_head";
   const defaultTab: IssueStatus = isMaintHead ? "ROUTED" : "PENDING_ASSIGN";
   const reviewTabs: { key: IssueStatus; label: string }[] = isMaintHead
-    ? [{ key: "INSPECTED", label: "To approve" }]
+    ? []
     : [{ key: "COMPLETED", label: "To verify" }];
   const tabs = [...TABS, ...reviewTabs];
   const activeTab: IssueStatus = tab === "all" ? defaultTab : tab;

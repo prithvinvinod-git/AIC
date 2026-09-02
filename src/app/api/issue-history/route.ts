@@ -7,7 +7,7 @@ import type { IssueStatus } from "@/lib/types";
 
 const db = adminDb();
 
-const HISTORY_ROLES = ["admin", "principal"];
+const HISTORY_ROLES = ["admin", "principal", "validator"];
 
 /** Cap the read; anything older falls outside the scrollable history. */
 const MAX = 2000;
@@ -20,6 +20,7 @@ interface HistoryIssue {
   department: string;
   status: IssueStatus;
   priority: number;
+  college?: string;
   boardHidden?: boolean;
   routing?: { categoryId: string; categoryName: string; teamId: string };
   reporter?: { uid: string; name: string; department: string };
@@ -83,6 +84,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             issueNo: String(data.issueNo || ""),
             title: String(data.title || ""),
             department: String(data.department || ""),
+            college: data.college ? String(data.college) : undefined,
             status: (STATUSES as string[]).includes(data.status)
               ? (data.status as IssueStatus)
               : "NEW",
@@ -108,6 +110,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         }
       )
       .filter((issue) => {
+        if (user.role !== "admin" && issue.college !== user.college) return false;
         const createdAt = toMs(issue.createdAt);
         if (startMs !== null && (createdAt === null || createdAt < startMs)) return false;
         if (endMs !== null && (createdAt === null || createdAt > endMs)) return false;

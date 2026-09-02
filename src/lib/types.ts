@@ -36,7 +36,6 @@ export type IssueStatus =
   | "PENDING"
   | "COMPLETED"
   | "INSPECTED"
-  | "HEAD_APPROVED"
   | "VERIFIED"
   | "REJECTED"
   | "CLOSED";
@@ -53,7 +52,6 @@ export const STATUSES: IssueStatus[] = [
   "PENDING",
   "COMPLETED",
   "INSPECTED",
-  "HEAD_APPROVED",
   "VERIFIED",
   "REJECTED",
   "CLOSED",
@@ -149,13 +147,6 @@ export interface Inspection {
   note?: string;
 }
 
-/** Maintenance head's approval of the inspected work (→ dept validator). */
-export interface HeadApproval {
-  approvedBy: { uid: string; name: string };
-  approvedAt: string;
-  note?: string;
-}
-
 export interface Feedback {
   rating: number;
   comment?: string;
@@ -226,7 +217,6 @@ export interface Issue {
   rejection?: Rejection;
   completion?: Completion;
   inspection?: Inspection;
-  headApproval?: HeadApproval;
   verification?: Verification;
   feedback?: Feedback;
   reporter: { uid: string; name: string; department: string };

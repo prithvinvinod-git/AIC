@@ -72,15 +72,27 @@ export async function notifyMany(uids: string[], input: NotificationInput): Prom
   await Promise.allSettled([...new Set(uids)].map((uid) => notify(uid, input)));
 }
 
-/** Notify every active user holding one of the given roles. */
-export async function notifyRole(roles: Role[], input: NotificationInput): Promise<void> {
+/** Notify every active user holding one of the given roles, optionally
+ *  scoped to a single college so cross-college accounts aren't notified. */
+export async function notifyRole(
+  roles: Role[],
+  input: NotificationInput,
+  college?: string
+): Promise<void> {
   try {
     const snap = await adminDb()
       .collection("users")
       .where("isActive", "==", true)
       .get();
     const uids = snap.docs
-      .filter((d) => roles.includes(d.data().role as Role))
+      .filter((d) => {
+        const data = d.data();
+        if (!roles.includes(data.role as Role)) return false;
+        // Skip only when a college is requested and the user has a (different)
+        // college — allows matching or empty (unset) accounts to receive it.
+        if (college && data.college && data.college !== college) return false;
+        return true;
+      })
       .map((d) => d.id);
     await notifyMany(uids, input);
   } catch (e) {
@@ -104,21 +116,29 @@ export function notifyRecipientsForIssue(issue: Issue, oldStatus: string, newSta
       toReporter("Issue rejected", `Your issue ${issue.issueNo} was rejected: ${issue.rejection?.reason || ""}`);
       break;
     case "VALIDATED":
-      notifyRole(["validator"], {
-        type: "issue",
-        title: "Issue validated",
-        body: `${issue.issueNo} validated with priority ${issue.priority}.`,
-        link,
-      });
+      notifyRole(
+        ["validator"],
+        {
+          type: "issue",
+          title: "Issue validated",
+          body: `${issue.issueNo} validated with priority ${issue.priority}.`,
+          link,
+        },
+        issue.college
+      );
       break;
     case "ESCALATED":
       toReporter("Issue escalated", `${issue.issueNo} escalated for HOD/Principal review.`);
-      notifyRole(["hod", "principal"], {
-        type: "escalation",
-        title: "Escalation needs review",
-        body: `${issue.issueNo} (P${issue.priority}) needs severity confirmation.`,
-        link,
-      });
+      notifyRole(
+        ["hod", "principal"],
+        {
+          type: "escalation",
+          title: "Escalation needs review",
+          body: `${issue.issueNo} (P${issue.priority}) needs severity confirmation.`,
+          link,
+        },
+        issue.college
+      );
       break;
     case "APPROVED":
       toReporter("Issue approved", `${issue.issueNo} approved — routing next.`);
@@ -133,12 +153,16 @@ export function notifyRecipientsForIssue(issue: Issue, oldStatus: string, newSta
           link,
         });
       } else {
-        notifyRole(["maintenance_head"], {
-          type: "assignment",
-          title: "New issue to dispatch",
-          body: `${issue.issueNo} needs dispatch to a maintenance team.`,
-          link,
-        });
+        notifyRole(
+          ["maintenance_head"],
+          {
+            type: "assignment",
+            title: "New issue to dispatch",
+            body: `${issue.issueNo} needs dispatch to a maintenance team.`,
+            link,
+          },
+          issue.college
+        );
       }
       break;
     case "PENDING_ASSIGN":
@@ -151,21 +175,29 @@ export function notifyRecipientsForIssue(issue: Issue, oldStatus: string, newSta
           link,
         });
       }
-      notifyRole(["maintenance_head"], {
-        type: "assignment",
-        title: "Issue forwarded",
-        body: `${issue.issueNo} forwarded to ${issue.routing?.categoryName || "a category"}.`,
-        link,
-      });
+      notifyRole(
+        ["maintenance_head"],
+        {
+          type: "assignment",
+          title: "Issue forwarded",
+          body: `${issue.issueNo} forwarded to ${issue.routing?.categoryName || "a category"}.`,
+          link,
+        },
+        issue.college
+      );
       break;
     case "ASSIGNED":
       toReporter("Issue assigned", `${issue.issueNo} assigned to a maintenance team.`);
-      notifyRole(["validator"], {
-        type: "assignment",
-        title: "New job assigned",
-        body: `${issue.issueNo} routed to ${issue.routing?.categoryName || "team"}.`,
-        link,
-      });
+      notifyRole(
+        ["validator"],
+        {
+          type: "assignment",
+          title: "New job assigned",
+          body: `${issue.issueNo} routed to ${issue.routing?.categoryName || "team"}.`,
+          link,
+        },
+        issue.college
+      );
       /* Notify assigned staff directly */
       if (issue.routing?.staff?.length) {
         for (const s of issue.routing.staff) {
@@ -179,7 +211,7 @@ export function notifyRecipientsForIssue(issue: Issue, oldStatus: string, newSta
       }
       break;
     case "ONGOING":
-      if (oldStatus === "COMPLETED" || oldStatus === "INSPECTED" || oldStatus === "HEAD_APPROVED") {
+      if (oldStatus === "COMPLETED") {
         toReporter("Work revised", `${issue.issueNo} was sent back for revision.`);
       } else {
         toReporter("Work started", `${issue.issueNo} is being worked on.`);
@@ -195,12 +227,16 @@ export function notifyRecipientsForIssue(issue: Issue, oldStatus: string, newSta
           link,
         });
       }
-      notifyRole(["maintenance_head", "validator"], {
-        type: "pending",
-        title: "Pending issue needs attention",
-        body: `${issue.issueNo} hit a blocker — reassign from the queue.`,
-        link,
-      });
+      notifyRole(
+        ["maintenance_head", "validator"],
+        {
+          type: "pending",
+          title: "Pending issue needs attention",
+          body: `${issue.issueNo} hit a blocker — reassign from the queue.`,
+          link,
+        },
+        issue.college
+      );
       break;
     case "COMPLETED":
       toReporter("Work completed", `${issue.issueNo} has been completed and is awaiting verification.`);
@@ -212,51 +248,37 @@ export function notifyRecipientsForIssue(issue: Issue, oldStatus: string, newSta
           link,
         });
       } else {
-        notifyRole(["category_head"], {
-          type: "verification",
-          title: "In-site verification needed",
-          body: `${issue.issueNo} completed — verify the work on site.`,
-          link,
-        });
+        notifyRole(
+          ["category_head"],
+          {
+            type: "verification",
+            title: "In-site verification needed",
+            body: `${issue.issueNo} completed — verify the work on site.`,
+            link,
+          },
+          issue.college
+        );
       }
-      break;
-    case "INSPECTED":
-      toReporter("Work inspected", `${issue.issueNo} passed the on-site inspection.`);
-      if (issue.routing?.maintenanceHeadUid) {
-        notify(issue.routing.maintenanceHeadUid, {
-          type: "verification",
-          title: "Head approval needed",
-          body: `${issue.issueNo} inspected — approve the completed work.`,
-          link,
-        });
-      } else {
-        notifyRole(["maintenance_head"], {
-          type: "verification",
-          title: "Head approval needed",
-          body: `${issue.issueNo} inspected — approve the completed work.`,
-          link,
-        });
-      }
-      break;
-    case "HEAD_APPROVED":
-      notifyRole(["validator"], {
-        type: "verification",
-        title: "Final verification needed",
-        body: `${issue.issueNo} approved by the maintenance head — do the final check.`,
-        link,
-      });
       break;
     case "VERIFIED":
-      toReporter("Issue verified", `${issue.issueNo} is verified. Please rate the resolution.`);
+      if (oldStatus === "COMPLETED") {
+        toReporter("Issue verified", `${issue.issueNo} has been inspected and verified. Please rate the resolution.`);
+      } else {
+        toReporter("Issue verified", `${issue.issueNo} is verified. Please rate the resolution.`);
+      }
       break;
     case "CLOSED":
       if (oldStatus === "VERIFIED") {
-        notifyRole(["validator"], {
-          type: "issue",
-          title: "Issue closed",
-          body: `${issue.issueNo} closed with rating ${issue.feedback?.rating}/5.`,
-          link,
-        });
+        notifyRole(
+          ["validator"],
+          {
+            type: "issue",
+            title: "Issue closed",
+            body: `${issue.issueNo} closed with rating ${issue.feedback?.rating}/5.`,
+            link,
+          },
+          issue.college
+        );
       }
       break;
     default:

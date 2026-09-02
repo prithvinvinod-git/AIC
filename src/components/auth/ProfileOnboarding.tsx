@@ -42,7 +42,7 @@ export default function ProfileOnboarding({ required, inline, onDone }: Props = 
   const dialogRef = useRef<HTMLDivElement | null>(null);
 
   const needsCompletion =
-    !!claims && claims.role === "reporter" && !claims.college;
+    !!claims && claims.role !== "admin" && !claims.college;
   const autoShow =
     needsCompletion &&
     !required &&
