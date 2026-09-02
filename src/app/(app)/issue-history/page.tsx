@@ -248,7 +248,7 @@ export default function IssueHistoryPage() {
             body="Try clearing the search or filters, or widening the date range."
           />
         ) : (
-          <table className="w-full min-w-[820px] text-left text-sm">
+          <table className="w-full min-w-[820px] text-left text-sm max-md:min-w-[640px] max-md:text-xs">
             <thead>
               <tr className="border-b border-silver text-xs uppercase tracking-wide text-slate">
                 <th className="px-4 py-3 max-md:px-3 max-md:py-2 font-medium">Issue</th>
@@ -330,7 +330,7 @@ export default function IssueHistoryPage() {
               </button>
             </div>
 
-            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+            <div className="mt-5 grid gap-4 sm:grid-cols-2 md:gap-6">
               <div>
                 <label className="label" htmlFor="filter-from">From</label>
                 <input

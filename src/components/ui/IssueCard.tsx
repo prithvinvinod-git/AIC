@@ -29,7 +29,7 @@ export function IssueCard({ issue, onClose }: { issue: Issue; onClose?: () => vo
           <StatusBadge status={issue.status} />
         </div>
 
-        <p className="line-clamp-2 text-sm text-slate">{issue.description}</p>
+        <p className="line-clamp-2 text-sm text-slate max-md:text-[13px]">{issue.description}</p>
 
         <div className="mt-auto flex flex-wrap items-center gap-2 text-xs text-slate">
           <PriorityBadge priority={issue.priority} />

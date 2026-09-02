@@ -32,7 +32,7 @@ function CommentItem({
         <p className="text-sm font-medium text-graphite">{comment.author.name}</p>
         <span className="text-xs text-slate">{formatDateTime(comment.at)}</span>
       </div>
-      <p className="mt-1 whitespace-pre-wrap text-sm text-slate">{comment.body}</p>
+      <p className="mt-1 whitespace-pre-wrap text-sm text-slate max-md:text-[13px]">{comment.body}</p>
       <button
         type="button"
         onClick={onToggle}

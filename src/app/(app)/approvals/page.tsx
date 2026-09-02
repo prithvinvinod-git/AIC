@@ -67,7 +67,7 @@ export default function PrincipalPage() {
         ) : approved.length === 0 ? (
           <EmptyState title="Nothing approved yet" body="Approved issues awaiting the department validator will appear here." />
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-3">
             {approved.map((issue) => (
               <IssueCard key={issue.id} issue={issue} />
             ))}

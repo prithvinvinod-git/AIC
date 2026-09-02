@@ -130,7 +130,7 @@ export default function AnalyticsPage() {
 
       <AtRiskLocationsCard />
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 md:gap-6 lg:grid-cols-2">
         <div className="card">
           <p className="font-medium text-graphite">By status</p>
           <div className="mt-4 h-64">

@@ -57,7 +57,7 @@ export function AnnouncementModal({ announcement, onClose }: { announcement: Ann
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
-          <p className="whitespace-pre-wrap text-sm leading-relaxed text-graphite">{announcement.body}</p>
+          <p className="whitespace-pre-wrap text-sm leading-relaxed text-graphite max-md:text-[13px]">{announcement.body}</p>
           {announcement.images.length > 0 && (
             <div className="mt-4 flex flex-col gap-3">
               {announcement.images.map((src, i) => (

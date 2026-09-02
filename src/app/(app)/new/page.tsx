@@ -190,7 +190,7 @@ export default function NewIssuePage() {
           />
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2 md:gap-6">
           <div>
             <label className="label" htmlFor="category">
               Category
@@ -284,7 +284,7 @@ export default function NewIssuePage() {
           <p className="mt-1.5 text-xs text-slate">1 = Critical, 5 = Minor. Validators can adjust this later.</p>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-3 md:gap-6">
           <div>
             <label className="label" htmlFor="building">
               Building

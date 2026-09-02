@@ -83,7 +83,7 @@ export default function DispatchPage() {
           }
         />
       ) : (
-        <div className="grid items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid items-stretch gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-3">
           {queue.map((issue) => (
             <DispatchCard key={issue.id} issue={issue} role={role} onRefresh={() => void reload()} />
           ))}

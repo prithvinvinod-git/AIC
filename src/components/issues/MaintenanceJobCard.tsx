@@ -361,7 +361,7 @@ export function MaintenanceJobCard({
             <StatusBadge status={issue.status} />
           </div>
         </div>
-        <p className="line-clamp-2 text-sm text-slate">{issue.description}</p>
+        <p className="line-clamp-2 text-sm text-slate max-md:text-[13px]">{issue.description}</p>
         <div className="flex flex-wrap items-center gap-2 text-xs text-slate">
           <span className="tag tag-outline">{issue.location.name}</span>
           <span className="tag tag-outline">{issue.routing?.categoryName}</span>

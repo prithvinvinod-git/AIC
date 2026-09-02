@@ -151,11 +151,11 @@ function TrackContent({ data }: { data: TrackData }) {
         </ol>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-4 md:gap-6 lg:grid-cols-3">
         <div className="flex flex-col gap-4 lg:col-span-2">
           <div className="card">
             <h2 className="font-display text-lg max-md:text-base font-semibold text-ink">{issue.title}</h2>
-            <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-slate">
+            <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-slate max-md:text-[13px]">
               {issue.description}
             </p>
             <div className="mt-4 flex flex-wrap gap-2 text-sm text-slate">
@@ -178,7 +178,7 @@ function TrackContent({ data }: { data: TrackData }) {
             {issue.completion && (
               <div className="mt-4 border-t border-silver pt-4">
                 <h2 className="font-display text-lg max-md:text-base font-semibold text-ink">Completion</h2>
-                <p className="mt-2 whitespace-pre-wrap text-sm text-slate">{issue.completion.report}</p>
+                <p className="mt-2 whitespace-pre-wrap text-sm text-slate max-md:text-[13px]">{issue.completion.report}</p>
                 <p className="mt-1 text-xs text-slate">{formatDateTime(issue.completion.completedAt)}</p>
               </div>
             )}
@@ -210,7 +210,7 @@ function TrackContent({ data }: { data: TrackData }) {
                 <FeedbackStars rating={issue.feedback.rating} size={20} />
               </div>
               {issue.feedback.comment && (
-                <p className="mt-2 whitespace-pre-wrap text-sm text-slate">{issue.feedback.comment}</p>
+                <p className="mt-2 whitespace-pre-wrap text-sm text-slate max-md:text-[13px]">{issue.feedback.comment}</p>
               )}
             </div>
           )}

@@ -159,7 +159,7 @@ export default function ValidatePage() {
                         <StatusBadge status={issue.status} />
                       </div>
                     </div>
-                    <p className="line-clamp-2 text-sm text-slate">{issue.description}</p>
+                    <p className="line-clamp-2 text-sm text-slate max-md:text-[13px]">{issue.description}</p>
                     <div className="flex flex-wrap gap-2 text-xs text-slate">
                       <span className="tag tag-outline">{issue.location.name}</span>
                       <span className="tag tag-outline">{issue.routing?.categoryName}</span>
@@ -186,7 +186,7 @@ export default function ValidatePage() {
         {active.length === 0 ? (
           <EmptyState title="No active jobs" body="Assigned jobs being worked on will appear here." />
         ) : (
-          <div className="grid items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid items-stretch gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-3">
             {active.map((issue) => (
               <MaintenanceJobCard key={issue.id} issue={issue} onRefresh={() => void reload()} readOnly />
             ))}
@@ -201,7 +201,7 @@ export default function ValidatePage() {
         {assignQueue.length === 0 ? (
           <EmptyState title="Nothing to route" body="Approved issues awaiting dispatch to the maintenance head will land here." />
         ) : (
-          <div className="grid items-start gap-4 lg:grid-cols-2">
+          <div className="grid items-start gap-4 md:gap-6 lg:grid-cols-2">
             {assignQueue.map((issue) => (
               <RouteToHeadCard key={issue.id} issue={issue} onRefresh={() => void reload()} />
             ))}
@@ -216,7 +216,7 @@ export default function ValidatePage() {
         {blocked.length === 0 ? (
           <EmptyState title="No blocked jobs" body="Jobs awaiting parts or permissions will appear here." />
         ) : (
-          <div className="grid items-start gap-4 lg:grid-cols-2">
+          <div className="grid items-start gap-4 md:gap-6 lg:grid-cols-2">
             {blocked.map((issue) => (
               <RouteToHeadCard key={issue.id} issue={issue} onRefresh={() => void reload()} pending />
             ))}

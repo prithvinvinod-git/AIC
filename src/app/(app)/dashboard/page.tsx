@@ -51,12 +51,12 @@ export default function DashboardPage() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-3 gap-3 sm:gap-4">
+      <div className="grid grid-cols-3 gap-2.5 max-md:gap-2 sm:gap-4">
         {kpis.map((k) => (
           <div key={k.label} className="kpi !px-[12px] !py-[16px] sm:!px-[24px] sm:!py-[20px]">
             <div className={`flex items-center gap-2 ${k.tone}`}>
               <k.icon className="h-4 w-4" aria-hidden />
-              <span className="text-xs font-medium uppercase tracking-wide">{k.label}</span>
+              <span className="truncate text-xs font-medium uppercase tracking-wide">{k.label}</span>
             </div>
             <p className="mt-2 font-display text-3xl max-md:text-2xl font-semibold text-ink">{k.value}</p>
           </div>
@@ -76,7 +76,7 @@ export default function DashboardPage() {
           body="Report your first maintenance issue and follow it through to closure."
         />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 max-md:gap-3 sm:grid-cols-2 md:gap-6 lg:grid-cols-3">
           {issues.map((issue) => (
             <IssueCard key={issue.id} issue={issue} onClose={() => setCloseIssue(issue)} />
           ))}

@@ -89,7 +89,7 @@ export default function PurchasePage() {
           body="When maintenance staff flag a requirement for approval, it will appear here."
         />
       ) : (
-        <div className="grid items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid items-stretch gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-3">
           {issues.map((issue) => {
             const flagged = issue.requirements.filter((r) => r.needsApproval);
             const pending = flagged.filter((r) => r.approvalStatus !== "approved" && r.approvalStatus !== "rejected");

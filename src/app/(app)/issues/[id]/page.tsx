@@ -120,7 +120,7 @@ export default function IssueDetailPage() {
         )}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-4 md:gap-6 lg:grid-cols-3">
         <div className="flex flex-col gap-4 lg:col-span-2">
           <div className="card">
             <div className="flex items-start justify-between gap-3">
@@ -129,8 +129,8 @@ export default function IssueDetailPage() {
                 <FeedbackStars rating={issue.feedback.rating} size={20} />
               ) : null}
             </div>
-            <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-slate">{issue.description}</p>
-            <div className="mt-4 flex flex-wrap gap-2 text-sm text-slate">
+            <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-slate max-md:text-[13px] max-md:leading-relaxed">{issue.description}</p>
+            <div className="mt-4 flex flex-wrap gap-2 text-sm text-slate max-md:text-xs">
               <span className="flex items-center gap-1.5">
                 <MapPin className="h-4 w-4" aria-hidden />
                 {issue.location.building}
@@ -150,7 +150,7 @@ export default function IssueDetailPage() {
             {issue.completion && (
               <div className="mt-4 border-t border-silver pt-4">
                 <h2 className="font-display text-lg max-md:text-base font-semibold text-ink">Completion</h2>
-                <p className="mt-2 whitespace-pre-wrap text-sm text-slate">{issue.completion.report}</p>
+                <p className="mt-2 whitespace-pre-wrap text-sm text-slate max-md:text-[13px]">{issue.completion.report}</p>
                 <p className="mt-1 text-xs text-slate">{formatDateTime(issue.completion.completedAt)}</p>
               </div>
             )}

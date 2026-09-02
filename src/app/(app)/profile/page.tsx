@@ -144,7 +144,7 @@ export default function ProfilePage() {
             />
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2 md:gap-6">
             <div>
               <label className="label">Email</label>
               <p className="text-sm text-graphite">{user.email || "—"}</p>

@@ -176,7 +176,7 @@ export default function AnnouncementsPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <h3 className="font-display text-base font-semibold text-ink">{a.title}</h3>
-                      <p className="mt-0.5 text-sm text-slate">{a.body}</p>
+                      <p className="mt-0.5 text-sm text-slate max-md:text-[13px]">{a.body}</p>
                     </div>
                     <div className="shrink-0 text-right text-xs text-slate max-md:hidden">
                       <p>{formatDateTime(a.createdAt)}</p>
