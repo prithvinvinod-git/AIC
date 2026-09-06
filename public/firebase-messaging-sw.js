@@ -1,6 +1,9 @@
 /* firebase-messaging-sw.js — runs outside Next.js, plain JS only */
 /* eslint-disable no-undef */
 
+importScripts("https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js");
+importScripts("https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js");
+
 self.__FIREBASE_CONFIG = {};
 self.__FIREBASE_READY = false;
 
@@ -15,9 +18,6 @@ self.addEventListener("message", (event) => {
 });
 
 function initFirebase() {
-  importScripts("https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js");
-  importScripts("https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js");
-
   firebase.initializeApp(self.__FIREBASE_CONFIG);
 
   const messaging = firebase.messaging();
