@@ -205,6 +205,7 @@ export const SLA_DEFAULTS = {
 export const DEFAULT_CONFIG = {
   feedbackGraceHours: 24,
   assignmentMode: "claim" as "claim" | "assign",
+  purchaseApprovalLimit: 5000,
   ai: {
     enabled: true,
     triageModel: "gemini-2.0-flash",

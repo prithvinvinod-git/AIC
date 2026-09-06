@@ -102,6 +102,10 @@ export interface Requirement {
   rejectReason?: string;
   rejectedBy?: { uid: string; name: string };
   rejectedAt?: string;
+  /** Set when the purchase team routes an over-limit price to a senior (HOD/Principal/Admin) for approval. */
+  seniorApprovalRequired?: boolean;
+  submittedBy?: { uid: string; name: string };
+  submittedAt?: string;
   addedBy: { uid: string; name: string };
   at: string;
 }
@@ -213,6 +217,8 @@ export interface Issue {
   involveTeams: InvolvedTeam[];
   /** Denormalized count of `needsApproval && approvalStatus === "pending"` requirements. */
   pendingPurchaseCount?: number;
+  /** Denormalized count of requirements flagged for senior (over-limit) approval. */
+  pendingSeniorApprovalCount?: number;
   sla?: SlaState;
   rejection?: Rejection;
   completion?: Completion;
@@ -334,6 +340,8 @@ export interface AppConfig {
   };
   feedbackGraceHours: number;
   assignmentMode: "claim" | "assign";
+  /** Purchases whose total (price × qty) exceeds this ₹ limit need senior (HOD/Principal/Admin) approval. */
+  purchaseApprovalLimit: number;
   ai: { enabled: boolean; triageModel: string; routingModel: string; threshold: number };
   sequenceCounters: { issues: number };
 }

@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createUserWithEmailAndPassword, fetchSignInMethodsForEmail, updateProfile } from "firebase/auth";
+import { createUserWithEmailAndPassword, fetchSignInMethodsForEmail, sendEmailVerification, updateProfile } from "firebase/auth";
 import { getClientAuth } from "@/lib/firebase";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { GoogleIcon } from "@/components/auth/ProviderButtons";
@@ -49,6 +49,10 @@ export default function SignupPage() {
         const cred = await createUserWithEmailAndPassword(auth, email.trim(), password);
         const fullName = name.trim();
         await updateProfile(cred.user, { displayName: capitalizeName(fullName) });
+        await sendEmailVerification(cred.user, {
+          url: `${window.location.origin}/verify-email`,
+          handleCodeInApp: true,
+        });
         await api("/api/auth/provision", {
           method: "POST",
           body: JSON.stringify({
@@ -58,11 +62,12 @@ export default function SignupPage() {
             role: "reporter",
             college,
             department,
+            requiresEmailVerification: true,
           }),
         });
         await refreshClaims();
         setLastAuthMethod("email");
-        router.replace("/dashboard");
+        router.replace("/verify-email");
       } catch (err) {
         setError(friendlyAuthError(err));
       } finally {

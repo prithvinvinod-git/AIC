@@ -4,12 +4,10 @@ import { requireAuth } from "@/lib/auth";
 import { json, handleError } from "@/lib/api";
 import { resolveRequirementSchema, editRequirementSchema } from "@/lib/schemas";
 import { notifyRole } from "@/lib/notifications";
+import { pendingCount, seniorPendingCount } from "@/lib/purchase";
 import type { Issue, Requirement } from "@/lib/types";
 
 const ALLOWED_ROLES = ["maintenance", "admin"];
-
-const pendingCount = (reqs: Requirement[]) =>
-  reqs.filter((r) => r.needsApproval && !r.resolved && r.approvalStatus !== "rejected").length;
 
 /** PATCH /api/issues/[id]/requirements/[reqId] — resolve/un-resolve, or edit & resubmit a rejected approval request. */
 export async function PATCH(
@@ -74,8 +72,16 @@ export async function PATCH(
             ...next,
             approvalStatus: "pending",
             resolved: false,
+            seniorApprovalRequired: false,
           };
           delete next.rejectReason;
+          delete next.rejectedBy;
+          delete next.rejectedAt;
+          delete next.price;
+          delete next.submittedBy;
+          delete next.submittedAt;
+          delete next.approvalBy;
+          delete next.approvalAt;
         }
       }
 
@@ -84,6 +90,7 @@ export async function PATCH(
       await tx.update(ref, {
         requirements,
         pendingPurchaseCount: pendingCount(requirements),
+        pendingSeniorApprovalCount: seniorPendingCount(requirements),
         updatedAt: now,
       });
     });

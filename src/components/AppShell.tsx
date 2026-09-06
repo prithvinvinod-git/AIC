@@ -11,7 +11,7 @@ import MobileNav from "@/components/MobileNav";
 import { Loading } from "@/components/ui/States";
 
 export default function AppShell({ children }: { children: ReactNode }) {
-  const { user, claims, ready, needsPasswordSetup, clearNeedsPasswordSetup } = useAuth();
+  const { user, claims, ready, needsPasswordSetup, needsEmailVerification, clearNeedsPasswordSetup } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   useNativePushPrompt();
@@ -21,8 +21,12 @@ export default function AppShell({ children }: { children: ReactNode }) {
     if (!user || !claims) {
       const next = pathname ? `?next=${encodeURIComponent(pathname)}` : "";
       router.replace(`/login${next}`);
+      return;
     }
-  }, [ready, user, claims, router, pathname]);
+    if (needsEmailVerification) {
+      router.replace("/verify-email");
+    }
+  }, [ready, user, claims, needsEmailVerification, router, pathname]);
 
   if (!ready) return <Loading label="Checking session…" />;
   if (!user || !claims) return null;

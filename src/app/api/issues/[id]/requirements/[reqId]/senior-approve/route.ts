@@ -1,24 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebaseAdmin";
 import { requireAuth } from "@/lib/auth";
-import { json, parseBody, handleError } from "@/lib/api";
-import { approveRequirementSchema } from "@/lib/schemas";
+import { json, handleError } from "@/lib/api";
 import { notify, notifyRole } from "@/lib/notifications";
-import {
-  loadPurchaseLimit,
-  pendingCount,
-  seniorPendingCount,
-  writePurchaseRecord,
-} from "@/lib/purchase";
+import { pendingCount, seniorPendingCount, writePurchaseRecord } from "@/lib/purchase";
 import type { Issue, Requirement, Role } from "@/lib/types";
 
-const ALLOWED_ROLES: Role[] = ["purchase", "admin"];
+const ALLOWED_ROLES: Role[] = ["hod", "principal", "admin"];
 
-/** POST /api/issues/[id]/requirements/[reqId]/approve — purchase team approves a
- *  flagged requirement. Over-limit totals (non-admin) are routed to a senior. */
+/** POST /api/issues/[id]/requirements/[reqId]/senior-approve — HOD/Principal/Admin
+ *  finalizes an over-limit purchase submitted by the purchase team. */
 export async function POST(
   req: NextRequest,
-  ctx: RouteContext<"/api/issues/[id]/requirements/[reqId]/approve">
+  ctx: RouteContext<"/api/issues/[id]/requirements/[reqId]/senior-approve">
 ): Promise<NextResponse> {
   try {
     const { id, reqId } = await ctx.params;
@@ -26,12 +20,10 @@ export async function POST(
     if (!ALLOWED_ROLES.includes(user.role)) {
       return json({ error: "Not allowed." }, 403);
     }
-    const body = await parseBody(req, approveRequirementSchema);
 
     const db = adminDb();
     const ref = db.doc(`issues/${id}`);
     const now = new Date().toISOString();
-    const limit = await loadPurchaseLimit(db);
 
     const result = await db.runTransaction(async (tx) => {
       const snap = await tx.get(ref);
@@ -43,38 +35,13 @@ export async function POST(
 
       const current = requirements[idx];
       if (!current.needsApproval) throw new Error("not-flagged");
+      if (!current.seniorApprovalRequired) throw new Error("not-senior");
       if (current.resolved || current.approvalStatus === "approved") throw new Error("already-approved");
-      if (current.seniorApprovalRequired) throw new Error("awaiting-senior");
-
-      const total = Math.round((body.price || 0) * (current.qty || 1) * 100) / 100;
-
-      // Over the configured limit (admins final-approve regardless): submit to
-      // the senior queue instead of resolving. It stays pending for seniors.
-      if (total > limit && user.role !== "admin") {
-        const submitted: Requirement = {
-          ...current,
-          price: body.price,
-          seniorApprovalRequired: true,
-          submittedBy: { uid: user.uid, name: user.name },
-          submittedAt: now,
-        };
-        requirements[idx] = submitted;
-
-        await tx.update(ref, {
-          requirements,
-          pendingPurchaseCount: pendingCount(requirements),
-          pendingSeniorApprovalCount: seniorPendingCount(requirements),
-          updatedAt: now,
-        });
-
-        return { action: "senior" as const, requirement: submitted, issue: data };
-      }
 
       const approved: Requirement = {
         ...current,
         approvalStatus: "approved",
         resolved: true,
-        price: body.price,
         approvalBy: { uid: user.uid, name: user.name },
         approvalAt: now,
       };
@@ -83,7 +50,7 @@ export async function POST(
       delete approved.rejectedAt;
       requirements[idx] = approved;
 
-      writePurchaseRecord(tx, data, approved, { uid: user.uid, name: user.name }, "purchase");
+      writePurchaseRecord(tx, data, approved, { uid: user.uid, name: user.name }, "senior");
 
       await tx.update(ref, {
         requirements,
@@ -92,49 +59,47 @@ export async function POST(
         updatedAt: now,
       });
 
-      return { action: "approved" as const, requirement: approved, issue: data };
+      return { approved, issue: data };
     });
 
-    const { action, requirement, issue } = result;
-    if (action === "senior") {
-      const total = Math.round((requirement.price || 0) * (requirement.qty || 1));
-      void notifyRole(
-        ["hod", "principal", "admin"],
-        {
-          type: "purchase",
-          title: "Senior approval needed",
-          body: `${requirement.item} ×${requirement.qty} totals ₹${total.toLocaleString("en-IN")} — over the purchase limit.`,
-          link: `/issues/${id}`,
-        },
-        issue.college
-      );
-    } else {
+    const { approved: approvedReq, issue: approvedIssue } = result;
+    if (approvedReq) {
       const recipientUids = [
-        ...(issue.routing?.staff?.map((s) => s.uid) || []),
-        issue.reporter?.uid,
+        ...(approvedIssue.routing?.staff?.map((s) => s.uid) || []),
+        approvedIssue.reporter?.uid,
       ].filter(Boolean) as string[];
       void Promise.allSettled(
         recipientUids.map((uid) =>
           notify(uid, {
             type: "purchase",
             title: "Purchase approved",
-            body: `Approved ${requirement.item} ×${requirement.qty} at ₹${body.price}.`,
+            body: `Approved ${approvedReq.item} ×${approvedReq.qty} at ₹${approvedReq.price ?? 0} by ${user.name}.`,
             link: `/issues/${id}`,
           })
         )
       );
+      void notifyRole(
+        ["purchase"],
+        {
+          type: "purchase",
+          title: "Purchase approved",
+          body: `Senior approved ${approvedReq.item} ×${approvedReq.qty} at ₹${approvedReq.price ?? 0}.`,
+          link: `/issues/${id}`,
+        },
+        approvedIssue.college
+      );
     }
 
-    return json({ ok: true, requirement, action });
+    return json({ ok: true, requirement: result.approved });
   } catch (e) {
     if (e instanceof Error && e.message === "issue-missing") return json({ error: "Issue not found." }, 404);
     if (e instanceof Error && e.message === "requirement-missing") return json({ error: "Requirement not found." }, 404);
     if (e instanceof Error && e.message === "not-flagged")
       return json({ error: "This requirement was not flagged for approval." }, 400);
+    if (e instanceof Error && e.message === "not-senior")
+      return json({ error: "This item was not submitted for senior approval." }, 400);
     if (e instanceof Error && e.message === "already-approved")
       return json({ error: "This requirement was already approved." }, 400);
-    if (e instanceof Error && e.message === "awaiting-senior")
-      return json({ error: "This item is awaiting senior approval — please wait for a decision." }, 400);
     return handleError(e);
   }
 }

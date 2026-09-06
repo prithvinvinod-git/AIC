@@ -93,6 +93,7 @@ export const adminUserSchema = z.object({
   college: z.string().optional(),
   department: z.string(),
   phone: z.string().optional(),
+  requiresEmailVerification: z.boolean().optional(),
   isActive: z.boolean().default(true),
 });
 
@@ -116,6 +117,7 @@ export const categorySchema = z.object({
 export const configSchema = z.object({
   feedbackGraceHours: z.number().min(1).max(24 * 14).optional(),
   assignmentMode: z.enum(["claim", "assign"]).optional(),
+  purchaseApprovalLimit: z.number().min(0).optional(),
   ai: z
     .object({
       enabled: z.boolean().optional(),
@@ -124,4 +126,14 @@ export const configSchema = z.object({
       threshold: z.number().min(0).max(1).optional(),
     })
     .optional(),
+});
+
+/** Updating the purchase approval limit (₹) — admin/principal. */
+export const purchaseLimitSchema = z.object({
+  purchaseApprovalLimit: z.number().min(0, "The limit cannot be negative"),
+});
+
+/** Senior (HOD/Principal/Admin) rejecting an over-limit purchase submission. */
+export const seniorRejectRequirementSchema = z.object({
+  reason: z.string().min(3, "A rejection reason at least 3 characters is required"),
 });

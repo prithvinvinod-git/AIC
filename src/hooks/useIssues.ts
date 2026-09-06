@@ -6,7 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { Issue } from "@/lib/types";
 import { api, ApiError } from "@/lib/clientApi";
 
-export function useIssues(params: { status?: string; mine?: boolean } = {}) {
+export function useIssues(params: { status?: string; mine?: boolean; pendingSenior?: boolean } = {}) {
   const [issues, setIssues] = useState<Issue[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -14,6 +14,7 @@ export function useIssues(params: { status?: string; mine?: boolean } = {}) {
     const qs = new URLSearchParams();
     if (params.status && params.status !== "all") qs.set("status", params.status);
     if (params.mine) qs.set("mine", "true");
+    if (params.pendingSenior) qs.set("pendingSenior", "true");
     try {
       const res = await api<{ issues: Issue[] }>(`/api/issues?${qs.toString()}`);
       setIssues(res.issues);
@@ -22,7 +23,7 @@ export function useIssues(params: { status?: string; mine?: boolean } = {}) {
       setError(e instanceof ApiError ? e.message : "Failed to load issues.");
       setIssues([]);
     }
-  }, [params.status, params.mine]);
+  }, [params.status, params.mine, params.pendingSenior]);
 
   useEffect(() => {
     void reload();

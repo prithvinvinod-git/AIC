@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthProvider";
 import ProfileOnboarding from "@/components/auth/ProfileOnboarding";
 import PasswordSetupModal from "@/components/auth/PasswordSetupModal";
@@ -17,14 +19,29 @@ import IssueBoard from "@/components/home/IssueBoard";
 import AnnouncementBoard from "@/components/home/AnnouncementBoard";
 
 export default function Home() {
-  const { user, claims, ready, needsPasswordSetup, clearNeedsPasswordSetup } = useAuth();
+  const { user, claims, ready, needsPasswordSetup, needsEmailVerification, clearNeedsPasswordSetup } = useAuth();
+  const router = useRouter();
   useNativePushPrompt();
+
+  useEffect(() => {
+    if (ready && needsEmailVerification) router.replace("/verify-email");
+  }, [ready, needsEmailVerification, router]);
 
   if (!ready) {
     return (
       <div className="flex min-h-full flex-col">
         <main className="flex flex-1 items-center justify-center">
           <Loading label="Checking session…" />
+        </main>
+      </div>
+    );
+  }
+
+  if (needsEmailVerification) {
+    return (
+      <div className="flex min-h-full flex-col">
+        <main className="flex flex-1 items-center justify-center">
+          <Loading label="Redirecting to email verification…" />
         </main>
       </div>
     );

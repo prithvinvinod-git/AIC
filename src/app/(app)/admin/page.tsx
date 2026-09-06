@@ -632,7 +632,7 @@ function CategoriesTab() {
 }
 
 function ConfigTab() {
-  const [config, setConfig] = useState<{ feedbackGraceHours?: number; assignmentMode?: string; aiEnabled?: boolean; aiThreshold?: number } | null>(null);
+  const [config, setConfig] = useState<{ feedbackGraceHours?: number; assignmentMode?: string; purchaseApprovalLimit?: number; aiEnabled?: boolean; aiThreshold?: number } | null>(null);
   const [failed, setFailed] = useState(false);
   const [saved, setSaved] = useState(false);
   const { showError } = useActionError();
@@ -640,10 +640,11 @@ function ConfigTab() {
   const load = useCallback(async () => {
     setFailed(false);
     try {
-      const res = await api<{ config: { feedbackGraceHours: number; assignmentMode: string; ai: { enabled: boolean; threshold: number } } }>("/api/admin/config");
+      const res = await api<{ config: { feedbackGraceHours: number; assignmentMode: string; purchaseApprovalLimit: number; ai: { enabled: boolean; threshold: number } } }>("/api/admin/config");
       setConfig({
         feedbackGraceHours: res.config.feedbackGraceHours,
         assignmentMode: res.config.assignmentMode,
+        purchaseApprovalLimit: res.config.purchaseApprovalLimit,
         aiEnabled: res.config.ai.enabled,
         aiThreshold: res.config.ai.threshold,
       });
@@ -667,6 +668,7 @@ function ConfigTab() {
           body: JSON.stringify({
             feedbackGraceHours: config?.feedbackGraceHours,
             assignmentMode: config?.assignmentMode,
+            purchaseApprovalLimit: config?.purchaseApprovalLimit,
             ai: { enabled: config?.aiEnabled, threshold: config?.aiThreshold },
           }),
         });
@@ -720,6 +722,21 @@ function ConfigTab() {
             <option value="claim">Claim</option>
             <option value="assign">Assign</option>
           </select>
+        </div>
+        <div>
+          <label className="label" htmlFor="purchaseLimit">
+            Purchase approval limit (₹)
+          </label>
+          <input
+            id="purchaseLimit"
+            className="input"
+            type="number"
+            min={0}
+            step="any"
+            value={config.purchaseApprovalLimit ?? 0}
+            onChange={(e) => setConfig({ ...config, purchaseApprovalLimit: Number(e.target.value) })}
+          />
+          <p className="mt-1 text-xs text-slate">Purchases above this total need HOD/Principal approval.</p>
         </div>
       </div>
       <label className="flex items-center gap-2 text-sm text-slate">

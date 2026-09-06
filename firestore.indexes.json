@@ -159,6 +159,11 @@
       "fields": [
         { "fieldPath": "categoryId", "order": "ASCENDING" },
         { "fieldPath": "isActive", "order": "ASCENDING" }
+      ] },
+    { "collectionGroup": "purchases", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "college", "order": "ASCENDING" },
+        { "fieldPath": "approvedAt", "order": "DESCENDING" }
       ] }
   ],
   "fieldOverrides": []

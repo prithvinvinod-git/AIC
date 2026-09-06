@@ -137,8 +137,26 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     const status = params.get("status");
     const mine = params.get("mine") === "true";
     const board = params.get("scope") === "board";
+    const pendingSenior = params.get("pendingSenior") === "true";
 
     let query: Query = db.collection("issues");
+
+    if (pendingSenior) {
+      // Over-limit purchases awaiting a senior (HOD/Principal/Admin) decision.
+      if (!["hod", "principal", "admin"].includes(user.role)) {
+        return json({ error: "Not allowed." }, 403);
+      }
+      if (user.college) query = query.where("college", "==", user.college);
+      const snap = await query.orderBy("createdAt", "desc").limit(100).get();
+      const issues: Issue[] = snap.docs
+        .map((d) => {
+          const data = d.data();
+          if (!Array.isArray(data.requirements)) data.requirements = [];
+          return { id: d.id, ...data } as Issue;
+        })
+        .filter((i) => (i.pendingSeniorApprovalCount ?? 0) > 0);
+      return json({ issues });
+    }
 
     if (board) {
       if (user.role !== "admin" && user.college) {

@@ -2,33 +2,38 @@
 
 import Link from "next/link";
 import { useEffect } from "react";
-import { CheckCheck } from "lucide-react";
+import { CheckCheck, Banknote } from "lucide-react";
 import { useIssues } from "@/hooks/useIssues";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Loading, EmptyState, BoardErrorState } from "@/components/ui/States";
 import { EscalationCard } from "@/components/issues/EscalationCard";
 import { IssueCard } from "@/components/ui/IssueCard";
+import { SeniorPurchaseApprovalCard } from "@/components/purchases/SeniorPurchaseApprovalCard";
+import { PurchaseLimitCard } from "@/components/purchases/PurchaseLimitCard";
 
 export default function PrincipalPage() {
   const { claims } = useAuth();
   const { issues: escalated, error: escalatedError, reload: reloadEscalated } = useIssues({ status: "ESCALATED" });
   const { issues: approved, error: approvedError, reload: reloadApproved } = useIssues({ status: "APPROVED" });
+  const { issues: purchases, error: purchaseError, reload: reloadPurchases } = useIssues({ pendingSenior: true });
 
   useEffect(() => {
     const onFocus = () => {
       void reloadEscalated();
       void reloadApproved();
+      void reloadPurchases();
     };
     window.addEventListener("focus", onFocus);
     return () => window.removeEventListener("focus", onFocus);
-  }, [reloadEscalated, reloadApproved]);
+  }, [reloadEscalated, reloadApproved, reloadPurchases]);
 
   if (!claims) return null;
-  if (!escalated || !approved) return <Loading label="Loading approvals…" />;
+  if (!escalated || !approved || !purchases) return <Loading label="Loading approvals…" />;
 
   const refreshAll = () => {
     void reloadEscalated();
     void reloadApproved();
+    void reloadPurchases();
   };
 
   return (
@@ -56,6 +61,29 @@ export default function PrincipalPage() {
         ) : (
           escalated.map((issue) => (
             <EscalationCard key={issue.id} issue={issue} onAction={refreshAll} />
+          ))
+        )}
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 className="font-display text-lg max-md:text-base font-semibold text-ink">Over-limit purchase approvals</h2>
+            <p className="mt-1 text-xs text-slate">Purchases above the configured limit need your sign-off.</p>
+          </div>
+          <PurchaseLimitCard />
+        </div>
+        {purchaseError ? (
+          <BoardErrorState message={purchaseError} onRetry={() => void reloadPurchases()} />
+        ) : purchases.length === 0 ? (
+          <EmptyState
+            icon={<Banknote className="h-8 w-8" aria-hidden />}
+            title="No over-limit purchases pending"
+            body="When the purchase team submits an amount above the limit, it will appear here for approval."
+          />
+        ) : (
+          purchases.map((issue) => (
+            <SeniorPurchaseApprovalCard key={issue.id} issue={issue} onAction={refreshAll} />
           ))
         )}
       </section>

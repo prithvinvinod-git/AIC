@@ -12,6 +12,7 @@ import {
 import {
   GoogleAuthProvider,
   onAuthStateChanged,
+  sendEmailVerification,
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut,
@@ -29,6 +30,7 @@ export interface SessionClaims {
   name: string;
   profilePromptDismissed?: boolean;
   hasPassword?: boolean;
+  requiresEmailVerification?: boolean;
 }
 
 interface AuthContextValue {
@@ -36,11 +38,14 @@ interface AuthContextValue {
   claims: SessionClaims | null;
   ready: boolean;
   needsPasswordSetup: boolean;
+  needsEmailVerification: boolean;
   login: (email: string, password: string) => Promise<SessionClaims>;
   loginWithGoogle: () => Promise<SessionClaims>;
   logout: () => Promise<void>;
   refreshClaims: () => Promise<SessionClaims>;
   clearNeedsPasswordSetup: () => void;
+  reloadUser: () => Promise<void>;
+  sendVerificationEmail: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -68,6 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       college: result.claims.college as string | undefined,
       profilePromptDismissed: Boolean(result.claims.profilePromptDismissed),
       hasPassword: Boolean(result.claims.hasPassword),
+      requiresEmailVerification: Boolean(result.claims.requiresEmailVerification),
       name:
         (result.claims.name as string) ||
         current.displayName ||
@@ -135,9 +141,60 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setNeedsPasswordSetup(false);
   }, []);
 
+  const sendVerificationEmail = useCallback(async (): Promise<void> => {
+    const auth = getClientAuth();
+    const current = auth.currentUser;
+    if (!current) return;
+    await sendEmailVerification(current, {
+      url: `${window.location.origin}/verify-email`,
+      handleCodeInApp: true,
+    });
+  }, []);
+
+  const reloadUser = useCallback(async (): Promise<void> => {
+    const auth = getClientAuth();
+    const current = auth.currentUser;
+    if (!current) return;
+    await current.reload();
+    setUser(auth.currentUser);
+    if (current.emailVerified) {
+      await refreshClaims();
+    }
+  }, [refreshClaims]);
+
+  const needsEmailVerification = Boolean(
+    claims?.requiresEmailVerification && user && !user.emailVerified
+  );
+
   const value = useMemo(
-    () => ({ user, claims, ready, needsPasswordSetup, login, loginWithGoogle, logout, refreshClaims, clearNeedsPasswordSetup }),
-    [user, claims, ready, needsPasswordSetup, login, loginWithGoogle, logout, refreshClaims, clearNeedsPasswordSetup]
+    () => ({
+      user,
+      claims,
+      ready,
+      needsPasswordSetup,
+      needsEmailVerification,
+      login,
+      loginWithGoogle,
+      logout,
+      refreshClaims,
+      clearNeedsPasswordSetup,
+      reloadUser,
+      sendVerificationEmail,
+    }),
+    [
+      user,
+      claims,
+      ready,
+      needsPasswordSetup,
+      needsEmailVerification,
+      login,
+      loginWithGoogle,
+      logout,
+      refreshClaims,
+      clearNeedsPasswordSetup,
+      reloadUser,
+      sendVerificationEmail,
+    ]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

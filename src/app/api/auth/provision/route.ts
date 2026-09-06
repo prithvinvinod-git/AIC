@@ -44,6 +44,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       portal: body.portal || null,
       department: body.department,
       college: body.college || null,
+      requiresEmailVerification: body.requiresEmailVerification || null,
       name,
     });
 
@@ -82,11 +83,17 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
     }
     if (name) await adminAuth().updateUser(body.uid, updates as never);
     if (body.role) {
+      const existing = await adminAuth().getUser(body.uid);
+      const requiresEmailVerification =
+        body.requiresEmailVerification !== undefined
+          ? body.requiresEmailVerification
+          : Boolean(existing.customClaims?.requiresEmailVerification);
       await adminAuth().setCustomUserClaims(body.uid, {
         role: body.role,
         portal: body.portal || null,
         department: body.department || "",
         college: body.college || null,
+        requiresEmailVerification: requiresEmailVerification || null,
         name: name || "",
       });
     }
