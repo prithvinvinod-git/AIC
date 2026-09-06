@@ -14,6 +14,8 @@ import PublicHero from "@/components/home/PublicHero";
 import FeatureSection from "@/components/home/FeatureSection";
 import AiSection from "@/components/home/AiSection";
 import SiteFooter from "@/components/home/SiteFooter";
+import FaqSection from "@/components/home/FaqSection";
+import AdUnit from "@/components/ads/AdUnit";
 import DashboardHero from "@/components/home/DashboardHero";
 import IssueBoard from "@/components/home/IssueBoard";
 import AnnouncementBoard from "@/components/home/AnnouncementBoard";
@@ -54,7 +56,11 @@ export default function Home() {
         <main className="flex-1">
           <PublicHero />
           <FeatureSection />
+          <div className="mx-auto w-full max-w-page px-[20px] sm:px-6">
+            <AdUnit slot="7383985747" />
+          </div>
           <AiSection />
+          <FaqSection />
         </main>
         <SiteFooter />
       </div>
