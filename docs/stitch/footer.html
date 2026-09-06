@@ -1,0 +1,234 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Servox - Campus Maintenance Workflow Footer</title>
+<!-- Tailwind CSS v3 with Plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<!-- Tailwind Configuration -->
+<script data-purpose="tailwind-config">
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              charcoal: '#0c0c0b',
+              surface: '#141312',
+              card: '#1a1917',
+              border: 'rgba(255, 255, 255, 0.08)',
+              accent: '#ea7a5d',
+              accentHover: '#f09077',
+              accentDeep: '#d96e52',
+              muted: '#a8a29e',
+              subtle: '#78716c',
+              heading: '#fafaf9',
+              lightText: '#d6d3d1'
+            }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+<!-- Custom Typography & Micro-interaction Styles -->
+<style data-purpose="typography">
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #0c0c0b;
+      color: #a8a29e;
+    }
+    .font-mono-code {
+      font-family: 'JetBrains Mono', monospace;
+    }
+  </style>
+<style data-purpose="micro-interactions">
+    .footer-link {
+      position: relative;
+      transition: color 0.2s ease, transform 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+    }
+    .footer-link:hover {
+      color: #f5f5f4;
+      transform: translateX(2px);
+    }
+    .footer-link::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 0%;
+      height: 1px;
+      background-color: #ea7a5d;
+      transition: width 0.25s ease-out;
+    }
+    .footer-link:hover::after {
+      width: 100%;
+    }
+    .status-pulse {
+      box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+      animation: pulse-ring 2.4s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
+    }
+    @keyframes pulse-ring {
+      0% {
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5);
+      }
+      70% {
+        box-shadow: 0 0 0 6px rgba(34, 197, 94, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-[#0c0c0b] flex flex-col text-[#a8a29e] antialiased selection:bg-[#ea7a5d]/30 selection:text-stone-100">
+<!-- Spacer to replicate real web page content above the footer -->
+
+<!-- BEGIN: MainFooter -->
+<footer class="w-full bg-[#141312] border-t border-white/[0.08] relative overflow-hidden" data-purpose="campus-maintenance-footer">
+<!-- Subtle top ambient light gradient -->
+<div aria-hidden="true" class="absolute top-0 left-1/4 -translate-x-1/2 w-96 h-24 bg-brand-accent/5 blur-3xl pointer-events-none"></div>
+<!-- Main Footer Container -->
+<div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 pt-16 pb-12">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8">
+<!-- BEGIN: BrandColumn -->
+<div class="lg:col-span-5 pr-0 lg:pr-10 flex flex-col justify-between" data-purpose="brand-identity-column">
+<div>
+<!-- Logo Section -->
+<div class="flex items-center gap-3">
+<!-- Geometric Slashed Square Mark -->
+<div aria-label="Servox Logo" class="w-8 h-8 rounded-lg bg-gradient-to-br from-[#ea7a5d] to-[#d96e52] flex items-center justify-center shadow-lg shadow-[#ea7a5d]/10 ring-1 ring-white/20">
+<svg class="w-4 h-4 text-[#141312]" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.6" viewBox="0 0 24 24">
+<rect height="18" rx="2" ry="2" width="18" x="3" y="3"></rect>
+<line x1="3" x2="21" y1="21" y2="3"></line>
+</svg>
+</div>
+<span class="text-xl font-extrabold tracking-widest text-stone-100 font-sans uppercase">SERVOX</span>
+</div>
+<!-- Mission Description -->
+<p class="mt-5 text-[14px] leading-relaxed text-brand-muted max-w-md font-normal">
+              A governed, AI-assisted workflow for professional campus maintenance — every request is validated, prioritised, assigned and verified before closure.
+            </p>
+<!-- Target Tagline -->
+<p class="mt-3 text-xs font-mono-code text-stone-400 tracking-wide flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-brand-accent"></span>
+              Built for professional campus teams.
+            </p>
+</div>
+<!-- Operational Status Badge -->
+
+</div>
+<!-- END: BrandColumn -->
+<!-- Navigation Links Grid (7 Columns wide on desktop) -->
+<div class="lg:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-6 pt-2 lg:pt-0">
+<!-- BEGIN: ProductNav -->
+<div data-purpose="navigation-column-product">
+<h3 class="text-xs font-semibold tracking-wider text-stone-100 uppercase font-mono-code mb-5 flex items-center gap-2">
+<span class="h-1 w-1 rounded-full bg-brand-accent"></span>
+              PRODUCT
+            </h3>
+<ul class="space-y-3.5 text-sm">
+<li class="">
+<a class="footer-link text-brand-muted hover:text-stone-100" href="#how-it-works">How it works</a>
+</li>
+<li class="">
+<a class="footer-link text-brand-muted hover:text-stone-100" href="#report-issue">Report an issue</a>
+</li>
+<li class="">
+<a class="footer-link text-brand-muted hover:text-stone-100" href="#track-issue">Track an issue</a>
+</li>
+<li class="">
+<a class="footer-link text-brand-muted hover:text-stone-100" href="#create-account">Create an account</a>
+</li>
+</ul>
+</div>
+<!-- END: ProductNav -->
+<!-- BEGIN: PlatformNav -->
+<div data-purpose="navigation-column-platform">
+<h3 class="text-xs font-semibold tracking-wider text-stone-100 uppercase font-mono-code mb-5 flex items-center gap-2">
+<span class="h-1 w-1 rounded-full bg-brand-accent"></span>
+              PLATFORM
+            </h3>
+<ul class="space-y-3.5 text-sm">
+<li class="">
+<a class="footer-link text-brand-muted hover:text-stone-100" href="#dashboard">Dashboard</a>
+</li>
+<li class="">
+<a class="footer-link text-brand-muted hover:text-stone-100" href="#analytics">Analytics</a>
+</li>
+<li class="">
+<a class="footer-link text-brand-muted hover:text-stone-100" href="#announcements">Announcements</a>
+</li>
+<li class="">
+<a class="footer-link text-brand-muted hover:text-stone-100" href="#issue-history">Issue history</a>
+</li>
+<li class="">
+<a class="footer-link text-brand-muted hover:text-stone-100" href="#notifications">Notifications</a>
+</li>
+</ul>
+</div>
+<!-- END: PlatformNav -->
+<!-- BEGIN: AboutNav -->
+<div data-purpose="navigation-column-about">
+<h3 class="text-xs font-semibold tracking-wider text-stone-100 uppercase font-mono-code mb-5 flex items-center gap-2">
+<span class="h-1 w-1 rounded-full bg-brand-accent"></span>
+              ABOUT
+            </h3>
+<ul class="space-y-3.5 text-sm">
+<li class="">
+<a class="footer-link text-brand-muted hover:text-stone-100" href="#ai-implementations">AI implementations</a>
+</li>
+<li class="">
+<a class="footer-link text-brand-muted hover:text-stone-100" href="#role-based-access">Role-based access</a>
+</li>
+<li class="">
+<a class="footer-link text-brand-muted hover:text-stone-100" href="#sla-enforcement">SLA enforcement</a>
+</li>
+<li class="">
+<a class="footer-link text-brand-muted hover:text-stone-100" href="#verify-before-close">Verify before close</a>
+</li>
+<!-- Highlighted Support Contact -->
+<li class="pt-2 border-t border-white/[0.06]">
+<div class="text-xs font-mono-code text-stone-400 mb-1">Direct Campus Desk</div>
+<a class="inline-flex items-center gap-1.5 font-medium text-[#ea7a5d] hover:text-[#f09077] transition-colors group" href="mailto:servox@gmail.com">
+<svg class="w-3.5 h-3.5 shrink-0 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+<rect height="16" rx="2" width="20" x="2" y="4"></rect>
+<path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+</svg>
+<span class="underline decoration-brand-accent/40 decoration-1 underline-offset-2">servox@gmail.com</span>
+</a>
+</li>
+</ul>
+</div>
+<!-- END: AboutNav -->
+</div>
+</div>
+<!-- BEGIN: BottomLegalBar -->
+<div class="mt-14 pt-8 border-t border-white/[0.08] flex flex-col md:flex-row items-center justify-between gap-4 text-xs font-mono-code text-stone-400" data-purpose="copyright-and-legal">
+<div class="flex items-center gap-2">
+<span class="">© 2026 servox-phi</span>
+<span class="text-stone-600">•</span>
+<span class="">All rights reserved.</span>
+</div>
+<!-- Compliance & Regulatory Secondary Links -->
+<nav aria-label="Legal links" class="flex flex-wrap items-center gap-6 text-stone-400">
+<a class="hover:text-stone-200 transition-colors" href="#privacy">Privacy Policy</a>
+<a class="hover:text-stone-200 transition-colors" href="#terms">Terms of Service</a>
+<a class="hover:text-stone-200 transition-colors" href="#governance">Campus Governance</a>
+<a class="hover:text-stone-200 transition-colors" href="#security">Security Audit</a>
+</nav>
+</div>
+<!-- END: BottomLegalBar -->
+</div>
+</footer>
+<!-- END: MainFooter -->
+
+
+</body></html>

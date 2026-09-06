@@ -19,6 +19,7 @@ export interface MorphingCardStackProps {
   className?: string;
   defaultLayout?: LayoutMode;
   onCardClick?: (card: CardData) => void;
+  hideDots?: boolean;
 }
 
 const layoutIcons = {
@@ -33,6 +34,7 @@ export function MorphingCardStack({
   className,
   defaultLayout = "stack",
   onCardClick,
+  hideDots = false,
 }: MorphingCardStackProps) {
   const [layout, setLayout] = useState<LayoutMode>(defaultLayout);
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
@@ -186,7 +188,7 @@ export function MorphingCardStack({
         </motion.div>
       </LayoutGroup>
 
-      {layout === "stack" && cards.length > 1 && (
+      {layout === "stack" && !hideDots && cards.length > 1 && (
         <div className="flex justify-center gap-1.5">
           {cards.map((_, index) => (
             <button
