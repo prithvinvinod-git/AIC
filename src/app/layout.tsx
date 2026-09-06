@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Fraunces, Inter } from "next/font/google";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -50,14 +51,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBootstrapScript }} />
-        <script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6865869538408644"
-          crossOrigin="anonymous"
-        />
         <meta name="google-adsense-account" content="ca-pub-6865869538408644" />
       </head>
       <body className="min-h-full" suppressHydrationWarning>
+        <Script strategy="afterInteractive" src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6865869538408644" crossOrigin="anonymous" />
         <ToastProvider>
           <ThemeProvider>
             <AuthProvider>

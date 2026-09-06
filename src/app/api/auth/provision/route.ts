@@ -84,17 +84,27 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
     if (name) await adminAuth().updateUser(body.uid, updates as never);
     if (body.role) {
       const existing = await adminAuth().getUser(body.uid);
+      const existingClaims = (existing.customClaims ?? {}) as Record<string, unknown>;
       const requiresEmailVerification =
         body.requiresEmailVerification !== undefined
           ? body.requiresEmailVerification
-          : Boolean(existing.customClaims?.requiresEmailVerification);
+          : Boolean(existingClaims.requiresEmailVerification);
       await adminAuth().setCustomUserClaims(body.uid, {
         role: body.role,
-        portal: body.portal || null,
-        department: body.department || "",
-        college: body.college || null,
+        portal: body.portal !== undefined ? body.portal : (existingClaims.portal as string) || null,
+        department:
+          body.department !== undefined
+            ? body.department
+            : (existingClaims.department as string) ?? "",
+        college:
+          body.college !== undefined
+            ? body.college
+            : (existingClaims.college as string) ?? null,
         requiresEmailVerification: requiresEmailVerification || null,
-        name: name || "",
+        name:
+          name !== undefined
+            ? name
+            : ((existingClaims.name as string) || existing.displayName || ""),
       });
     }
 

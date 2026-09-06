@@ -47,15 +47,18 @@ export default function MobileNav() {
     pathname === href || (href !== "/" && pathname.startsWith(href + "/"));
 
   return (
-    <div ref={ref} className="fixed bottom-[15px] right-[15px] z-40 lg:hidden">
+    <div
+      ref={ref}
+      className="fixed bottom-[calc(env(safe-area-inset-bottom)+16px)] right-[calc(env(safe-area-inset-right)+16px)] z-40 lg:hidden"
+    >
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Menu"
-        className={`flex h-14 w-14 items-center justify-center rounded-full border bg-white shadow-card transition-all ${
-          open ? "border-stone" : "border-silver hover:border-stone hover:bg-paper"
+        className={`flex h-14 w-14 items-center justify-center rounded-full border border-silver bg-white shadow-card transition-colors will-change-transform ${
+          open ? "border-stone" : "hover:border-stone hover:bg-paper"
         }`}
       >
         <Menu className="h-5 w-5 text-ink" aria-hidden />

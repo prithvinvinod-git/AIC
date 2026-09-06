@@ -240,7 +240,7 @@ export default function IssueHistoryPage() {
         </button>
       </div>
 
-      <div className="card overflow-x-auto">
+      <div className="card h-[370px] overflow-auto max-md:h-[350px]">
         {issues.length === 0 ? (
           <EmptyState
             icon={<History className="h-8 w-8" aria-hidden />}
@@ -397,7 +397,7 @@ export default function IssueHistoryPage() {
                     type="button"
                     className={`btn btn-sm ${
                       draft.statuses.length > 0 &&
-                      g.statuses.every((s) => draft.statuses.includes(s))
+                      g.statuses.some((s) => draft.statuses.includes(s))
                         ? "btn-primary"
                         : "btn-ghost"
                     }`}

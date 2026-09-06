@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "postinstall": "node scripts/patch-next-cookiestore.mjs"
   },
   "dependencies": {
     "@genkit-ai/googleai": "^1.28.0",

@@ -91,6 +91,11 @@ function UsersTab() {
     try {
       const res = await api<{ users: AppUser[] }>("/api/admin/users");
       setUsers(res.users);
+      setSelectedUser((prev) => {
+        if (!prev) return prev;
+        const fresh = res.users.find((x) => x.uid === prev.uid);
+        return fresh ?? prev;
+      });
     } catch (e) {
       showError(e);
       setUsers([]);
