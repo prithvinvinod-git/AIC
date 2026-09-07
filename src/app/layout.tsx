@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Fraunces, Inter } from "next/font/google";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -51,7 +52,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${inter.variable} ${fraunces.variable} h-full antialiased`}
     >
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeBootstrapScript }} />
+        {/* Inline theme guard must run before paint/hydration. next/script's
+            beforeInteractive strategy hoists it into <head> as a real script
+            tag — plain JSX <script> is never executed by React on the client. */}
+        <Script
+          id="theme-bootstrap"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: themeBootstrapScript }}
+        />
         <meta name="google-adsense-account" content="ca-pub-6865869538408644" />
       </head>
       <body className="min-h-full" suppressHydrationWarning>
