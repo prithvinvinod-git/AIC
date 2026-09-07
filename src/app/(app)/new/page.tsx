@@ -138,7 +138,7 @@ export default function NewIssuePage() {
 
   if (claims?.role === "reporter" && !claims.college) {
     return (
-      <div className="w-full max-w-[820px]">
+<div className="w-full max-w-[820px] sm:h-[calc(100vh-150px)] sm:overflow-y-auto sm:[scrollbar-width:none] sm:[&::-webkit-scrollbar]:hidden">
         <h1 className="font-display text-2xl max-md:text-xl font-semibold text-ink">Report an issue</h1>
         <p className="mt-1 text-sm text-slate">Add your college and department to your profile first.</p>
         <div className="mt-6">
@@ -281,7 +281,6 @@ export default function NewIssuePage() {
               </button>
             ))}
           </div>
-          <p className="mt-1.5 text-xs text-slate">1 = Critical, 5 = Minor. Validators can adjust this later.</p>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-3 md:gap-6">
@@ -334,57 +333,117 @@ export default function NewIssuePage() {
         </div>
         </form>
 
-        <aside className="card mt-2.5 flex flex-col gap-4" style={{ boxShadow: "none", paddingTop: 18 }}>
+        <aside className="card mt-2.5 flex flex-col gap-3 pb-[32px] sm:mt-[20px]" style={{ boxShadow: "none", paddingTop: 18 }}>
           <p className="label mb-0">Photos</p>
-          {images.map((im) => (
-            <div
-              key={im.preview}
-              className="relative flex items-center justify-center rounded-xl border border-silver bg-paper px-2 py-1.5"
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={im.preview}
-                alt="Issue preview"
-                className="max-h-[142px] w-auto max-w-full rounded-lg object-contain"
-              />
-              {im.uploading && (
-                <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-white/70">
-                  <Loader2 className="h-6 w-6 animate-spin text-slate" aria-hidden />
-                </div>
-              )}
-              <button
-                type="button"
-                aria-label="Remove image"
-                className="absolute right-1.5 top-1.5 flex h-[34px] w-[34px] items-center justify-center rounded-full bg-ink/80 text-white"
-                onClick={() => removeImage(im.preview)}
+
+          <div className="hidden flex-col gap-3 sm:flex">
+            {Array.from({ length: MAX_IMAGES }).map((_, i) => {
+              const im = images[i];
+              if (im) {
+                return (
+                  <div
+                    key={im.preview}
+                    className="relative flex h-[124px] items-center justify-center rounded-xl border border-silver bg-paper"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={im.preview}
+                      alt="Issue preview"
+                      className="max-h-[92%] w-auto max-w-[92%] rounded-lg object-contain"
+                    />
+                    {im.uploading && (
+                      <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-white/70">
+                        <Loader2 className="h-6 w-6 animate-spin text-slate" aria-hidden />
+                      </div>
+                    )}
+                    <button
+                      type="button"
+                      aria-label="Remove image"
+                      className="absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-full bg-ink/80 text-white"
+                      onClick={() => removeImage(im.preview)}
+                    >
+                      <X className="h-[18px] w-[18px]" aria-hidden />
+                    </button>
+                  </div>
+                );
+              }
+              return (
+                <label
+                  key={`slot-${i}`}
+                  className="flex h-[124px] cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-slate bg-paper text-slate transition-colors hover:border-graphite hover:text-graphite"
+                >
+                  <ImagePlus className="h-7 w-7" aria-hidden />
+                  <span className="text-xs font-medium">Add photo</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) void addImage(file);
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+              );
+            })}
+          </div>
+
+          <div className="flex flex-col gap-4 sm:hidden">
+            {images.map((im) => (
+              <div
+                key={im.preview}
+                className="relative flex items-center justify-center rounded-xl border border-silver bg-paper px-2 py-1.5"
               >
-                <X className="h-3.5 w-3.5" aria-hidden />
-              </button>
-            </div>
-          ))}
-          {images.length < MAX_IMAGES && (
-            <label className="mt-2.5 flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-slate bg-paper px-4 py-5 text-slate transition-colors hover:border-graphite hover:text-graphite">
-              <ImagePlus className="h-9 w-9" aria-hidden />
-              <span className="text-sm font-medium">Upload photos</span>
-              <span className="text-xs text-stone">
-                {images.length}/{MAX_IMAGES} · keeps original ratio
-              </span>
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) void addImage(file);
-                  e.target.value = "";
-                }}
-              />
-            </label>
-          )}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={im.preview}
+                  alt="Issue preview"
+                  className="max-h-[142px] w-auto max-w-full rounded-lg object-contain"
+                />
+                {im.uploading && (
+                  <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-white/70">
+                    <Loader2 className="h-6 w-6 animate-spin text-slate" aria-hidden />
+                  </div>
+                )}
+                <button
+                  type="button"
+                  aria-label="Remove image"
+                  className="absolute right-1.5 top-1.5 flex h-[38px] w-[38px] items-center justify-center rounded-full bg-ink/80 text-white"
+                  onClick={() => removeImage(im.preview)}
+                >
+                  <X className="h-[18px] w-[18px]" aria-hidden />
+                </button>
+              </div>
+            ))}
+            {images.length < MAX_IMAGES && (
+              <label className="mt-2.5 flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-slate bg-paper px-4 py-5 text-slate transition-colors hover:border-graphite hover:text-graphite">
+                <ImagePlus className="h-9 w-9" aria-hidden />
+                <span className="text-sm font-medium">Upload photos</span>
+                <span className="text-xs text-stone">
+                  {images.length}/{MAX_IMAGES} · keeps original ratio
+                </span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) void addImage(file);
+                    e.target.value = "";
+                  }}
+                />
+              </label>
+            )}
+          </div>
+
+          <p className="hidden text-xs text-stone sm:block">
+            {images.length}/{MAX_IMAGES} · keeps original ratio
+          </p>
         </aside>
       </div>
 
-      <div className="mt-6 flex justify-end gap-3">
+      <div className="mt-6 flex justify-end gap-3 sm:sticky sm:bottom-4 sm:z-10 sm:mt-1.5">
         <button type="button" className="btn btn-secondary" onClick={() => router.push("/dashboard")}>
           Cancel
         </button>

@@ -21,6 +21,7 @@ import { Loading, EmptyState } from "@/components/ui/States";
 import { ANALYTICS_ROLES } from "@/lib/nav";
 import { CATEGORY_COLORS } from "@/lib/chartColors";
 import { AtRiskLocationsCard } from "@/components/ai/AtRiskLocationsCard";
+import { WeeklyInsightsCard } from "@/components/ai/WeeklyInsightsCard";
 
 interface SummaryResponse {
   summary: {
@@ -127,6 +128,8 @@ export default function AnalyticsPage() {
           </ResponsiveContainer>
         </div>
       </div>
+
+      <WeeklyInsightsCard />
 
       <AtRiskLocationsCard />
 

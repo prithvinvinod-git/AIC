@@ -8,7 +8,6 @@ import {
   Megaphone,
   ShieldCheck,
   ShoppingCart,
-  TriangleAlert,
   UserCog,
   Wrench,
 } from "lucide-react";
@@ -43,8 +42,7 @@ export const NAV_ITEMS: NavItem[] = [
   { role: "reporter", label: "My issues", href: "/dashboard", icon: LayoutDashboard },
   { role: "reporter", label: "Submit issue", href: "/new", icon: CirclePlus },
   { role: "validator", label: "Board", href: "/board", icon: ShieldCheck },
-  { role: "hod", label: "Escalations", href: "/escalations", icon: TriangleAlert },
-  { role: "principal", label: "Approvals", href: "/approvals", icon: CheckCheck },
+  { roles: ["hod", "principal"], label: "Approvals", href: "/approvals", icon: CheckCheck },
   { role: "maintenance", label: "Jobs", href: "/jobs", icon: Wrench },
   { roles: HEAD_ROLES, label: "Dispatch", href: "/dispatch", icon: Wrench },
   { role: "purchase", label: "Purchases", href: "/purchase", icon: ShoppingCart },

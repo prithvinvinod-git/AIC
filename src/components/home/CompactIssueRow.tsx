@@ -28,12 +28,13 @@ export default function CompactIssueRow({
         </h3>
         <p className="truncate font-sans text-xs text-slate">
           {issue.department}
-          {issue.reporter?.name ? ` · ${issue.reporter.name}` : ""} · {timeAgo(issue.createdAt)}
+          {issue.reporter?.name ? <span className="hidden sm:inline"> · {issue.reporter.name}</span> : null} ·{" "}
+          {timeAgo(issue.createdAt)}
         </p>
       </div>
       <div className="flex shrink-0 items-center gap-2 sm:gap-3">
         <StatusBadge status={issue.status} />
-        <span className="max-[480px]:hidden">
+        <span className="hidden sm:inline">
           <PriorityBadge priority={issue.priority} />
         </span>
       </div>

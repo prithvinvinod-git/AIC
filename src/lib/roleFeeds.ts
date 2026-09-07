@@ -41,8 +41,8 @@ export function feedFor(role: Role, department?: string): RoleFeed {
       return {
         title: "Escalations to approve",
         subtitle: "Critical issues awaiting your approval.",
-        ctaLabel: "Open escalations",
-        ctaHref: "/escalations",
+        ctaLabel: "Open approvals",
+        ctaHref: "/approvals",
         params: { status: "ESCALATED" },
         emptyTitle: "No escalations pending",
         emptyBody: "Approved critical issues will flow here from department validation.",

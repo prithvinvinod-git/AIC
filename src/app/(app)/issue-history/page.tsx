@@ -11,18 +11,24 @@ import { useToast } from "@/components/ui/Toast";
 import { Loading, EmptyState } from "@/components/ui/States";
 import { StatusBadge, PriorityBadge } from "@/components/ui/Badge";
 import { formatDate } from "@/lib/format";
-import { DEPARTMENTS, STATUS_LABEL } from "@/lib/constants";
+import { DEPARTMENTS } from "@/lib/constants";
 import { STATUSES } from "@/lib/types";
-import { useFocusTrap } from "@/hooks/useFocusTrap";
 import type { Category, Issue, IssueStatus } from "@/lib/types";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 const HISTORY_ROLES = ["admin", "principal", "validator"];
 
 /** Issues at P3 or above (priority number ≤ 3) are board-eligible. */
 const BOARD_MAX_PRIORITY = 3;
 
-const STATUS_GROUPS: { key: string; label: string; statuses: IssueStatus[] }[] = [
-  { key: "resolved", label: "Resolved", statuses: ["COMPLETED", "VERIFIED", "CLOSED"] },
+type StatusFilterKey = "all" | "resolved" | "unresolved" | "in-progress" | "rejected";
+
+const STATUS_FILTER_OPTIONS: { key: StatusFilterKey; label: string; statuses: IssueStatus[] }[] = [
+  {
+    key: "resolved",
+    label: "Resolved",
+    statuses: ["COMPLETED", "INSPECTED", "VERIFIED", "CLOSED"],
+  },
   {
     key: "unresolved",
     label: "Unresolved",
@@ -31,13 +37,15 @@ const STATUS_GROUPS: { key: string; label: string; statuses: IssueStatus[] }[] =
       "VALIDATED",
       "ESCALATED",
       "APPROVED",
+      "ROUTED",
+      "PENDING_ASSIGN",
       "ASSIGNED",
       "ONGOING",
       "PENDING",
-      "REJECTED",
     ],
   },
   { key: "in-progress", label: "In progress", statuses: ["ASSIGNED", "ONGOING", "PENDING"] },
+  { key: "rejected", label: "Rejected", statuses: ["REJECTED"] },
 ];
 
 interface Filters {
@@ -45,10 +53,10 @@ interface Filters {
   to: string;
   department: string;
   category: string;
-  statuses: IssueStatus[];
+  statusFilter: StatusFilterKey;
 }
 
-const DEFAULT_FILTERS: Filters = { from: "", to: "", department: "", category: "", statuses: [] };
+const DEFAULT_FILTERS: Filters = { from: "", to: "", department: "", category: "", statusFilter: "all" };
 
 export default function IssueHistoryPage() {
   const { claims } = useAuth();
@@ -89,7 +97,10 @@ export default function IssueHistoryPage() {
       if (applied.to) params.set("to", applied.to);
       if (applied.department) params.set("department", applied.department);
       if (applied.category) params.set("category", applied.category);
-      if (applied.statuses.length) params.set("statuses", applied.statuses.join(","));
+      if (applied.statusFilter !== "all") {
+        const group = STATUS_FILTER_OPTIONS.find((g) => g.key === applied.statusFilter);
+        if (group) params.set("statuses", group.statuses.join(","));
+      }
       const res = await api<{ issues: Issue[]; truncated: boolean }>(
         `/api/issue-history?${params.toString()}`
       );
@@ -114,14 +125,14 @@ export default function IssueHistoryPage() {
     const counts: Record<string, number> = {};
     for (const s of STATUSES) counts[s] = 0;
     for (const i of issues ?? []) if (i.status in counts) counts[i.status] += 1;
-    const resolved = counts.COMPLETED + counts.VERIFIED + counts.CLOSED;
+    const resolved = counts.COMPLETED + counts.INSPECTED + counts.VERIFIED + counts.CLOSED;
     const inProgress = counts.ASSIGNED + counts.ONGOING + counts.PENDING;
     return { total: issues?.length ?? 0, resolved, inProgress, unresolved: (issues?.length ?? 0) - resolved };
   }, [issues]);
 
   const activeFilterCount =
     [applied.from, applied.to, applied.department, applied.category].filter(Boolean).length +
-    applied.statuses.length;
+    (applied.statusFilter !== "all" ? 1 : 0);
 
   if (!claims) return null;
   if (!HISTORY_ROLES.includes(claims.role)) {
@@ -146,12 +157,6 @@ export default function IssueHistoryPage() {
     setDraft(DEFAULT_FILTERS);
     setApplied(DEFAULT_FILTERS);
     setOpen(false);
-  };
-
-  const toggleStatus = (s: IssueStatus) => {
-    setDraft((d) =>
-      d.statuses.includes(s) ? { ...d, statuses: d.statuses.filter((x) => x !== s) } : { ...d, statuses: [...d.statuses, s] }
-    );
   };
 
   const boardEligible = (i: Issue) => i.priority >= 1 && i.priority <= BOARD_MAX_PRIORITY;
@@ -196,7 +201,7 @@ export default function IssueHistoryPage() {
           <h1 className="font-display text-2xl max-md:text-xl font-semibold text-ink">Issue history</h1>
           <p className="mt-1 text-sm text-slate">
             Every reported issue, searchable and filterable — {summary.total} shown
-            {applied.statuses.length || applied.from || applied.to || applied.department || applied.category
+            {applied.statusFilter !== "all" || applied.from || applied.to || applied.department || applied.category
               ? " (filtered)"
               : ""}
             .
@@ -240,7 +245,7 @@ export default function IssueHistoryPage() {
         </button>
       </div>
 
-      <div className="card h-[370px] overflow-auto max-md:h-[350px]">
+      <div className="card custom-scroll h-[540px] overflow-auto max-md:h-[460px]">
         {issues.length === 0 ? (
           <EmptyState
             icon={<History className="h-8 w-8" aria-hidden />}
@@ -386,44 +391,23 @@ export default function IssueHistoryPage() {
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
-                  className={`btn btn-sm ${draft.statuses.length === 0 ? "btn-primary" : "btn-ghost"}`}
-                  onClick={() => setDraft((d) => ({ ...d, statuses: [] }))}
+                  className={`btn btn-sm ${draft.statusFilter === "all" ? "btn-primary" : "btn-ghost"}`}
+                  onClick={() => setDraft((d) => ({ ...d, statusFilter: "all" }))}
                 >
                   All
                 </button>
-                {STATUS_GROUPS.map((g) => (
+                {STATUS_FILTER_OPTIONS.map((g) => (
                   <button
                     key={g.key}
                     type="button"
                     className={`btn btn-sm ${
-                      draft.statuses.length > 0 &&
-                      g.statuses.some((s) => draft.statuses.includes(s))
-                        ? "btn-primary"
-                        : "btn-ghost"
+                      draft.statusFilter === g.key ? "btn-primary" : "btn-ghost"
                     }`}
-                    onClick={() => setDraft((d) => ({ ...d, statuses: g.statuses }))}
+                    onClick={() => setDraft((d) => ({ ...d, statusFilter: g.key }))}
                   >
                     {g.label}
                   </button>
                 ))}
-              </div>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {STATUSES.map((s) => {
-                  const active = draft.statuses.includes(s);
-                  return (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => toggleStatus(s)}
-                      aria-pressed={active}
-                      className={`tag cursor-pointer select-none transition-colors ${
-                        active ? "bg-ink text-white" : "text-slate hover:bg-paper"
-                      }`}
-                    >
-                      {STATUS_LABEL[s]}
-                    </button>
-                  );
-                })}
               </div>
             </div>
 

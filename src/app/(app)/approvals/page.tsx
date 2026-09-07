@@ -9,9 +9,8 @@ import { Loading, EmptyState, BoardErrorState } from "@/components/ui/States";
 import { EscalationCard } from "@/components/issues/EscalationCard";
 import { IssueCard } from "@/components/ui/IssueCard";
 import { SeniorPurchaseApprovalCard } from "@/components/purchases/SeniorPurchaseApprovalCard";
-import { PurchaseLimitCard } from "@/components/purchases/PurchaseLimitCard";
 
-export default function PrincipalPage() {
+export default function ApprovalsPage() {
   const { claims } = useAuth();
   const { issues: escalated, error: escalatedError, reload: reloadEscalated } = useIssues({ status: "ESCALATED" });
   const { issues: approved, error: approvedError, reload: reloadApproved } = useIssues({ status: "APPROVED" });
@@ -39,8 +38,10 @@ export default function PrincipalPage() {
   return (
     <div className="flex flex-col gap-8 max-md:gap-5">
       <div>
-        <h1 className="font-display text-2xl max-md:text-xl font-semibold text-ink">Principal approvals</h1>
-        <p className="mt-1 text-sm text-slate">Approve critical escalations and track approved work.</p>
+        <h1 className="font-display text-2xl max-md:text-xl font-semibold text-ink">Approvals</h1>
+        <p className="mt-1 text-sm text-slate">
+          {claims.name} · Approve critical escalations and over-limit purchases, and track approved work.
+        </p>
       </div>
 
       <section className="flex flex-col gap-4">
@@ -66,13 +67,7 @@ export default function PrincipalPage() {
       </section>
 
       <section className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h2 className="font-display text-lg max-md:text-base font-semibold text-ink">Over-limit purchase approvals</h2>
-            <p className="mt-1 text-xs text-slate">Purchases above the configured limit need your sign-off.</p>
-          </div>
-          <PurchaseLimitCard />
-        </div>
+        <h2 className="font-display text-lg max-md:text-base font-semibold text-ink">Over-limit purchases</h2>
         {purchaseError ? (
           <BoardErrorState message={purchaseError} onRetry={() => void reloadPurchases()} />
         ) : purchases.length === 0 ? (

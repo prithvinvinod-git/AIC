@@ -56,7 +56,7 @@ export default function DashboardPage() {
           <div key={k.label} className="kpi !px-[12px] !py-[16px] sm:!px-[24px] sm:!py-[20px]">
             <div className={`flex items-center gap-2 ${k.tone}`}>
               <k.icon className="h-4 w-4" aria-hidden />
-              <span className="truncate text-xs font-medium uppercase tracking-wide">{k.label}</span>
+              <span className="truncate text-[10px] font-medium uppercase tracking-wide">{k.label}</span>
             </div>
             <p className="mt-2 font-display text-3xl max-md:text-2xl font-semibold text-ink">{k.value}</p>
           </div>
