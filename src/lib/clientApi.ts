@@ -1,5 +1,12 @@
 "use client";
 
+import { cachedGet, forceRefresh, onWrite } from "@/lib/jsonCache";
+import {
+  enqueueWrite,
+  listWrites,
+  dropWrite,
+} from "@/lib/offlineStore";
+
 let authToken: string | null = null;
 let refreshTokenHandler: (() => Promise<string | null>) | null = null;
 
@@ -16,6 +23,13 @@ export function setTokenRefreshHandler(handler: (() => Promise<string | null>) |
   refreshTokenHandler = handler;
 }
 
+export interface ApiOptions {
+  /** Bypass the read-through cache and hit the network, then refresh cache. */
+  force?: boolean;
+  /** Skip write-queue buffering for a non-GET (used by the sync flush itself). */
+  fromQueue?: boolean;
+}
+
 export class ApiError extends Error {
   status: number;
   details?: unknown;
@@ -27,14 +41,39 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(path: string, init: RequestInit, retried: boolean): Promise<T> {
+/** Thrown by `api()` when a mutation was buffered but the network is down. */
+export class QueuedOfflineError extends Error {
+  constructor() {
+    super("You're offline — your change was saved and will sync when you reconnect.");
+    this.name = "QueuedOfflineError";
+  }
+}
+
+/** True when a fetch failure is a network transport error (not an HTTP status). */
+function isNetworkError(e: unknown): boolean {
+  return e instanceof TypeError || (e instanceof Error && /failed to fetch|network/i.test(e.message));
+}
+
+/** Build headers for a request, attaching the current auth token. */
+function prepareHeaders(init: RequestInit): Headers {
   const headers = new Headers(init.headers);
   if (authToken) headers.set("Authorization", `Bearer ${authToken}`);
   if (init.body && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
+  return headers;
+}
 
-  const res = await fetch(path, { ...init, headers });
+async function request<T>(path: string, init: RequestInit, retried: boolean): Promise<T> {
+  const headers = prepareHeaders(init);
+  let res: Response;
+  try {
+    res = await fetch(path, { ...init, headers });
+  } catch (e) {
+    // Transport failure — rethrow so callers can distinguish offline vs HTTP.
+    throw e instanceof TypeError ? e : new (Error as unknown as new (m: string) => Error)(String(e));
+  }
+
   const isJson = res.headers.get("content-type")?.includes("application/json");
   const body = isJson ? await res.json().catch(() => null) : null;
 
@@ -62,12 +101,100 @@ async function request<T>(path: string, init: RequestInit, retried: boolean): Pr
 }
 
 /**
- * Authenticated fetch wrapper used by every client-side call. Attaches the
- * current Firebase ID token (set by the auth provider) as a Bearer header.
+ * Authenticated fetch wrapper used by every client-side call.
+ *
+ * GETs go through a read-through, stale-while-revalidate cache (IndexedDB via
+ * `offlineStore`) keyed per user — see `src/lib/jsonCache.ts`. Non-GETs are
+ * buffered into the pending-write queue so offline actions survive a dropped
+ * connection and replay in order on reconnect (server remains authoritative).
  */
 export async function api<T = unknown>(
   path: string,
-  init: RequestInit = {}
+  init: RequestInit = {},
+  opts: ApiOptions = {}
 ): Promise<T> {
-  return request<T>(path, init, false);
+  const method = (init.method || "GET").toUpperCase();
+
+  // ---- mutations ----
+  if (method !== "GET") {
+    if (!opts.fromQueue) {
+      await enqueueWrite({
+        url: path,
+        init,
+        method,
+        enqueuedAt: Date.now(),
+      });
+    }
+    try {
+      const res = await request<T>(path, init, false);
+      if (!opts.fromQueue) await dropQueuedForWrite(path, init);
+      return res;
+    } catch (e) {
+      if (isNetworkError(e) || navigator.onLine === false) {
+        // Server unreachable — stays queued for later sync.
+        throw new QueuedOfflineError();
+      }
+      if (!opts.fromQueue) {
+        // Server answered (validation / permission) — terminal, drop the copy.
+        await dropWriteForMatch(path, init);
+      }
+      throw e;
+    }
+  }
+
+  // ---- reads ----
+  const fetchImpl = () => request<T>(path, init, false);
+  if (opts.force) return forceRefresh<T>(path, fetchImpl);
+  return cachedGet<T>(path, fetchImpl);
+}
+
+/**
+ * Drop a buffered write after the server accepted it. Matches the enqueued
+ * copy by path + body to avoid deleting an unrelated queued write.
+ */
+async function dropQueuedForWrite(path: string, init: RequestInit): Promise<void> {
+  await dropWriteForMatch(path, init);
+}
+
+async function dropWriteForMatch(path: string, init: RequestInit): Promise<void> {
+  const pending = await listWrites();
+  const body = typeof init.body === "string" ? init.body : undefined;
+  const match = pending.find(
+    (w) =>
+      w.url === path &&
+      (w.method || "POST").toUpperCase() === (init.method || "POST").toUpperCase() &&
+      (body === undefined || w.init.body === body)
+  );
+  if (match) await dropWrite(match.id);
+  onWrite(path);
+}
+
+/** Replay the queued writes in order. Resolves once the queue is empty. */
+export async function flushPendingWrites(): Promise<{ sent: number; failed: number; dropped: number }> {
+  let sent = 0;
+  let failed = 0;
+  let dropped = 0;
+  const pending = await listWrites();
+  for (const w of pending) {
+    try {
+      const init: RequestInit = {
+        method: w.method,
+        headers: w.init.headers,
+        body: w.init.body,
+      };
+      await request(w.url, init, false);
+      await dropWrite(w.id);
+      onWrite(w.url);
+      sent++;
+    } catch (e) {
+      if (isNetworkError(e) || navigator.onLine === false) {
+        failed++;
+        break; // still offline — stop; remaining queue replays on next flush.
+      }
+      // Server rejected — terminal; drop so we don't retry forever.
+      await dropWrite(w.id);
+      dropped++;
+    }
+  }
+  return { sent, failed, dropped };
 }

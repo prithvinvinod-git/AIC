@@ -20,6 +20,7 @@ import {
 } from "firebase/auth";
 import { getClientAuth } from "@/lib/firebase";
 import { getAuthToken, setAuthToken, setTokenRefreshHandler } from "@/lib/clientApi";
+import { setOfflineUser, nuke } from "@/lib/offlineStore";
 import type { Role } from "@/lib/types";
 
 export interface SessionClaims {
@@ -89,12 +90,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const unsub = onAuthStateChanged(auth, (u) => {
       setUser(u);
       if (u) {
+        setOfflineUser(u.uid);
         void refreshClaims().then((c) => {
           const hasPwProvider = u.providerData.some((p) => p.providerId === "password");
           setNeedsPasswordSetup(!hasPwProvider && !c.hasPassword);
           setReady(true);
         });
       } else {
+        // Sign-out / switch: wipe the offline store so a different account
+        // never sees the previous user's cached data or queued writes.
+        void nuke();
+        setOfflineUser(null);
         setClaims(null);
         setAuthToken(null);
         setNeedsPasswordSetup(false);

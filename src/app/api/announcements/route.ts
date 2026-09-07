@@ -4,6 +4,7 @@ import { requireAuth } from "@/lib/auth";
 import { handleError, json, parseBody } from "@/lib/api";
 import { adminDb } from "@/lib/firebaseAdmin";
 import { ANNOUNCER_ROLES, publishAnnouncement } from "@/lib/announcements";
+import { serverCached, invalidateServerCache } from "@/lib/serverCache";
 import { ROLES, EASTER_EGG_SLUGS, type Announcement } from "@/lib/types";
 
 const audienceSchema = z.discriminatedUnion("kind", [
@@ -43,25 +44,30 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       name: user.name,
       role: user.role,
     });
+    invalidateServerCache("api:announcements");
     return json({ ok: true, announcement }, 201);
   } catch (e) {
     return handleError(e);
   }
 }
 
+const GET_CACHE_KEY = "api:announcements:list";
+
 /** GET /api/announcements — recent announcements, newest first (for authoring UI). */
 export async function GET(req: NextRequest): Promise<NextResponse> {
   try {
     await requireAuth(req);
-    const snap = await adminDb()
-      .collection("announcements")
-      .orderBy("createdAt", "desc")
-      .limit(50)
-      .get();
-    const announcements: Announcement[] = snap.docs.map((d) => ({
-      id: d.id,
-      ...(d.data() as Omit<Announcement, "id">),
-    }));
+    const announcements = await serverCached(GET_CACHE_KEY, 30_000, async () => {
+      const snap = await adminDb()
+        .collection("announcements")
+        .orderBy("createdAt", "desc")
+        .limit(50)
+        .get();
+      return snap.docs.map((d) => ({
+        id: d.id,
+        ...(d.data() as Omit<Announcement, "id">),
+      }));
+    });
     return json({ announcements });
   } catch (e) {
     return handleError(e);

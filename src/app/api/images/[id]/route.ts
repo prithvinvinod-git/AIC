@@ -22,7 +22,8 @@ export async function GET(
     return new Response(new Uint8Array(buffer), {
       headers: {
         "Content-Type": (data.contentType as string) || "image/jpeg",
-        "Cache-Control": "public, max-age=3600",
+        // Blobs are unguessable + never rewritten → safe to cache as immutable.
+        "Cache-Control": "public, max-age=31536000, immutable",
       },
     });
   } catch {

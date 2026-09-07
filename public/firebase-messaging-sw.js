@@ -7,6 +7,95 @@ importScripts("https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-com
 self.__FIREBASE_CONFIG = {};
 self.__FIREBASE_READY = false;
 
+/* ------------------------------------------------------------------ *
+ * Offline app-shell cache (plain JS, no framework).                  *
+ *                                                                    *
+ * Purpose: make the shell (HTML + hashed static assets + icons +     *
+ * images) load on a flat connection. Authenticated JSON GETs are     *
+ * intentionally NOT cached here — they are served per-user through   *
+ * the IndexedDB read-through cache on the client (src/lib/jsonCache) *
+ * and cleared on account switch. SW only stores public assets.       *
+ * ------------------------------------------------------------------ */
+const SHELL_CACHE = "servox-shell-v1";
+const PRECACHE_URLS = [
+  "/",
+  "/login",
+  "/signup",
+  "/manifest.json",
+  "/servoxlogo.png",
+];
+
+self.addEventListener("install", (event) => {
+  self.skipWaiting();
+  event.waitUntil(
+    caches
+      .open(SHELL_CACHE)
+      .then((cache) => cache.addAll(PRECACHE_URLS))
+      .catch(() => { /* offline install — runtime cache will fill in */ })
+  );
+});
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(keys.filter((k) => k.startsWith("servox-shell-") && k !== SHELL_CACHE).map((k) => caches.delete(k)))
+      )
+      .then(() => self.clients.claim())
+  );
+});
+
+/* Cache-first with background revalidate, for content-hashed/public assets. */
+function staleWhileRevalidate(cache, request) {
+  return caches.open(cache).then(async (c) => {
+    const hit = await c.match(request);
+    const network = fetch(request)
+      .then((res) => {
+        if (res && res.ok) c.put(request, res.clone());
+        return res;
+      })
+      .catch(() => hit);
+    return hit || network;
+  });
+}
+
+self.addEventListener("fetch", (event) => {
+  const { request } = event;
+  if (request.method !== "GET") return;
+  const url = new URL(request.url);
+  if (url.origin !== self.location.origin) return; // let CDNs behave normally
+
+  // Navigation: network first, fall back to the precached shell offline.
+  if (request.mode === "navigate") {
+    event.respondWith(
+      fetch(request)
+        .catch(() =>
+          caches.match("/").then((cached) => cached || caches.match("/login"))
+        )
+    );
+    return;
+  }
+
+  // Public, content-hashed build assets + fonts + icons.
+  if (
+    url.pathname.startsWith("/_next/static") ||
+    url.pathname.endsWith(".woff2") ||
+    url.pathname === "/servoxlogo.png" ||
+    url.pathname === "/manifest.json"
+  ) {
+    event.respondWith(staleWhileRevalidate(SHELL_CACHE, request));
+    return;
+  }
+
+  // Unguessable (UUID) image blobs — cache-first so cached attachments open
+  // offline. Attachments are private but the URL is unguessable.
+  if (url.pathname.startsWith("/api/images/")) {
+    event.respondWith(staleWhileRevalidate(SHELL_CACHE, request));
+    return;
+  }
+});
+
 self.addEventListener("message", (event) => {
   if (event.data?.type === "SET_FIREBASE_CONFIG") {
     self.__FIREBASE_CONFIG = event.data.config || {};

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminAuth, adminDb } from "@/lib/firebaseAdmin";
 import { json, parseBody, handleError } from "@/lib/api";
 import { adminUserSchema } from "@/lib/schemas";
+import { invalidateServerCache } from "@/lib/serverCache";
 import { capitalizeName } from "@/lib/format";
 import type { Role } from "@/lib/types";
 
@@ -63,6 +64,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       { merge: true }
     );
 
+    invalidateServerCache("api:admin:users");
     return json({ uid: userRecord.uid }, 201);
   } catch (e) {
     return handleError(e);
@@ -119,6 +121,7 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
 
     await db.doc(`users/${body.uid}`).set(userData, { merge: true });
 
+    invalidateServerCache("api:admin:users");
     return json({ ok: true });
   } catch (e) {
     return handleError(e);

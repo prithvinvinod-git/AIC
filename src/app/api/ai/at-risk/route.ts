@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { json, handleError } from "@/lib/api";
+import { serverCached } from "@/lib/serverCache";
 import { predictiveMaintenanceFlow } from "@/lib/ai/predictive";
 
 /** GET /api/ai/at-risk — identify locations at risk for future issues */
@@ -10,10 +11,12 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     if (!["admin", "validator", "hod", "principal"].includes(user.role)) {
       return json({ error: "Not allowed." }, 403);
     }
-    
-    const result = await predictiveMaintenanceFlow({
-      college: user.role === "admin" ? undefined : user.college,
-    });
+    const college = user.role === "admin" ? undefined : user.college;
+    // Regenerate at most every 5 min per college; the scan + model call is
+    // expensive and the underlying data moves on the order of hours.
+    const result = await serverCached(`api:ai:at-risk:${college || "all"}`, 5 * 60_000, () =>
+      predictiveMaintenanceFlow({ college })
+    );
     return json({ result });
   } catch (e) {
     return handleError(e);
