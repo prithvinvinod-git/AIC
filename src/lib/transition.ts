@@ -45,13 +45,19 @@ export async function runTransition(
     // Best-effort emails keyed on the final status. Approvals reach HOD +
     // Principal; assignments reach the maintenance team; a CLOSED issue tells
     // the staff + dept validator the feedback outcome. Rejections never email.
+    // Any send failure is logged — never allowed to break the transition.
     after(async () => {
-      if (issue.status === "APPROVED") {
-        await import("@/lib/email").then((m) => m.sendIssueApprovedEmail(issue));
-      } else if (issue.status === "ASSIGNED") {
-        await import("@/lib/email").then((m) => m.sendJobAssignmentEmail(issue));
-      } else if (issue.status === "CLOSED") {
-        await import("@/lib/email").then((m) => m.sendFeedbackEmail(issue));
+      try {
+        if (issue.status === "APPROVED") {
+          await import("@/lib/email").then((m) => m.sendIssueApprovedEmail(issue));
+        } else if (issue.status === "ASSIGNED") {
+          await import("@/lib/email").then((m) => m.sendJobAssignmentEmail(issue));
+        } else if (issue.status === "CLOSED") {
+          await import("@/lib/email").then((m) => m.sendFeedbackEmail(issue));
+        }
+      } catch (e) {
+        const { logError } = await import("@/lib/errorLog");
+        await logError(e, { source: "after-transition-email", issueId });
       }
     });
 

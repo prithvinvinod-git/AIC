@@ -19,6 +19,18 @@ const apiKey = env.NEXT_PUBLIC_FIREBASE_API_KEY;
 const projectId = env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || env.FIREBASE_PROJECT_ID;
 const BASE = process.env.SMOKE_BASE || "http://localhost:3000";
 
+// Safety: never touch the live project unless explicitly overridden. The
+// smoke run creates real-looking issues that land in dashboards/analytics.
+const PROD_PROJECT = "campus-maintenance-2820d";
+if (projectId === PROD_PROJECT && process.env.SMOKE_ALLOW_PROD !== "1") {
+  console.error(
+    `Refusing to run smoke tests against production project "${projectId}".\n` +
+      "This creates and auto-deletes real-looking data in the live Firestore.\n" +
+      "Set SMOKE_ALLOW_PROD=1 to override."
+  );
+  process.exit(1);
+}
+
 const app =
   getApps()[0] ||
   initializeApp({
@@ -95,6 +107,7 @@ try {
     role: "reporter",
     department: "Engineering",
     isActive: true,
+    smoke: true,
     createdAt: new Date().toISOString(),
   });
 
@@ -129,6 +142,8 @@ try {
     images: [],
   });
   issueId = createdResp.issue.id;
+  // Tag directly (admin SDK) so leftover cleanup is exact, not title-based.
+  await db.doc(`issues/${issueId}`).update({ smoke: true });
   report("create issue -> NEW", createdResp.issue.status === "NEW", `(${createdResp.issue.issueNo})`);
 
   // 2. Validator validates P2 -> auto ESCALATED.

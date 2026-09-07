@@ -18,13 +18,13 @@
 
 | Status | Item | Why it matters |
 |---|---|---|
-| [ ] | **Add password reset.** No `sendPasswordResetEmail` path exists anywhere in the UI. Locked-out users must contact an admin to recreate their account. | Staff turnover and forgotten credentials are guaranteed in a campus environment. |
-| [ ] | **Add tracking-token rate limiting and revocation.** Tokens are UUID-based (high entropy) but the `/api/track/[token]` endpoint has no rate limiting and there is no admin/user revocation mechanism. | A compromised or leaked token grants indefinite public read access to issue details. |
-| [ ] | **Add upload malware scanning or hash-check gate.** Uploads are constrained to image MIME + 5 MB, but there is no server-side scan or metadata-strip before storing base64 in Firestore. | Uploaded photos may carry embedded documents, faces, or malicious payloads. |
-| [ ] | **Auto-escalate unaccepted NEW critical issues.** P1–2 issues auto-escalate only once validated. A critical issue left in `NEW` for days (validator inaction) has no deadline, no escalation, no alert. | This is the exact failure found in the audit: a water-hazard report sat `NEW` for 6 days. |
-| [ ] | **Separate smoke/demo data from production.** `smoke-lifecycle.mjs` and `cleanup-smoke.mjs` write directly to the production Firestore project. Seeded test data is indistinguishable from real issues in dashboards and analytics. | Leadership viewing the pilot will see fabricated issues in their metrics. |
-| [ ] | **Add basic server-side rate limiting on auth endpoints.** Login, signup, and Google sign-in routes have no IP or email rate limiting. Firebase handles `too-many-requests` for repeated bad passwords, but the Next.js routes themselves are unprotected. | Brute-force and credential-stuffing attacks against `/api/auth/provision` or other routes. |
-| [ ] | **Add error monitoring.** No structured logging, no error tracking (Sentry, Logtail, etc.), no uptime checks. Errors in `after()` fire-and-forget hooks (AI triage, email sends) are silently swallowed. | Production failures are invisible until a user reports them. |
+| [x] | **Add password reset.** No `sendPasswordResetEmail` path exists anywhere in the UI. Locked-out users must contact an admin to recreate their account. | Staff turnover and forgotten credentials are guaranteed in a campus environment. |
+| [x] | **Add tracking-token rate limiting and revocation.** Tokens are UUID-based (high entropy) but the `/api/track/[token]` endpoint has no rate limiting and there is no admin/user revocation mechanism. | A compromised or leaked token grants indefinite public read access to issue details. |
+| [x] | **Add upload malware scanning or hash-check gate.** Uploads are constrained to image MIME + 5 MB, but there is no server-side scan or metadata-strip before storing base64 in Firestore. | Uploaded photos may carry embedded documents, faces, or malicious payloads. |
+| [x] | **Auto-escalate unaccepted NEW critical issues.** P1–2 issues auto-escalate only once validated. A critical issue left in `NEW` for days (validator inaction) has no deadline, no escalation, no alert. | This is the exact failure found in the audit: a water-hazard report sat `NEW` for 6 days. |
+| [x] | **Separate smoke/demo data from production.** `smoke-lifecycle.mjs` and `cleanup-smoke.mjs` write directly to the production Firestore project. Seeded test data is indistinguishable from real issues in dashboards and analytics. | Leadership viewing the pilot will see fabricated issues in their metrics. |
+| [x] | **Add basic server-side rate limiting on auth endpoints.** Login, signup, and Google sign-in routes have no IP or email rate limiting. Firebase handles `too-many-requests` for repeated bad passwords, but the Next.js routes themselves are unprotected. | Brute-force and credential-stuffing attacks against `/api/auth/provision` or other routes. |
+| [x] | **Add error monitoring.** No structured logging, no error tracking (Sentry, Logtail, etc.), no uptime checks. Errors in `after()` fire-and-forget hooks (AI triage, email sends) are silently swallowed. | Production failures are invisible until a user reports them. |
 
 ---
 
@@ -93,11 +93,11 @@ These items from the original audit are **done** and require no further work:
 | [x] | **Authentication happy path** | Signup, login, Google login, email verification — all functional. |
 | [x] | **Workflow integrity** | Smoke tests (`smoke-lifecycle.mjs`) drive full NEW→CLOSED lifecycle with Admin-SDK tokens. 9/9 PASS against production. |
 | [x] | **Role-based access at API level** | Every route verifies ID token + claims; role checks enforced server-side. |
-| [ ] | **Password reset flow** | Not implemented (see P0 above). |
-| [ ] | **Rate limiting on auth/data routes** | Not implemented. |
-| [ ] | **Tracking token security** | No rate limiting, no revocation (see P0 above). |
-| [ ] | **Upload security** | MIME + size enforced; no malware scan, no metadata strip. |
-| [ ] | **Error monitoring in production** | Not implemented. |
+| [x] | **Password reset flow** | Implemented — "Forgot password?" on the login card, `sendPasswordResetEmail`, no account-enumeration. |
+| [x] | **Rate limiting on auth/data routes** | In-memory sliding window on `/api/track/[token]`, `/api/images/[id]`, `/api/auth/provision`. |
+| [x] | **Tracking token security** | Rate-limited; admin/principal revoke toggle; auto-revoke 30 days post-close (410 Gone). |
+| [x] | **Upload security** | Magic-byte re-detection (JPEG/PNG/WebP/HEIC), embedded-script payload scan, sha256 digest verified on serve. |
+| [x] | **Error monitoring in production** | `logs/errors` + daily counter (`logError`), wired into `handleError` and `after()` hooks; `/api/health` probe. |
 | [ ] | **Backup and restore drills** | Firestore backups enabled (GCP); no documented restore runbook. |
 | [ ] | **AI prompt injection testing** | No adversarial testing of issue descriptions against triage prompts. |
 

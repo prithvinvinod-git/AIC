@@ -1,122 +1,78 @@
-Comprehensive Codebase Summary: servox-phi (servox/AIC)
-1. The Complete Current State Machine Flow (from src/lib/issueMachine.ts)
-The authoritative transition table is TRANSITION_RULES, executed transactionally by applyTransition(). Important: The machine in the code has evolved beyond what CONTEXT.md and docs/app_status.md (v4.0) describe. There are now 14 statuses and two new head roles.
-Statuses (from types.ts):
-NEW → VALIDATED → ESCALATED → APPROVED → ROUTED → PENDING_ASSIGN → ASSIGNED → ONGOING → PENDING → COMPLETED → INSPECTED → VERIFIED → CLOSED plus REJECTED (terminal).
-Full transition table:
-From	To	Roles
-NEW	VALIDATED	validator, admin
-NEW	REJECTED	validator, admin
-VALIDATED	ESCALATED	validator, admin
-VALIDATED	ROUTED	validator, admin
-VALIDATED	ASSIGNED	validator, admin
-ESCALATED	APPROVED	hod, principal, admin
-ESCALATED	REJECTED	hod, principal, admin
-APPROVED	ROUTED	validator, admin
-APPROVED	ASSIGNED	validator, admin
-ROUTED	PENDING_ASSIGN	maintenance_head, validator, admin
-ROUTED	ASSIGNED	maintenance_head, admin
-PENDING_ASSIGN	ASSIGNED	category_head, maintenance_head, admin
-ASSIGNED	ONGOING	maintenance
-ASSIGNED	PENDING_ASSIGN	category_head, maintenance_head, validator, admin
-ASSIGNED	PENDING	maintenance, validator, admin
-ONGOING	PENDING	maintenance, validator, admin
-ONGOING	COMPLETED	maintenance, validator, admin
-PENDING	PENDING_ASSIGN	category_head, maintenance_head, validator, admin
-PENDING	ASSIGNED	validator, admin
-COMPLETED	INSPECTED	category_head, admin
-COMPLETED	ONGOING	category_head, admin
-INSPECTED	none	—
-VERIFIED	CLOSED	reporter
-REJECTED / CLOSED	terminal	—
-Cascade behavior (applyTransition switch):
-- VALIDATED P1–2 → auto ESCALATED (sets escalation = {required:true, status:"pending"}), two timeline entries.
-- VALIDATED P3–5 → auto ROUTED to maintenance head (denormalizes routing.maintenanceHeadUid), two timeline entries.
-- INSPECTED → always sets verification block and auto-transitions to VERIFIED with an auto timeline entry.
-- COMPLETED set via complete → does NOT cascade; stays COMPLETED awaiting category-head inspection.
-- SLA init: initSla at APPROVED (P1–2) or ASSIGNED (P3–5); paused on PENDING (pausedAt, totalPausedMs); resumed/extended on ASSIGNED.
-2. Roles and What They Can Do at Each Status
-Roles (types.ts): reporter, validator, hod, principal, maintenance_head, category_head, maintenance, purchase, admin.
-- reporter: creates issues (POST /api/issues); rates VERIFIED → CLOSED (0.5–5). Comments. Sees own issues.
-- validator (department-scoped): NEW→VALIDATED/REJECTED; VALIDATED→ESCALATED/ROUTED/ASSIGNED; APPROVED→ROUTED; ASSIGNED/ONGOING→PENDING; ONGOING→COMPLETED; PENDING→ASSIGNED. No longer verifies COMPLETED (this changed — see inconsistencies).
-- hod / principal: ESCALATED→APPROVED/REJECTED (approve with severity revision).
-- maintenance_head: ROUTED→PENDING_ASSIGN (forward to category head) or ROUTED→ASSIGNED; PENDING_ASSIGN→ASSIGNED.
-- category_head: PENDING_ASSIGN→ASSIGNED (assign team+workers); COMPLETED→INSPECTED (on-site verification, auto→VERIFIED) or COMPLETED→ONGOING (send back). Scoped to own routing.categoryHeadUid.
-- maintenance: ASSIGNED→ONGOING (must be assigned staff); ASSIGNED/ONGOING→PENDING; ONGOING→COMPLETED.
-- purchase: not in the status machine. Approves/rejects needsApproval requirements (with price / reason), auto-resolving them.
-- admin: allowed on nearly all transitions as an override.
-3. All API Endpoints
-Issue lifecycle (src/app/api/issues/):
-- POST /api/issues — create NEW (reporter only), after(): AI triage + duplicates, notify validator, stats, reported email.
-- GET /api/issues?status=&mine=&scope=board — role-scoped lists; scope=board returns P1–3 across all depts (max 10, minus boardHidden).
-- GET /api/issues/[id] — issue + timeline + comments + attachments.
-- Per-status wrappers (all via runTransition):
-- POST /validate (→VALIDATED; resolves maintenance head for P3–5 pre-parse)
-- POST /reject (→REJECTED)
-- POST /escalate (→ESCALATED)
-- POST /approve (→APPROVED)
-- POST /forward (→ROUTED or PENDING_ASSIGN; resolves maintenance head / category head + name)
-- POST /assign (→ASSIGNED; resolves default team from category)
-- POST /pending (→PENDING)
-- POST /complete (→COMPLETED)
-- POST /inspect (→INSPECTED, category head)
-- POST /verify (→VERIFIED)
-- POST /sendback (→ONGOING)
-- POST /feedback (→CLOSED)
-- POST /status (generic transition, "the ONE door")
-- POST /board-visibility (admin/principal hides issue from board)
-- POST /comments, POST /comments/[commentId]/like
-- POST /requirements, PATCH/DELETE /requirements/[reqId], POST /requirements/[reqId]/approve|reject (purchase/admin)
-- Legacy empty dir: /issues/[id]/head-approve/ is an empty directory (no route.ts).
-Other endpoints:
-- GET /api/notifications, GET/PATCH /api/profile, GET /api/teams, GET /api/categories, GET/PATCH /api/admin/config, GET /api/analytics/summary, GET/POST /api/announcements(/[id]), GET /api/issue-history, POST /api/uploads, GET /api/images/[id], GET /api/track/[token], POST /api/auth/provision, cron routes.
-- Admin: GET/POST/PATCH/DELETE /api/admin/users, teams(+[id]), categories(+[id]).
-- AI: /api/ai/triage, duplicates, suggest-assign, extract-requirements, draft-closure, root-cause, weekly-insights, at-risk.
-4. References to HEAD_APPROVED / headApproval
-None. A grep across the entire repo for HEAD_APPROVED|headApproval|head-approve|headApprove found zero source references. The only trace is the empty directory src/app/api/issues/[id]/head-approve/ (no route file inside). There is no HEAD_APPROVED status in types.ts and no head_approval logic anywhere — that concept has been fully removed from the code.
-5. Inconsistencies & Issues Noticed
- 1. Documentation is badly out of date relative to the code. CONTEXT.md and docs/app_status.md (v4.0) describe the validator-only model (no maintenance_head/category_head, no ROUTED/PENDING_ASSIGN/INSPECTED, head merged into validator, COMPLETED → VERIFIED by validator). But the actual code has re-introduced two head roles and three new statuses, moved completion verification to the category head, and changed the route. The docs do not match the implemented machine.
- 2. The /verify endpoint is now effectively dead. COMPLETED has no → VERIFIED transition rule for any role (only INSPECTED/ONGOING by category_head/admin). The generic POST /verify route would always fail from COMPLETED. The current UI routes category-head verification through /inspect (which cascades to VERIFIED). VerifyCard in HeadCards.tsx still calls /verify and is an unused export (dead code).
- 3. AssignCard is also unused (dead code in HeadCards.tsx); only RouteToHeadCard is imported/used (board page).
- 4. Smoke test is out of date (scripts/smoke-lifecycle.mjs): it drives the old APPROVED → ASSIGNED (validator assign) and COMPLETED → VERIFIED (validator verify) path. Under the current machine, P2 validate auto-escalates (still OK), but there is no COMPLETED → VERIFIED transition, so step 7 would fail, and step 4's direct /assign from APPROVED is no longer the normal flow (needs ROUTED→PENDING_ASSIGN via heads).
- 5. firestore.rules issues.update is stale/incomplete for the new flow. It only authorizes specific role→status combinations (e.g. validator on ['COMPLETED','PENDING','ASSIGNED'], maintenance on ['ASSIGNED','ONGOING']). It does not include maintenance_head, category_head, or the ROUTED/PENDING_ASSIGN/INSPECTED statuses. Since all writes go through route handlers (defense-in-depth), this is flagged as "harmless/stale" but would block any direct client writes in the new flow. It also still references the removed head pattern implicitly (no head literal now — actually rules only mention validator/hod/principal/maintenance/admin).
- 6. Rating schema mismatch: feedbackSchema/feedback route enforces rating: 0.5–5, multipleOf(0.5); the machine's CLOSED check matches (0.5–5, half steps). But statusTransitionSchema (generic door) enforces rating: int 1–5 — so if someone closes via the generic /status endpoint (used by AssignedActions? no—only ONGOING via generic), half-step ratings would be rejected. CloseIssueModal/StarPicker allow 0.5 steps. Minor inconsistency between the generic door and the dedicated feedback door.
- 7. HEAD_ROLES nav label: nav.ts maps both maintenance_head and category_head to /dispatch, which correctly distinguishes tabs. ROLE_HOME maps all roles to / (landing decides), consistent with docs.
- 8. Board page (validator) still reflects old flows: It shows a "Route queue" of APPROVED issues and "Blocked" PENDING issues rendered via RouteToHeadCard (forwarding to head). It has no explicit section for the new ROUTED/PENDING_ASSIGN/INSPECTED statuses, though the machine now produces them. The validator board does not render a verify panel for COMPLETED (correct under new rules) but the UI messaging still says "verify completed jobs."
- 9. routing.staff name-lookup inside applyTransition ASSIGNED uses tx.get inside the transaction — allowed, but unusual; works.
-10. Push notification FCM code exists in both notifications.ts and functions/src/index.ts; TYPE_META in constants.ts includes purchase and sla/reminder/digest types referenced by functions not all present in NotificationType union in types.ts (minor typing gap).
-11. Emails: transition.ts fires sendFeedbackEmail on CLOSED, sendJobAssignmentEmail on ASSIGNED, sendIssueApprovedEmail on APPROVED (all best-effort, gated by EMAIL_ENABLED). Rejection never emails. Reported email fired on create with AI-priority preference. Templates use the warm terracotta theme (contrary to docs/app_status.md §8 which claims a "dark ChatGPT-style" theme — docs inconsistency; actual templates in templates.ts are the warm "Claude" theme as CONTEXT.md says).
-12. Auto-close: docs/app_status.md §16 says it's a pending gap, but CONTEXT.md §9 says it's implemented via GET /api/cron/auto-close (Vercel cron daily). There is a src/app/api/cron/auto-close/ directory — so it is implemented, contradicting app_status.md. src/lib/autoClose.ts exists.
-6. Pages/Components I Examined (key dispatch/board/jobs/issue detail)
-- Dispatch (/dispatch, src/app\(app)\dispatch\page.tsx): tabs ROUTED (To dispatch), PENDING_ASSIGN (To assign), ASSIGNED, ONGOING, PENDING, plus COMPLETED (To verify) for category_head. Uses DispatchCard (forward to category head / assign workers / inspect-completed).
-- Board (/board, validator): Validate queue (NEW) via ValidatePanel + AISuggestionCard; Active jobs (ASSIGNED/ONGOING) via MaintenanceJobCard readOnly; Route queue (APPROVED) + Blocked (PENDING) via RouteToHeadCard.
-- Jobs (/jobs, maintenance): tabs All/ASSIGNED/ONGOING/PENDING/COMPLETED/INSPECTED/VERIFIED via MaintenanceJobCard (start/block/complete, requirements + AI draft).
-- Issue detail (/issues/[id]): description, photos, SLA countdown, AISuggestionCard, RequirementsPanel, IssueActions (role/status-conditional action panels), CommentsSection, Timeline, rejection card, receipt button (CLOSED), CloseIssueModal (VERIFIED reporter).
-- Escalations (/escalations, HOD): EscalationCard + WeeklyInsightsCard.
-- Approvals (/approvals, principal): escalated (EscalationCard) + APPROVED (IssueCard).
-- Purchase (/purchase): flagged requirements approve/reject with price/reason.
-- Dashboard (/dashboard, reporter): my issues KPIs.
-- Landing / is the shared homepage for all roles (role-agnostic when authed).
-Files Read (complete list)
-Core logic:
-- src/lib/issueMachine.ts (743 lines — full state machine)
-- src/lib/types.ts (full)
-- src/lib/transition.ts (full)
-- src/lib/constants.ts (full)
-- src/lib/schemas.ts (full)
-- src/lib/nav.ts (full)
-- src/lib/auth.ts (full)
-- src/lib/notifications.ts (full)
-- src/lib/roleFeeds.ts (full)
-- src/lib/email/templates.ts, index.ts, recipients.ts (full)
-API routes:
-- src/app/api/issues/route.ts, [id]/route.ts
-- [id]/approve, assign, board-visibility, comments, comments/[commentId]/like, complete, escalate, feedback, forward, inspect, pending, reject, requirements, requirements/[reqId], requirements/[reqId]/approve, requirements/[reqId]/reject, sendback, status, validate, verify — all route.ts
-- src/app/api/admin/users/route.ts
-Pages:
-- (app)/dispatch, board, jobs, issues/[id], escalations, approvals, purchase, dashboard — page.tsx
-- src/app/page.tsx (landing)
-Components:
-- issues/DispatchCard.tsx, HeadCards.tsx, IssueActions.tsx, MaintenanceJobCard.tsx, EscalationCard.tsx, CloseIssueModal.tsx
-Other:
-- firestore.rules, functions/src/index.ts, scripts/smoke-lifecycle.mjs, docs/app_status.md, context.md (via grep), src/components/home/* names, scripts/backfill-heads.mjs, scripts/provision-heads.mjs
+# servox-phi (servox / AIC) — App Brief
+
+Living compaction of the app. The code is the source of truth; this file is the map.
+> Note: `CONTEXT.md` / `docs/app_status.md` describe an older validator-only model (no heads, 11 statuses). The code now has **14 statuses and 9 roles incl. two heads** — this brief reflects the code and supersedes them.
+
+## 1. What it is
+Closed-loop campus maintenance ticketing with AI assistance. Reporter raises → dept **validator** screens (sets priority) → HOD/Principal approve P1–2 criticals → **maintenance head** routes the job → **category head** assigns a team → worker executes → category head inspects on-site → reporter rates → closed. Every mutation is audited on a timeline; SLAs enforced per priority; in-app + (optional Gmail-SMTP) email notifications.
+**Core rule: "AI suggests, the state machine decides."** Every status change goes through the machine and requires a human.
+
+- Live: https://servox-phi.vercel.app · Firebase project `campus-maintenance-2820d` (real cloud, no emulator).
+
+## 2. Stack
+Next.js 16.3.0 (App Router, Turbopack, React 19.2.8) · TypeScript · Tailwind v4 · Firebase client 12 + firebase-admin 14 · Genkit 1.40 (`@genkit-ai/googleai` + genkitx-groq) · nodemailer (Gmail SMTP) · pdfmake (receipts) · recharts · lucide-react · zod 4 · date-fns · jose pinned 4.15.9. Warm terracotta design system (Claude-style neutrals, `globals.css` `@theme`).
+Verify: `npx tsc --noEmit`, `npx eslint src`, `npm run build`.
+
+## 3. Roles (9) — `src/lib/types.ts`
+`reporter · validator · hod · principal · maintenance_head · category_head · maintenance · purchase · admin`
+- **validator** (department-scoped): screens NEW, routes/assigns, blocks jobs, complets. Verifies nothing — completion verification moved to category head.
+- **hod / principal**: ESCALATED→APPROVED/REJECTED (optional severity revision). `purchase` not in the machine — approves/rejects flagged requirements with unit price (auto-resolves) or reason.
+- **maintenance_head / category_head**: dispatch chain (see below), with category heads scoped to `routing.categoryHeadUid`.
+- **admin**: override on nearly all transitions; `portal` claim lets a single admin navigate as principal/hod/admin (e.g. `admin@gmail.com`).
+
+## 4. Statuses & transition table (14) — `TRANSITION_RULES` in `src/lib/issueMachine.ts`
+```
+NEW → VALIDATED → ESCALATED → APPROVED → ROUTED → PENDING_ASSIGN → ASSIGNED → ONGOING
+  └→ REJECTED (terminal)                               │         │
+                                                       └→ ASSIGNED →┘
+ONGOING → COMPLETED → INSPECTED ──auto──→ VERIFIED → CLOSED (terminal)
+   └→ PENDING (blocker) → PENDING_ASSIGN | ASSIGNED
+COMPLETED ──send-back──→ ONGOING (category head)
+```
+| From | To | Roles | Precondition |
+|---|---|---|---|
+| NEW | VALIDATED | validator, admin | priority 1–5 |
+| NEW | REJECTED | validator, admin | reason ≥3 chars |
+| NEW | ESCALATED | admin | `safetyEscalation` (AI hazard) |
+| VALIDATED | ESCALATED | validator, admin | — (P1–2 **auto**: 2 tl entries) |
+| VALIDATED | ROUTED | validator, admin | — (P3–5 **auto** to maintenance head) |
+| VALIDATED / APPROVED | ASSIGNED | validator, admin | direct assign |
+| ESCALATED | APPROVED / REJECTED | hod, principal, admin | approve: severity 1–5 optional; reject: reason |
+| APPROVED | ROUTED | validator, admin | — |
+| ROUTED | PENDING_ASSIGN | maintenance_head, validator, admin | categoryId |
+| ROUTED | ASSIGNED | admin | — |
+| PENDING_ASSIGN | ASSIGNED | category_head, maintenance_head, admin | teamId + workers |
+| ASSIGNED | ONGOING | maintenance | must be assigned staff/team |
+| ASSIGNED / ONGOING | PENDING | maintenance, validator, admin | blocker note ≥3 |
+| ASSIGNED / PENDING | PENDING_ASSIGN | category_head, maintenance_head, validator, admin | — |
+| ONGOING | COMPLETED | maintenance, validator, admin | report ≥5; **all** `needsApproval` reqs resolved |
+| COMPLETED | INSPECTED | category_head, admin | verdict ≥2 (auto→VERIFIED) |
+| COMPLETED | ONGOING | category_head, admin | sendBackReason ≥3 |
+| VERIFIED | CLOSED | reporter | rating 0.5–5 (half steps) or `isAuto` (auto-close) |
+| REJECTED / CLOSED | terminal | — | — |
+
+**Machine behaviors** (`applyTransition`, single Firestore transaction): P1–2 validate → auto-ESCALATED (escalation pending); P3–5 validate → auto-ROUTED (denormalizes `routing.maintenanceHeadUid`); INSPECTED → sets verification + auto-VERIFIED timeline; COMPLETED does **not** cascade (waits for category-head inspection). SLA (`initSla`): P1–2 at APPROVED, P3–5 at ASSIGNED; paused while PENDING (`pausedAt`/`totalPausedMs`), resumed/extended at ASSIGNED; `breachedFlags` drive queues. Every mutation = transaction + timeline entries.
+
+## 5. Architecture invariants
+- **All writes via Next Route Handlers** → `src/lib/transition.ts runTransition` (auth → Zod → `applyTransition` → notifications → `after()` email hooks); the generic `POST /api/issues/[id]/status` is the ONE door. Thin wrappers: `/validate /reject /escalate /approve /forward /assign /pending /complete /inspect /verify /sendback /feedback`.
+- Role checks in handlers (Admin SDK ID token + custom claims); Firestore rules = defense-in-depth only. Denormalized display data; composite indexes; counters transactional; images = base64 blobs in `imageBlobs` served via `/api/images/[id]`.
+- Crons (Vercel, `CRON_SECRET`): sla-reminders 09:00 UTC, auto-close 10:00, **escalate-stale 08:30** (forces P1–2 stuck in NEW >24h through VALIDATED→ESCALATED plus alerts). Cloud Functions: 10-min SLA breach scan, 60-min reminders, Mon weekly digest (in-app).
+
+## 6. AI surfaces (7 Genkit flows, `src/lib/ai/`) — LLM-first, deterministic fallback, never touches `status`
+F1 triage+photo (on create via `after()`), F2 duplicates (token-overlap, same location, threshold 0.45), F3 routing suggestion (rule engine + AI reason), F4a requirements extraction + pre-job **IssueBriefing** (probable cause / safety / tools / skill / ETA), F4b closure draft, F5 weekly insights, F6 root cause, F7 at-risk locations. Guarded by `aiSuggestion.aiProcessed`; write only into `aiSuggestion`. Gate: `GOOGLE_GENAI_API_KEY`/`GROQ_API_KEY` present (model chain Gemini 3 → Groq → legacy).
+
+## 7. Screens & public surfaces
+Landing `/` · public track `/track/[token]` (revocable, rate-limited) · reporter `/dashboard` `/new` · validator `/validate` (board) · dispatch `/dispatch` (head tabs ROUTED/PENDING_ASSIGN/ASSIGNED/ONGOING/PENDING/COMPLETED) · `/jobs` (staff) · `/escalations` (HOD) `/approvals` (principal) · `/purchase` `/analytics` `/issue-history` `/admin` `/profile` `/settings` `/announcements` · shared `/issues/[id]`.
+Extras: receipt PDF (CLOSED), client-side image compression (~1200px q0.7), CloseIssueModal (VERIFIED reporter), auto-close after `feedbackGraceHours` (24h) anchored on `verification.verifiedAt`, offline/PWA on branch `feature/offline-pwa-cache` (merged SW + IndexedDB write queue).
+
+## 8. Security / ops hardening shipped (P0 audit)
+Password-reset flow (`sendPasswordResetEmail`, no enumeration) · in-memory sliding-window rate limits (`/api/auth/provision`, `/api/track/[token]` 30/min, `/api/images/[id]` 120/min) · tracking-token revoke (admin/principal, audited) + auto-revoke 30d post-close (410) · upload gate (`imageGate`: magic-byte re-detect JPEG/PNG/WebP/HEIC + embedded-script scan + sha256 verified on serve) · stale-critical auto-escalation · smoke scripts refuse prod without `SMOKE_ALLOW_PROD=1` and tag `smoke:true` · error monitoring (`logError` → `logs/errors` + daily counter, wired into `handleError` + `after()` hooks; `GET /api/health`).
+
+## 9. Known gaps / roadmap
+- Response-SLA breach not yet enforced (resolution only).
+- `config.ai.enabled` admin toggle is display-only (real gate = env keys).
+- Open items tracked in `docs/tasks.md` #40–64: merge offline branch to `main`, stale `head` refs cleanup, reporter filters/search/pagination, notification grouping, CSV/PDF export, WhatsApp (Meta template sender + webhook), SMS, SSO, preventive maintenance, asset/vendor mgmt, multilingual/voice, QR/room asset scan, status bot, FCM push, weekly governance email.
+- `scripts/smoke-lifecycle.mjs` still drives the old ASSIGNED/VERIFY path (doc.txt §5.4) — update to the current ROUTED/INSPECTED flow when re-running.
+
+## Useful files
+`src/lib/issueMachine.ts` (machine) · `types.ts` (shapes) · `constants.ts` · `transition.ts` · `notifications.ts` · `email/*` · `ai/*` · `api.ts` / `errorLog.ts` / `rateLimit.ts` / `imageGate.ts` / `staleCritical.ts` · `nav.ts` · `roleFeeds.ts` · `src/app/api/**` · `scripts/*.mjs` · `firestore.rules` · `vercel.json`.

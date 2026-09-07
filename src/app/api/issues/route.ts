@@ -85,40 +85,46 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     // Post-response work (AI triage + duplicates, notifications, stats) is
     // scheduled with `after()` so the runtime keeps it alive instead of
-    // killing fire-and-forget promises once the response is sent.
+    // killing fire-and-forget promises once the response is sent. Failures
+    // here are logged (best-effort) so they aren't swallowed silently.
     after(async () => {
-      await Promise.all([
-        import("@/lib/ai").then((ai) => ai.runAiOnCreate(ref.id)),
-        notifyRole(
-          ["validator"],
-          {
-            type: "issue",
-            title: "New issue to review",
-            body: `${issueNo}: ${title}`,
-            link: `/issues/${ref.id}`,
-          },
-          body.college || undefined
-        ),
-        incrementStatusCount("NEW"),
-        incrementCategoryCount(cat.name),
-      ]);
+      try {
+        await Promise.all([
+          import("@/lib/ai").then((ai) => ai.runAiOnCreate(ref.id)),
+          notifyRole(
+            ["validator"],
+            {
+              type: "issue",
+              title: "New issue to review",
+              body: `${issueNo}: ${title}`,
+              link: `/issues/${ref.id}`,
+            },
+            body.college || undefined
+          ),
+          incrementStatusCount("NEW"),
+          incrementCategoryCount(cat.name),
+        ]);
 
-      // Reported email — the AI-set severity wins (reporter picked default P3),
-      // else the reporter's explicit choice, else the AI suggestion, else P3.
-      const snap = await db.doc(`issues/${ref.id}`).get();
-      if (snap.exists) {
-        const issue = { id: ref.id, ...snap.data() } as Issue;
-        const suggested = issue.aiSuggestion?.suggestedPriority;
-        const aiSet = issue.prioritySetBy?.uid === "ai-triage";
-        const effective =
-          aiSet && issue.priority >= 1 && issue.priority <= 5
-            ? issue.priority
-            : priority >= 1 && priority <= 5
-              ? priority
-              : suggested && suggested >= 1 && suggested <= 5
-                ? suggested
-                : 3;
-        await import("@/lib/email").then((m) => m.sendIssueReportedEmail(issue, effective));
+        // Reported email — the AI-set severity wins (reporter picked default P3),
+        // else the reporter's explicit choice, else the AI suggestion, else P3.
+        const snap = await db.doc(`issues/${ref.id}`).get();
+        if (snap.exists) {
+          const issue = { id: ref.id, ...snap.data() } as Issue;
+          const suggested = issue.aiSuggestion?.suggestedPriority;
+          const aiSet = issue.prioritySetBy?.uid === "ai-triage";
+          const effective =
+            aiSet && issue.priority >= 1 && issue.priority <= 5
+              ? issue.priority
+              : priority >= 1 && priority <= 5
+                ? priority
+                : suggested && suggested >= 1 && suggested <= 5
+                  ? suggested
+                  : 3;
+          await import("@/lib/email").then((m) => m.sendIssueReportedEmail(issue, effective));
+        }
+      } catch (e) {
+        const { logError } = await import("@/lib/errorLog");
+        await logError(e, { source: "after-create", route: "/api/issues", issueId: ref.id });
       }
     });
 

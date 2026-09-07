@@ -60,3 +60,44 @@ Zero-cost WhatsApp alerts for maintenance staff, purchase team, and HODs/validat
 - [ ] **37. Admin user manager.** Add phone + WhatsApp opt-in fields when provisioning staff accounts.
 - [ ] **38. Hook into issue lifecycle.** Extend `after()` in `src/lib/transition.ts`, `src/app/api/issues/route.ts`, purchase approve route, and cron SLA reminders to fire WA sends alongside email. WhatsApp never touches `status`.
 - [ ] **39. Verify.** `npx tsc --noEmit`, `npx eslint src`. Smoke with `WHATSAPP_TEST_RECIPIENT`. Keep WA off in automated smokes until templates approved.
+
+---
+
+# Remaining Work — Real-World Readiness audit (P0 done, P1/P2 outstanding) + session leftovers
+
+Appended after completing all 7 P0 items from `docs/Servox_Φ__Real-World_Readiness_Todo_List.md` (password reset, tracking-token rate limiting/revocation, upload gate, stale-critical auto-escalation, smoke/prod separation, auth rate limiting, error monitoring). Everything below is still open.
+
+## Housekeeping
+- [ ] **40. Merge `feature/offline-pwa-cache` into `main`.** The offline PWA work (IndexedDB cache, write queue, merged SW, server cache TTLs) and the rewritten project README live on that branch and are not yet on `main`.
+- [ ] **41. Clean stale `head` role references.** `firestore.rules` and `functions/src/index.ts` still mention the removed `head` role (harmless, but confusing to new readers). Also clear any legacy `head` claims in demo accounts.
+- [ ] **42. Make `config.ai.enabled` effectively gate AI.** The admin toggle is display-only; the real gate is the env-key check in `aiEnabled()`. Either wire the toggle in, or relabel it in the admin UI.
+
+## P1 — During pilot (from audit "Recommended delivery sequence")
+- [ ] **43. Reporter dashboard: search, filter, sort, pagination.** `useIssues({ mine: true })` loads a flat grid; add filtering (status/priority/date), search, sort, and paging.
+- [ ] **44. Reporter-side overdue/escalation visibility.** Surface `sla.responseDeadline`, `sla.breachedFlags`, and "next action" on the reporter's own issue cards/detail (today it's only exposed to validators/HODs).
+- [ ] **45. Notification center: per-issue grouping + type/severity filters.** Feed is flat (All/Unread/Announcements only); add per-issue threads and type filters so heavy-activity roles stay unburied.
+- [ ] **46. Auto-close behaviour explained on the issue detail page.** `CloseIssueModal` already notes it (UX task 17); add the same explanatory copy to the closed-issue detail view ("unrated issues auto-close after the feedback grace period").
+- [ ] **47. SLA response-time enforcement (deferred todo #3).** `sla.breachedFlags.response` is declared but never set. Extend the Cloud Function / cron scan (the 10-min resolution-breach scanner) to also flag unresolved `responseDeadline` breaches without changing the existing resolution logic.
+- [ ] **48. Emergency/contact guidance for safety-critical issues.** When `aiSuggestion.safetyFlags` is set (or P1), show a callout on the issue detail + track pages with campus security / emergency contact guidance and an alternative reporting channel.
+- [ ] **49. Analytics + issue-history export (CSV/PDF).** `receiptPdf.ts` covers single issues; add a range export for `/api/analytics/summary`, `stats/{YYYY-MM-DD}`, and `/api/issue-history` for admin/principal.
+
+## P1/P2 — Phone & WhatsApp opt-in (folded in with the WhatsApp group)
+- [ ] **50. Phone normalization + WhatsApp opt-in.** E.164 normalization + `notifyWhatsApp`/`whatsappOptedInAt` on profile (tasks 29, 35, 36). Prerequisite for items 26–39.
+
+## QA & security (audit checklist gaps)
+- [ ] **51. Backup/restore drill runbook.** GCP Firestore backups are enabled, but no documented restore runbook exists — write one and rehearse it.
+- [ ] **52. AI prompt-injection testing.** Adversarial issue descriptions/requirements against the triage, requirements-extraction, and closure-draft prompts; verify nothing escapes into a state change or leaks data.
+
+## P2 — Scale / differentiation roadmap
+- [ ] **53. Campus SSO / directory sync.** SAML/OIDC login, role mapping, deprovisioning.
+- [ ] **54. SMS notifications for high-severity issues.** Opt-in + consent recording.
+- [ ] **55. Full offline report capture.** Cache + write-queue ship in the offline branch; extend it so a NEW issue (with images queued as blobs) can be drafted and submitted on reconnect.
+- [ ] **56. Preventive maintenance scheduling.** Recurring inspections, asset schedules, automatic work orders.
+- [ ] **57. Asset and vendor management.** Warranty, service history, vendor contacts, cost tracking.
+- [ ] **58. Multilingual and voice reporting.** Speech-to-text, translation, review-before-submit.
+- [ ] **59. Real weekly governance email (todo #5).** The weekly digest is in-app only (Cloud Function); ship the actual HTML email to admin/HOD/principal.
+- [ ] **60. "Where's my complaint?" status bot (todo #7).** Natural-language status lookup.
+- [ ] **61. FCM push delivery (todo #9).** SW + `fcm.ts` scaffold exists; verify device-token persistence, lifecycle, and opt-in end to end.
+- [ ] **62. Reporter re-submit from REJECTED issues.** Edit + re-file a rejected issue instead of creating a fresh one.
+- [ ] **63. QR-per-room/asset scanning.** Report from a scanned QR instead of a location picker.
+- [ ] **64. Status chatbot (WhatsApp/voice).** Reuse the WhatsApp webhook (tasks 33–34) for a conversational status flow.

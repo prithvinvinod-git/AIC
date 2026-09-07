@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminAuth, adminDb } from "@/lib/firebaseAdmin";
 import { json, parseBody, handleError } from "@/lib/api";
+import { clientIp, isRateLimited } from "@/lib/rateLimit";
 import { adminUserSchema } from "@/lib/schemas";
 import { invalidateServerCache } from "@/lib/serverCache";
 import { capitalizeName } from "@/lib/format";
@@ -17,6 +18,24 @@ const db = adminDb();
 export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
     const body = await parseBody(req, adminUserSchema);
+
+    // Server-side rate limiting — this is the only Next-route auth door
+    // (login/signup talk to Firebase directly via the client SDK, which
+    // already enforces its own too-many-requests throttling).
+    const ip = clientIp(req);
+    if (isRateLimited(`provision:ip:${ip}`, { limit: 30, windowMs: 60_000 })) {
+      return NextResponse.json(
+        { error: "Too many account requests from this device. Please try again later." },
+        { status: 429, headers: { "Retry-After": "60" } }
+      );
+    }
+    if (body.email && isRateLimited(`provision:email:${body.email.toLowerCase()}`, { limit: 10, windowMs: 60 * 60 * 1000 })) {
+      return NextResponse.json(
+        { error: "Too many attempts for this email. Please try again later." },
+        { status: 429, headers: { "Retry-After": "3600" } }
+      );
+    }
+
     const role: Role = body.role;
     const name = capitalizeName(body.name || "");
 
@@ -74,6 +93,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 /** PATCH /api/auth/provision — update role + claims for an existing user. */
 export async function PATCH(req: NextRequest): Promise<NextResponse> {
   try {
+    if (isRateLimited(`provision:patch:ip:${clientIp(req)}`, { limit: 60, windowMs: 60_000 })) {
+      return NextResponse.json(
+        { error: "Too many requests from this device. Please try again later." },
+        { status: 429, headers: { "Retry-After": "60" } }
+      );
+    }
     const body = await parseBody(req, adminUserSchema.partial());
     if (!body.uid) return json({ error: "uid is required." }, 400);
 

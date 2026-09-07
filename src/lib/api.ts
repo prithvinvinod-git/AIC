@@ -3,6 +3,7 @@ import "server-only";
 import { NextResponse } from "next/server";
 import { ZodError, type ZodSchema } from "zod";
 import { MachineError } from "./issueMachine";
+import { logError, type ErrorContext } from "./errorLog";
 
 export function json(data: unknown, status = 200): NextResponse {
   return NextResponse.json(data, { status });
@@ -30,7 +31,9 @@ export async function parseBody<T>(req: Request, schema: ZodSchema<T>): Promise<
   return result.data;
 }
 
-export function handleError(e: unknown): NextResponse {
+export function handleError(e: unknown, ctx: ErrorContext = {}): NextResponse {
+  // Known, intentional 4xx outcomes (validation / preconditions) are not
+  // monitoring targets — only unexpected errors get logged.
   if (e instanceof MachineError) {
     return err(e.message, e.statusCode, e.details);
   }
@@ -40,10 +43,12 @@ export function handleError(e: unknown): NextResponse {
   if (e instanceof Error) {
     const code = (e as Error & { statusCode?: number }).statusCode;
     if (typeof code === "number" && code >= 400 && code < 600) {
+      if (code >= 500) void logError(e, ctx);
       return err(e.message, code);
     }
   }
   console.error("API error:", e);
+  void logError(e, ctx);
   const msg = e instanceof Error ? e.message : "Internal server error.";
   return err(msg, 500);
 }
