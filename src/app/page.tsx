@@ -57,7 +57,7 @@ export default function Home() {
           <PublicHero />
           <FeatureSection />
           <div className="mx-auto w-full max-w-page px-[20px] sm:px-6">
-            <AdUnit slot="7383985747" />
+            <AdUnit slot="7383985747" variant="dark" />
           </div>
           <AiSection />
           <FaqSection />

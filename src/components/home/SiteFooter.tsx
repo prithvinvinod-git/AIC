@@ -41,7 +41,7 @@ export default function SiteFooter() {
           align-items: center;
         }
         #servox-site-footer .footer-link:hover {
-          color: #f5f5f4;
+          color: var(--color-ink);
           transform: translateX(2px);
         }
         #servox-site-footer .footer-link::after {
@@ -51,7 +51,7 @@ export default function SiteFooter() {
           left: 0;
           width: 0%;
           height: 1px;
-          background-color: #ea7a5d;
+          background-color: var(--color-accent);
           transition: width 0.25s ease-out;
         }
         #servox-site-footer .footer-link:hover::after {
@@ -60,11 +60,11 @@ export default function SiteFooter() {
       `}</style>
       <footer
         id="servox-site-footer"
-        className="relative w-full overflow-hidden border-t border-white/[0.08] bg-[#141312] text-[#a8a29e]"
+        className="relative w-full overflow-hidden border-t border-silver bg-paper text-slate"
       >
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute left-1/4 top-0 h-24 w-96 -translate-x-1/2 bg-[#ea7a5d]/5 blur-3xl"
+          className="pointer-events-none absolute left-1/4 top-0 h-24 w-96 -translate-x-1/2 bg-accent/5 blur-3xl"
         />
         <div className="mx-auto w-full max-w-page px-[20px] pt-16 pb-12 sm:px-6 lg:px-10">
           <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-8">
@@ -77,16 +77,16 @@ export default function SiteFooter() {
                     alt="Servox"
                     className="h-[26px] w-auto drop-shadow-[0_0_8px_rgba(234,122,93,0.25)]"
                   />
-                  <span className="font-sans text-xl font-extrabold uppercase tracking-widest text-stone-100">
+                  <span className="font-sans text-xl font-extrabold uppercase tracking-widest text-ink">
                     Servox
                   </span>
                 </div>
-                <p className="mt-5 max-w-md text-[14px] font-normal leading-relaxed text-[#a8a29e]">
+                <p className="mt-5 max-w-md text-[14px] font-normal leading-relaxed text-slate">
                   A governed, AI-assisted workflow for professional campus maintenance — every
                   request is validated, prioritised, assigned and verified before closure.
                 </p>
-                <p className="mt-3 flex items-center gap-2 font-mono text-xs tracking-wide text-stone-400">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#ea7a5d]" />
+                <p className="mt-3 flex items-center gap-2 font-mono text-xs tracking-wide text-stone">
+                  <span className="h-1.5 w-1.5 rounded-full bg-accent" />
                   Built for professional campus teams.
                 </p>
               </div>
@@ -94,8 +94,8 @@ export default function SiteFooter() {
 
             <div className="grid grid-cols-1 gap-8 pt-2 sm:grid-cols-3 sm:gap-6 lg:col-span-7 lg:pt-0">
               <div>
-                <h3 className="mb-5 flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-wider text-stone-100">
-                  <span className="h-1 w-1 rounded-full bg-[#ea7a5d]" />
+                <h3 className="mb-5 flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-wider text-ink">
+                  <span className="h-1 w-1 rounded-full bg-accent" />
                   Product
                 </h3>
                 <ul className="space-y-3.5 text-sm">
@@ -110,8 +110,8 @@ export default function SiteFooter() {
               </div>
 
               <div>
-                <h3 className="mb-5 flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-wider text-stone-100">
-                  <span className="h-1 w-1 rounded-full bg-[#ea7a5d]" />
+                <h3 className="mb-5 flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-wider text-ink">
+                  <span className="h-1 w-1 rounded-full bg-accent" />
                   Platform
                 </h3>
                 <ul className="space-y-3.5 text-sm">
@@ -126,23 +126,23 @@ export default function SiteFooter() {
               </div>
 
               <div>
-                <h3 className="mb-5 flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-wider text-stone-100">
-                  <span className="h-1 w-1 rounded-full bg-[#ea7a5d]" />
+                <h3 className="mb-5 flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-wider text-ink">
+                  <span className="h-1 w-1 rounded-full bg-accent" />
                   About
                 </h3>
                 <ul className="space-y-3.5 text-sm">
                   {ABOUT_LINKS.map((l) => (
                     <li key={l.label}>
-                      <Link href={l.href} className="footer-link text-[#a8a29e]">
+                      <Link href={l.href} className="footer-link text-slate">
                         {l.label}
                       </Link>
                     </li>
                   ))}
-                  <li className="border-t border-white/[0.06] pt-2">
-                    <div className="mb-1 font-mono text-xs text-stone-400">Direct Campus Desk</div>
+                  <li className="border-t border-silver pt-2">
+                    <div className="mb-1 font-mono text-xs text-stone">Direct Campus Desk</div>
                     <a
                       href="mailto:servox@gmail.com"
-                      className="group inline-flex items-center gap-1.5 font-medium text-[#ea7a5d] transition-colors hover:text-[#f09077]"
+                      className="group inline-flex items-center gap-1.5 font-medium text-accent transition-colors hover:text-accent-hover"
                     >
                       <svg
                         className="h-3.5 w-3.5 shrink-0 transition-transform group-hover:scale-110"
@@ -156,7 +156,7 @@ export default function SiteFooter() {
                         <rect height="16" rx="2" width="20" x="2" y="4"></rect>
                         <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
                       </svg>
-                      <span className="underline decoration-[#ea7a5d]/40 decoration-1 underline-offset-2">
+                      <span className="underline decoration-accent/40 decoration-1 underline-offset-2">
                         servox@gmail.com
                       </span>
                     </a>
@@ -167,14 +167,14 @@ export default function SiteFooter() {
           </div>
         </div>
 
-        <div className="border-t border-white/[0.08]">
-          <div className="mx-auto flex w-full max-w-page flex-col items-center justify-between gap-4 px-[20px] py-5 font-mono text-xs text-stone-400 sm:flex-row sm:px-6 lg:px-10">
+        <div className="border-t border-silver">
+          <div className="mx-auto flex w-full max-w-page flex-col items-center justify-between gap-4 px-[20px] py-5 font-mono text-xs text-stone sm:flex-row sm:px-6 lg:px-10">
             <p>
-              © {year} servox-phi <span className="text-stone-600">•</span> All rights reserved.
+              © {year} servox-phi <span className="text-stone/60">•</span> All rights reserved.
             </p>
-            <nav aria-label="Legal links" className="flex flex-wrap items-center gap-6 text-stone-400">
+            <nav aria-label="Legal links" className="flex flex-wrap items-center gap-6 text-stone">
               {LEGAL_LINKS.map((l) => (
-                <a key={l.label} href={l.href} className="transition-colors hover:text-stone-200">
+                <a key={l.label} href={l.href} className="transition-colors hover:text-ink">
                   {l.label}
                 </a>
               ))}

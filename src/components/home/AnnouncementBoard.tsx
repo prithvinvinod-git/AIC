@@ -57,27 +57,35 @@ export default function AnnouncementBoard() {
     : false;
 
   return (
-    <div className="card flex h-[600px] flex-col overflow-hidden max-md:h-[545px]">
-      <div className="flex items-center justify-between px-5 py-4">
-        <div className="flex items-center gap-2.5">
-          <span className="flex h-9 w-9 -mt-[5px] items-center justify-center text-graphite">
-            <Megaphone className="h-[20px] w-[20px]" aria-hidden />
-          </span>
-          <div>
-            <h2 className="font-display text-base font-semibold text-ink">Announcements</h2>
-            <p className="mt-0.5 text-xs text-slate">Latest broadcasts for your team.</p>
-          </div>
+    <div className="card flex h-[600px] flex-col overflow-hidden p-6 sm:p-8 max-md:h-[545px]">
+      <header className="flex items-center justify-between border-b border-silver pb-6">
+        <div>
+          <h2 className="font-display text-2xl font-normal leading-none tracking-tight text-ink">
+            Announcements
+          </h2>
+          <p className="mt-2 text-xs tracking-wide text-slate">Latest broadcasts for your team.</p>
         </div>
-        {announcer && (
-          <Link href="/announcements" className="btn btn-ghost btn-sm">
-            View all
-          </Link>
-        )}
-      </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={reload}
+            aria-label="Refresh announcements"
+            title="Refresh announcements"
+            className="rounded-lg p-2.5 text-slate transition-colors hover:text-ink sm:hidden"
+          >
+            <RefreshCw className="h-5 w-5" aria-hidden />
+          </button>
+          {announcer && (
+            <Link href="/announcements" className="btn btn-ghost btn-sm">
+              View all
+            </Link>
+          )}
+        </div>
+      </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="custom-scroll min-h-0 -mr-6 flex-1 divide-y divide-silver overflow-y-auto pr-6 sm:-mr-8 sm:pr-8">
         {error ? (
-          <div className="px-5 py-10 text-center text-sm text-slate">{error}</div>
+          <div className="px-1 py-10 text-center text-sm text-slate">{error}</div>
         ) : !visible ? (
           <Loading label="Loading announcements…" />
         ) : visible.length === 0 ? (
@@ -92,41 +100,42 @@ export default function AnnouncementBoard() {
               key={a.id}
               type="button"
               onClick={() => setSelected(a)}
-              className="block w-full border-b border-silver px-5 py-4 text-left transition-colors last:border-0 hover:bg-paper"
+              className="block w-full px-1 py-4 text-left transition-colors hover:bg-paper sm:py-6"
             >
-              <div className="flex items-center justify-between gap-3">
-                <p className="font-medium text-ink">{a.title}</p>
-                <div className="flex items-center gap-2">
-                  {a.easterEgg && EASTER_EGG_META[a.easterEgg] && (
-                    <Link
-                      href={`/${a.easterEgg}`}
-                      onClick={(e) => e.stopPropagation()}
-                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent transition-transform hover:scale-110"
-                      title={EASTER_EGG_META[a.easterEgg].label}
-                    >
-                      {(() => { const Icon = EASTER_EGG_META[a.easterEgg!].Icon; return <Icon className="h-3.5 w-3.5" aria-hidden />; })()}
-                    </Link>
-                  )}
-                  <span className="shrink-0 text-xs text-slate">{timeAgo(a.createdAt)}</span>
+              <div className="flex items-start justify-between gap-4 sm:gap-6">
+                <div className="min-w-0 space-y-1.5">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <h3 className="truncate text-sm font-medium tracking-tight text-ink transition-colors group-hover:text-accent">
+                      {a.title}
+                    </h3>
+                    {a.easterEgg && EASTER_EGG_META[a.easterEgg] && (
+                      <Link
+                        href={`/${a.easterEgg}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent transition-transform hover:scale-110"
+                        title={EASTER_EGG_META[a.easterEgg].label}
+                      >
+                        {(() => { const Icon = EASTER_EGG_META[a.easterEgg!].Icon; return <Icon className="h-3.5 w-3.5" aria-hidden />; })()}
+                      </Link>
+                    )}
+                  </div>
+                  <p className="line-clamp-2 text-xs leading-relaxed text-slate sm:text-sm">{a.body}</p>
+                  <p className="text-xs text-stone">
+                    {a.author.name} · {ROLE_LABEL[a.author.role] ?? a.author.role}
+                  </p>
                 </div>
+                <span className="shrink-0 pt-1 font-mono text-xs text-slate">{timeAgo(a.createdAt)}</span>
               </div>
-              <p className="mt-1 line-clamp-3 text-sm leading-relaxed text-slate">{a.body}</p>
-              <p className="mt-2 text-xs text-stone">
-                {a.author.name} · {ROLE_LABEL[a.author.role] ?? a.author.role}
-              </p>
             </button>
           ))
         )}
       </div>
 
-      <div className="flex shrink-0 items-center justify-between border-t border-silver px-5 py-3">
-        <p className="text-xs text-slate">
+      <footer className="mt-4 flex shrink-0 items-center justify-between border-t border-silver pt-4">
+        <p className="font-mono text-xs text-slate">
           {visible ? `${visible.length} announcement${visible.length === 1 ? "" : "s"}` : " "}
         </p>
-        <button type="button" onClick={reload} className="btn btn-ghost btn-sm" aria-label="Refresh announcements">
-          <RefreshCw className="h-3.5 w-3.5" aria-hidden /> Refresh
-        </button>
-      </div>
+      </footer>
 
       {selected && <AnnouncementModal announcement={selected} onClose={() => setSelected(null)} />}
     </div>

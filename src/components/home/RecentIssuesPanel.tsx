@@ -58,7 +58,7 @@ export default function RecentIssuesPanel() {
         ) : (
           <div className="flex flex-col gap-[10px] p-[10px]">
             {recent.map((issue) => (
-              <CompactIssueRow key={issue.id} issue={issue} />
+              <CompactIssueRow bordered key={issue.id} issue={issue} />
             ))}
           </div>
         )}

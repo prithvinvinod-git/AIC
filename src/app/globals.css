@@ -929,3 +929,44 @@ body {
   outline: none !important;
   -webkit-tap-highlight-color: transparent;
 }
+
+/* ============================================================
+   CUSTOM SCROLLBAR — theme-aware, thin, rounded, flush against
+   the right edge. Add the `custom-scroll` class to any scrollable
+   container to hide the default UA scrollbar and use this one
+   instead. Tracks the app's paper/ink tokens so it adapts to
+   dark/light mode. To align the bar with the card's outer border,
+   pair it with a negative right margin on the scroll container
+   (e.g. `-mr-6 sm:-mr-8`) plus matching right padding.
+   ============================================================ */
+.custom-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-silver) transparent;
+}
+.custom-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scroll::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 9999px;
+}
+.custom-scroll::-webkit-scrollbar-thumb {
+  background-color: var(--color-silver);
+  border-radius: 9999px;
+}
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-stone);
+}
+
+/* ============================================================
+   NOTICE BOARD ROWS — size each row to exactly 1/5 of the grid
+   container's HEIGHT so precisely five cards fill the first
+   viewport and any extras scroll below the fold. The grid
+   container must carry a definite height (e.g. `h-full` inside
+   a fixed card) or the `100%` falls back to auto and every card
+   shows at once. (100% - 4px) = 4 one-pixel `divide-y` borders.
+   ============================================================ */
+.board-issue-rows {
+  display: grid;
+  grid-auto-rows: minmax(0, calc((100% - 4px) / 5));
+}

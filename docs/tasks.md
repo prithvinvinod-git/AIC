@@ -34,3 +34,29 @@ Findings from the UX audit of all role pages, issue components, the state machin
 - [x] **23. Jobs board has no "All" tab.** Fix: add an All tab showing total count.
 - [x] **24. Silent-failure dropdowns.** `/api/categories` (new page) and `/api/teams` (AssignCard/Panel) errors are swallowed, leaving empty selects. Fix: inline error + retry.
 - [x] **25. `/new` submit bar `-mt-[40px]` hack can overlap the form.** Fix: use normal spacing.
+
+---
+
+# WhatsApp Notifications — Meta Cloud API Free Tier
+
+Zero-cost WhatsApp alerts for maintenance staff, purchase team, and HODs/validators who ignore email/app. Uses Meta WhatsApp Business Cloud API (1,000 free service conversations/month; Utility templates + within-24h-window replies stay free).
+
+## Prerequisites (user setup, no code)
+
+- [ ] **26. Create Meta Business Manager + WhatsApp Business Account.** Connect a phone number not already on WhatsApp. Create a System User with `whatsapp_business_messaging` + `whatsapp_business_management` permissions. Generate a permanent access token. Note `phone_number_id` and `business_account_id`.
+- [ ] **27. Submit and approve Utility-category message templates.** Must be Utility (not Marketing) to stay inside the free service-conversation tier. Submit: `new_job_assigned` (issueNo, title, link), `issue_approved` (issueNo, title, link), `issue_reported` (issueNo, title, severity, link), `sla_reminder` (issueNo, title, deadline, link), `purchase_approval_required` (issueNo, title, link), `feedback_received` (issueNo, title, rating, link), `whatsapp_optin_confirm` (name). Copy the approved template names into env.
+- [ ] **28. Configure webhook.** Point `https://servox-phi.vercel.app/api/whatsapp/webhook` at WABA API setup. Subscribe to `messages` with a verify token.
+
+## Code implementation
+
+- [ ] **29. Data + env.** `users/{uid}` adds `notifyWhatsApp` (false), `whatsappOptedInAt`, `phoneE164`, `phoneCountry` (default `+91`). `src/lib/phone.ts` normalizes to E.164. `.env.example` adds `WHATSAPP_ENABLED`, `WHATSAPP_API_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_WEBHOOK_VERIFY_TOKEN`, `WHATSAPP_TEST_RECIPIENT`, template name constants.
+- [ ] **30. `src/lib/wa/client.ts`** — Graph API template sender (`/{phone_number_id}/messages`, `type=template`). Best-effort, never throws into the flow (same contract as `src/lib/email/client.ts`).
+- [ ] **31. `src/lib/wa/recipients.ts`** — `getWaRecipients(roles, dept, college)` + `getTeamWaNumbers(teamId, staffUids)`. Same scoping as `src/lib/email/recipients.ts` but filters `notifyWhatsApp && phoneE164 && optedIn`. Honors `WHATSAPP_TEST_RECIPIENT` override.
+- [ ] **32. `src/lib/wa/send.ts`** — Per-event senders (`sendIssueReportedWa`, `sendIssueApprovedWa`, `sendJobAssignmentWa`, `sendSlaReminderWa`, `sendPurchaseApprovalWa`, `sendFeedbackWa`). Template registry mapping event to template name + param layout. SLA cooldown reuses the existing `sla.emailReminderAt` timestamp.
+- [ ] **33. `src/lib/wa/webhook.ts`** — Incoming message responder. `START` (opt-in, record consent), `STOP` (opt-out), `STATUS <issueNo>`, `HELP`. Sender matched to `users/{uid}` via `phoneE164`. Replies are free-form inside the 24h customer-service window (counts as free service conversation).
+- [ ] **34. `app/api/whatsapp/webhook/route.ts`** — GET = Meta verification handshake (hub.mode/verify_token/challenge). POST = signature check (`x-hub-signature-256`) + dispatch to responder.
+- [ ] **35. `PATCH /api/profile` update.** Add `notifyWhatsApp`, normalize `phone` to `phoneE164`, set `whatsappOptedInAt`.
+- [ ] **36. Settings page toggle.** "WhatsApp notifications" toggle (disabled until phone is saved). Profile page phone field already exists.
+- [ ] **37. Admin user manager.** Add phone + WhatsApp opt-in fields when provisioning staff accounts.
+- [ ] **38. Hook into issue lifecycle.** Extend `after()` in `src/lib/transition.ts`, `src/app/api/issues/route.ts`, purchase approve route, and cron SLA reminders to fire WA sends alongside email. WhatsApp never touches `status`.
+- [ ] **39. Verify.** `npx tsc --noEmit`, `npx eslint src`. Smoke with `WHATSAPP_TEST_RECIPIENT`. Keep WA off in automated smokes until templates approved.
