@@ -7,7 +7,6 @@ Reporter raises an issue → a department-scoped **validator** screens it → **
 > **Core principle: "AI suggests, the state machine decides."** AI never moves a ticket, never approves, never skips a human. All AI output flows through the same route handlers and requires human confirmation.
 
 - **Live app:** https://servox-phi.vercel.app
-- **Firebase project:** `campus-maintenance-2820d` (real, cloud — no emulator)
 
 ---
 
