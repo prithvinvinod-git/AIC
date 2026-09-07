@@ -4,7 +4,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { Eye, EyeOff, History, Search, SlidersHorizontal, X } from "lucide-react";
+import { Eye, EyeOff, History, Link2, Link2Off, Search, SlidersHorizontal, X } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { api, ApiError } from "@/lib/clientApi";
 import { useToast } from "@/components/ui/Toast";
@@ -73,6 +73,7 @@ export default function IssueHistoryPage() {
   const [draft, setDraft] = useState<Filters>(DEFAULT_FILTERS);
   const [open, setOpen] = useState(false);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [togglingTrackingId, setTogglingTrackingId] = useState<string | null>(null);
   const dialogRef = useRef<HTMLDivElement | null>(null);
 
   useFocusTrap(dialogRef, open);
@@ -184,6 +185,32 @@ export default function IssueHistoryPage() {
     }
   };
 
+  const toggleTracking = async (issue: Issue) => {
+    if (togglingTrackingId) return;
+    setTogglingTrackingId(issue.id ?? "");
+    try {
+      const revoked = !issue.trackingRevoked;
+      await api<{ ok: boolean; revoked: boolean }>(
+        `/api/issues/${issue.id}/tracking-visibility`,
+        { method: "POST", body: JSON.stringify({ revoked }) }
+      );
+      setIssues((prev) =>
+        prev ? prev.map((x) => (x.id === issue.id ? { ...x, trackingRevoked: revoked } : x)) : prev
+      );
+      toast.show({
+        type: "success",
+        title: revoked ? "Tracking link revoked" : "Tracking link restored",
+        message: revoked
+          ? "The public tracking link for this issue now returns 410 Gone."
+          : "The public tracking link for this issue works again.",
+      });
+    } catch (e) {
+      toast.showError(e, { title: "Couldn't update tracking link" });
+    } finally {
+      setTogglingTrackingId(null);
+    }
+  };
+
   const kpis = [
     { label: "Total", value: summary.total },
     { label: "Resolved", value: summary.resolved },
@@ -259,6 +286,7 @@ export default function IssueHistoryPage() {
                 <th className="px-4 py-3 max-md:px-3 max-md:py-2 font-medium">Status</th>
                 <th className="px-4 py-3 max-md:px-3 max-md:py-2 font-medium">Priority</th>
                 <th className="px-4 py-3 max-md:px-3 max-md:py-2 font-medium">Board</th>
+                <th className="px-4 py-3 max-md:px-3 max-md:py-2 font-medium">Tracking</th>
                 <th className="px-4 py-3 max-md:px-3 max-md:py-2 font-medium">Reported</th>
               </tr>
             </thead>
@@ -306,6 +334,33 @@ export default function IssueHistoryPage() {
                     ) : (
                       <span className="text-xs text-stone">—</span>
                     )}
+                  </td>
+                  <td className="px-4 py-3 max-md:px-3 max-md:py-2">
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => void toggleTracking(i)}
+                        disabled={togglingTrackingId === i.id}
+                        aria-label={
+                          i.trackingRevoked
+                            ? `Restore the public tracking link for ${i.issueNo}`
+                            : `Revoke the public tracking link for ${i.issueNo}`
+                        }
+                        aria-pressed={!!i.trackingRevoked}
+                        title={
+                          i.trackingRevoked
+                            ? "Tracking link revoked — the public link returns 410 Gone"
+                            : "Public tracking link active — revoke to stop access"
+                        }
+                        className="btn btn-ghost btn-sm"
+                      >
+                        {i.trackingRevoked ? (
+                          <Link2Off className="h-3.5 w-3.5 text-danger" aria-hidden />
+                        ) : (
+                          <Link2 className="h-3.5 w-3.5" aria-hidden />
+                        )}
+                      </button>
+                    </div>
                   </td>
                   <td className="px-4 py-3 max-md:px-3 max-md:py-2">
                     <span className="block text-graphite">{formatDate(i.createdAt)}</span>

@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import Link from "next/link";
-import { fetchSignInMethodsForEmail } from "firebase/auth";
+import { fetchSignInMethodsForEmail, sendPasswordResetEmail } from "firebase/auth";
 import { useAuth, type SessionClaims } from "@/components/auth/AuthProvider";
 import { ensureReporterProvisioned } from "@/components/auth/provisionReporter";
 import { GoogleIcon } from "@/components/auth/ProviderButtons";
@@ -31,12 +31,25 @@ type HeroAuthCardProps = {
 export default function HeroAuthCard({ onSuccess }: HeroAuthCardProps = {}) {
   const { login, loginWithGoogle, refreshClaims } = useAuth();
 
+  const [mode, setMode] = useState<"login" | "forgot">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [showGoogleGlow, setShowGoogleGlow] = useState(false);
   const [needsPassword, setNeedsPassword] = useState(false);
+
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetBusy, setResetBusy] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+  const [resetError, setResetError] = useState<string | null>(null);
+
+  const backToLogin = useCallback(() => {
+    setMode("login");
+    setResetSent(false);
+    setResetError(null);
+    setResetBusy(false);
+  }, []);
 
   const submitEmail = useCallback(
     async (e: React.FormEvent) => {
@@ -106,78 +119,173 @@ export default function HeroAuthCard({ onSuccess }: HeroAuthCardProps = {}) {
     await onSuccess?.(session);
   }, [refreshClaims, onSuccess]);
 
+  const submitReset = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      setResetError(null);
+      setResetBusy(true);
+      try {
+        await sendPasswordResetEmail(getClientAuth(), resetEmail.trim());
+        setResetSent(true);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "";
+        if (msg.includes("user-not-found")) {
+          // Never reveal whether an account exists — the outcome is identical.
+          setResetSent(true);
+        } else if (msg.includes("too-many-requests")) {
+          setResetError("Too many attempts. Please wait a few minutes and try again.");
+        } else if (msg.includes("invalid-email")) {
+          setResetError("Please enter a valid email address.");
+        } else {
+          setResetError("Couldn't send the reset link. Please try again.");
+        }
+      } finally {
+        setResetBusy(false);
+      }
+    },
+    [resetEmail]
+  );
+
   return (
     <>
       <div className="card w-full max-md:!p-3">
-        <h2 className="font-display text-xl max-md:text-base font-semibold text-ink">Sign in to Servox</h2>
+        <h2 className="font-display text-xl max-md:text-base font-semibold text-ink">
+          {mode === "forgot" ? "Reset your password" : "Sign in to Servox"}
+        </h2>
         <p className="mt-1 text-sm max-md:text-xs text-slate">Track and manage campus maintenance issues.</p>
 
-        <div className="mt-5 max-md:mt-2 rounded-2xl border border-silver px-10 py-8 max-md:px-4 max-md:py-3">
-          <form onSubmit={submitEmail} className="flex flex-col gap-3 max-md:gap-2">
-            <div>
-              <label className="label" htmlFor="hero-email">
-                Email
-              </label>
-              <input
-                id="hero-email"
-                type="email"
-                required
-                autoComplete="email"
-                className="input max-md:!py-1.5 max-md:!text-xs"
-                placeholder="you@campus.edu"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="label" htmlFor="hero-password">
-                Password
-              </label>
-              <input
-                id="hero-password"
-                type="password"
-                required
-                autoComplete="current-password"
-                className="input max-md:!py-1.5 max-md:!text-xs"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
+        {mode === "login" ? (
+          <>
+            <div className="mt-5 max-md:mt-2 rounded-2xl border border-silver px-10 py-8 max-md:px-4 max-md:py-3">
+              <form onSubmit={submitEmail} className="flex flex-col gap-3 max-md:gap-2">
+                <div>
+                  <label className="label" htmlFor="hero-email">
+                    Email
+                  </label>
+                  <input
+                    id="hero-email"
+                    type="email"
+                    required
+                    autoComplete="email"
+                    className="input max-md:!py-1.5 max-md:!text-xs"
+                    placeholder="you@campus.edu"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="label" htmlFor="hero-password">
+                    Password
+                  </label>
+                  <input
+                    id="hero-password"
+                    type="password"
+                    required
+                    autoComplete="current-password"
+                    className="input max-md:!py-1.5 max-md:!text-xs"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                </div>
+                <div className="flex items-center justify-end">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setResetEmail(email.trim());
+                      setMode("forgot");
+                    }}
+                    className="text-xs font-medium text-accent hover:text-accent-strong hover:underline"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+
+                {error && <p className="rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger">{error}</p>}
+
+                <div className="relative">
+                  <button type="submit" disabled={busy} className="btn btn-brand btn-lg w-full text-white! font-bold! max-md:!text-xs max-md:!px-3 max-md:!py-1.5">
+                    {busy ? "Signing in…" : "Sign in"}
+                  </button>
+                  <LastUsedBadge method="email" />
+                </div>
+              </form>
             </div>
 
-            {error && <p className="rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger">{error}</p>}
+            <div className="mt-4 max-md:mt-2 flex items-center gap-3 text-xs text-stone">
+              <span className="h-px flex-1 bg-silver" aria-hidden />
+              or
+              <span className="h-px flex-1 bg-silver" aria-hidden />
+            </div>
 
-            <div className="relative">
-              <button type="submit" disabled={busy} className="btn btn-brand btn-lg w-full text-white! font-bold! max-md:!text-xs max-md:!px-3 max-md:!py-1.5">
-                {busy ? "Signing in…" : "Sign in"}
+            <div className="relative mt-4 max-md:mt-2">
+              <button
+                type="button"
+                onClick={() => void submitGoogle()}
+                disabled={busy}
+                className={`btn btn-secondary btn-lg w-full max-md:!text-xs max-md:!px-3 max-md:!py-1.5 max-md:whitespace-normal ${showGoogleGlow ? "animate-google-glow" : ""}`}
+              >
+                <GoogleIcon />
+                Continue with Google
               </button>
-              <LastUsedBadge method="email" />
+              <LastUsedBadge method="google" />
             </div>
-          </form>
-        </div>
 
-        <div className="mt-4 max-md:mt-2 flex items-center gap-3 text-xs text-stone">
-          <span className="h-px flex-1 bg-silver" aria-hidden />
-          or
-          <span className="h-px flex-1 bg-silver" aria-hidden />
-        </div>
+            <Link href="/signup" className="btn btn-ghost btn-lg mt-3 max-md:mt-2 w-full max-md:!text-xs max-md:!px-3 max-md:!py-1.5">
+              Create account
+            </Link>
+          </>
+        ) : (
+          <div className="mt-5 max-md:mt-2 rounded-2xl border border-silver px-10 py-8 max-md:px-4 max-md:py-3">
+            {resetSent ? (
+              <div className="flex flex-col gap-3 max-md:gap-2">
+                <p className="text-sm font-medium text-ink">Check your inbox for a reset link.</p>
+                <p className="text-sm text-slate">
+                  If an account exists for <span className="font-medium text-ink">{resetEmail || "this email"}</span>, we&apos;ve
+                  sent a password reset link. It expires after about an hour.
+                </p>
+                <button
+                  type="button"
+                  onClick={backToLogin}
+                  className="btn btn-ghost btn-lg mt-1 w-full max-md:!text-xs max-md:!px-3 max-md:!py-1.5"
+                >
+                  Back to sign in
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={submitReset} className="flex flex-col gap-3 max-md:gap-2">
+                <div>
+                  <label className="label" htmlFor="reset-email">
+                    Email
+                  </label>
+                  <input
+                    id="reset-email"
+                    type="email"
+                    required
+                    autoComplete="email"
+                    className="input max-md:!py-1.5 max-md:!text-xs"
+                    placeholder="you@campus.edu"
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                  />
+                </div>
 
-        <div className="relative mt-4 max-md:mt-2">
-          <button
-            type="button"
-            onClick={() => void submitGoogle()}
-            disabled={busy}
-            className={`btn btn-secondary btn-lg w-full max-md:!text-xs max-md:!px-3 max-md:!py-1.5 max-md:whitespace-normal ${showGoogleGlow ? "animate-google-glow" : ""}`}
-          >
-            <GoogleIcon />
-            Continue with Google
-          </button>
-          <LastUsedBadge method="google" />
-        </div>
+                {resetError && <p className="rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger">{resetError}</p>}
 
-        <Link href="/signup" className="btn btn-ghost btn-lg mt-3 max-md:mt-2 w-full max-md:!text-xs max-md:!px-3 max-md:!py-1.5">
-          Create account
-        </Link>
+                <button type="submit" disabled={resetBusy} className="btn btn-brand btn-lg w-full text-white! font-bold! max-md:!text-xs max-md:!px-3 max-md:!py-1.5">
+                  {resetBusy ? "Sending…" : "Send reset link"}
+                </button>
+                <button
+                  type="button"
+                  onClick={backToLogin}
+                  className="btn btn-ghost btn-lg w-full max-md:!text-xs max-md:!px-3 max-md:!py-1.5"
+                >
+                  Back to sign in
+                </button>
+              </form>
+            )}
+          </div>
+        )}
       </div>
 
       <PasswordSetupModal open={needsPassword} onComplete={() => void handlePasswordSetupComplete()} />

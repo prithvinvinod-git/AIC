@@ -33,7 +33,8 @@ export default function TrackPage() {
         });
         const body = (await res.json()) as TrackData & { error?: string };
         if (cancelled) return;
-        if (!res.ok || body.error) setError(body.error || "Issue not found.");
+        if (res.status === 410) setError("This tracking link has been revoked.");
+        else if (!res.ok || body.error) setError(body.error || "Issue not found.");
         else setData(body);
       } catch {
         if (!cancelled) setError("Could not load this issue. Please try again.");
@@ -62,7 +63,10 @@ export default function TrackPage() {
 
       <main className="mx-auto w-full max-w-[1100px] flex-1 px-4 pb-16">
         {error ? (
-          <EmptyState title="Issue not found" body={error} />
+          <EmptyState
+            title={error === "This tracking link has been revoked." ? "Tracking link revoked" : "Issue not found"}
+            body={error}
+          />
         ) : !data ? (
           <Loading label="Loading issue…" />
         ) : (

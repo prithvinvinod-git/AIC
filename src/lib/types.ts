@@ -246,6 +246,8 @@ export interface Issue {
   counters?: { commentCount: number; timelineCount: number };
   /** Set by admin/principal to exclude an issue from the cross-user board. */
   boardHidden?: boolean;
+  /** Set by admin/principal to revoke the public tracking link (returns 410). */
+  trackingRevoked?: boolean;
   createdAt: string;
   updatedAt: string;
 }

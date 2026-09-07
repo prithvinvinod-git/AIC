@@ -3,6 +3,7 @@ import { randomUUID } from "crypto";
 import { adminDb } from "@/lib/firebaseAdmin";
 import { requireAuth } from "@/lib/auth";
 import { json, handleError } from "@/lib/api";
+import { validateImageUpload } from "@/lib/imageGate";
 
 // Base64 payload cap — keeps each blob comfortably under the 1MB Firestore
 // document limit. Client compresses to ~300-600KB before sending.
@@ -33,15 +34,20 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       return json({ error: "Image too large. Please re-submit after compression." }, 413);
     }
 
+    // Server-side gate: real format re-detected from magic bytes + payload scan.
+    const gate = validateImageUpload(body.base64);
+    if (!gate.ok) return json({ error: gate.error }, 400);
+
     const id = randomUUID();
     await adminDb().collection("imageBlobs").doc(id).set({
       data: body.base64,
-      contentType: body.mime || "image/jpeg",
+      contentType: gate.contentType,
+      sha256: gate.sha256,
       uploadedBy: user.uid,
       at: new Date().toISOString(),
     });
 
-    return json({ url: `/api/images/${id}`, name: "image.jpg", size: buffer.length }, 201);
+    return json({ url: `/api/images/${id}`, name: "image.jpg", size: gate.bytes }, 201);
   } catch (e) {
     return handleError(e);
   }
