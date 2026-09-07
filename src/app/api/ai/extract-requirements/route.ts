@@ -18,11 +18,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     if (!snap.exists) return json({ error: "Issue not found." }, 404);
     const issue = snap.data()!;
 
-    const requirements = await extractRequirementsFlow({
+    const result = await extractRequirementsFlow({
       description: issue.description,
       imageUrl: issue.images?.[0]?.url,
     });
-    return json({ requirements });
+    await adminDb().doc(`issues/${body.issueId}`).update({
+      "aiSuggestion.briefing": result.briefing,
+    });
+    return json(result);
   } catch (e) {
     return handleError(e);
   }

@@ -1,6 +1,8 @@
 import "server-only";
 
+import type { Part } from "genkit";
 import { adminDb } from "../firebaseAdmin";
+import { escalateForSafety } from "../issueMachine";
 import { notifyMany } from "../notifications";
 import { aiEnabled, getGenkit, triageModelChain } from "./genkit";
 
@@ -9,10 +11,28 @@ export interface TriageResult {
   suggestedPriority: number;
   reasons: string[];
   photoSummary?: string;
+  photoQuality?: "relevant" | "irrelevant" | "low_quality" | "mismatch";
   safetyFlags: string[];
   isSpam?: boolean;
   spamReasons?: string[];
   modelUsed?: string;
+}
+
+/** Load an uploaded issue image's base64 payload from Firestore.
+ *  `imageUrl` is typically `/api/images/{uuid}` → `imageBlobs/{uuid}`. */
+async function loadImageBlob(imageUrl?: string): Promise<{ data: string; mimeType: string } | null> {
+  if (!imageUrl) return null;
+  const m = imageUrl.match(/\/images\/([a-f0-9-]{8,})/i);
+  if (!m) return null;
+  try {
+    const snap = await adminDb().doc(`imageBlobs/${m[1]}`).get();
+    if (!snap.exists) return null;
+    const d = snap.data();
+    if (!d?.data) return null;
+    return { data: d.data, mimeType: d.contentType || "image/jpeg" };
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -139,7 +159,7 @@ const SAFETY_WORDS: { word: string; flag: string }[] = [
   { word: "fall", flag: "Injury risk" },
 ];
 
-export function fallbackTriage(description: string): TriageResult {
+export function fallbackTriage(description: string, hasImage = false): TriageResult {
   const spam = spamCheck(description);
   if (spam.isSpam) {
     return {
@@ -149,6 +169,7 @@ export function fallbackTriage(description: string): TriageResult {
       safetyFlags: [],
       isSpam: true,
       spamReasons: spam.reasons,
+      photoQuality: hasImage ? "irrelevant" : undefined,
     };
   }
 
@@ -189,7 +210,9 @@ export function fallbackTriage(description: string): TriageResult {
     category,
     suggestedPriority: priority,
     reasons,
-    photoSummary: "Photo attached — visually confirms the reported damage in the described area.",
+    photoSummary:
+      "Photo attached — an image was provided; visual quality could not be assessed without the AI model.",
+    photoQuality: hasImage ? "relevant" : undefined,
     safetyFlags,
   };
 }
@@ -205,17 +228,20 @@ export async function triageFlow(input: {
   department: string;
   categories?: string[];
 }): Promise<TriageResult> {
-  if (!aiEnabled()) return fallbackTriage(input.description);
+  if (!aiEnabled()) return fallbackTriage(input.description, Boolean(input.imageUrl));
 
   const ai = await getGenkit();
   const { z } = await import("genkit");
   const allowed = input.categories?.length ? input.categories : CATEGORIES;
+
+  const image = await loadImageBlob(input.imageUrl);
 
   const schema = z.object({
     category: z.enum(allowed as [string, ...string[]]),
     suggestedPriority: z.number().int().min(1).max(5),
     reasons: z.array(z.string()),
     photoSummary: z.string().optional(),
+    photoQuality: z.enum(["relevant", "irrelevant", "low_quality", "mismatch"]).optional(),
     safetyFlags: z.array(z.string()),
     isSpam: z.boolean().optional().default(false),
     spamReasons: z.array(z.string()).optional().default([]),
@@ -224,6 +250,10 @@ export async function triageFlow(input: {
   // Try a chain of providers/models so a single quota/RateLimit error (429) on
   // one model doesn't silently drop us to the fallback classifier.
   const models = triageModelChain();
+  const promptParts: Part[] = [{ text: input.description }];
+  if (image) {
+    promptParts.push({ media: { url: `data:${image.mimeType};base64,${image.data}` } });
+  }
 
   for (const model of models) {
     try {
@@ -233,8 +263,11 @@ export async function triageFlow(input: {
 Priority: 1 = critical (safety/water/electrical hazard), 5 = cosmetic.
 
 First decide if the submission is SPAM: test/placeholder messages, keyboard mashing, gibberish, incoherent text, off-topic advertising or promotions, or content with no real maintenance request. If it is spam, set isSpam=true, add a short explanation to spamReasons, set suggestedPriority=5, and still pick the closest category for filing.
-Return ONLY structured JSON.`,
-        prompt: input.description,
+
+If a photo is provided, inspect it carefully and describe in photoSummary what you actually see: the object(s), damage, condition and surroundings. Compare the photo with the text description and set photoQuality to exactly one of: "relevant" (photo shows the reported issue), "irrelevant" (unrelated to the report — e.g. a screenshot, face/selfie, document or text-only image), "low_quality" (blurry, dark, cut-off or unreadable), or "mismatch" (photo shows something other than what the text describes). Also detect visible hazards (fire, smoke, exposed wiring, gas cylinders, water near electrical equipment, sharp objects, structural damage) and list them in safetyFlags.
+
+If no photo is provided, omit photoSummary and photoQuality. Return ONLY structured JSON.`,
+        prompt: promptParts,
         output: { schema, format: "json" },
         config: { temperature: 0.2 },
       });
@@ -254,13 +287,13 @@ Return ONLY structured JSON.`,
           modelUsed: model,
         };
       }
-      return fallbackTriage(input.description);
+      return fallbackTriage(input.description, Boolean(input.imageUrl));
     } catch (e) {
       console.error(`triageFlow error on ${model}, trying next:`, e);
     }
   }
   console.error("triageFlow: all models failed, falling back to classifier");
-  return fallbackTriage(input.description);
+  return fallbackTriage(input.description, Boolean(input.imageUrl));
 }
 
 /** Persist a triage suggestion onto the issue (never touches status). */
@@ -272,6 +305,7 @@ export async function writeTriage(issueId: string, result: TriageResult) {
       "aiSuggestion.suggestedPriority": result.suggestedPriority,
       "aiSuggestion.reasons": result.reasons,
       "aiSuggestion.photoSummary": result.photoSummary || "",
+      "aiSuggestion.photoQuality": result.photoQuality || "",
       "aiSuggestion.safetyFlags": result.safetyFlags,
       "aiSuggestion.isSpam": Boolean(result.isSpam),
       "aiSuggestion.spamReasons": result.spamReasons || [],
@@ -324,6 +358,11 @@ export async function applyTriagePriority(issueId: string, result: TriageResult)
           link: `/issues/${issueId}`,
         }
       );
+    }
+
+    // Safety hazard on a NEW issue → machine auto-escalates to leadership.
+    if (!result.isSpam && result.safetyFlags.length > 0) {
+      await escalateForSafety(issueId);
     }
   } catch (e) {
     console.error("applyTriagePriority failed:", e);

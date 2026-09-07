@@ -7,6 +7,7 @@ import { deadlineLabel, timeAgo } from "@/lib/format";
 import { PriorityBadge, StatusBadge } from "./Badge";
 import { IssuePhotos } from "./IssuePhotos";
 import { FeedbackStars } from "./FeedbackStars";
+import { SlaBreachLine } from "@/components/issues/SlaBreachLine";
 
 export function IssueCard({ issue, onClose }: { issue: Issue; onClose?: () => void }) {
   const sla = issue.sla;
@@ -30,6 +31,8 @@ export function IssueCard({ issue, onClose }: { issue: Issue; onClose?: () => vo
         </div>
 
         <p className="line-clamp-2 text-sm text-slate max-md:text-[13px]">{issue.description}</p>
+
+        <SlaBreachLine issue={issue} />
 
         <div className="mt-auto flex flex-wrap items-center gap-2 text-xs text-slate">
           <PriorityBadge priority={issue.priority} />

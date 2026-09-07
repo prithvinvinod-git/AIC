@@ -1,4 +1,5 @@
 import { formatDistanceToNow, format } from "date-fns";
+import type { SlaState } from "./types";
 
 export function timeAgo(iso: string): string {
   return formatDistanceToNow(new Date(iso), { addSuffix: true });
@@ -56,4 +57,38 @@ export function initials(name: string): string {
     .slice(0, 2)
     .join("")
     .toUpperCase();
+}
+
+/** One-liner for "why is this issue late?" — deterministic, client-safe.
+ *  Cards show the persisted `sla.explanation` (F8 AI) when present, else this. */
+export function slaBreachReason(issue: {
+  status: string;
+  sla?: SlaState | null;
+  requirements?: { needsApproval?: boolean; resolved?: boolean }[];
+}): string | null {
+  if (!issue.sla?.breachedFlags?.resolution && !issue.sla?.breachedFlags?.response) return null;
+  const awaiting = (issue.requirements || []).filter((r) => r.needsApproval && !r.resolved).length;
+  if (awaiting > 0) {
+    return `Waiting on purchase approval for ${awaiting} material requirement${awaiting === 1 ? "" : "s"}`;
+  }
+  switch (issue.status) {
+    case "PENDING":
+      return "Blocked — awaiting parts or permission";
+    case "ASSIGNED":
+      return "Assigned but the job hasn't started yet";
+    case "ONGOING":
+      return "Work in progress — past the resolution deadline";
+    case "ESCALATED":
+    case "APPROVED":
+      return "Awaiting leadership approval";
+    case "NEW":
+    case "VALIDATED":
+      return "Not yet processed by a validator";
+    case "COMPLETED":
+    case "INSPECTED":
+    case "VERIFIED":
+      return "Resolved — awaiting verification or closure";
+    default:
+      return "Overdue";
+  }
 }

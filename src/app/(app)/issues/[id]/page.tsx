@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, CircleCheckBig, Clock3, Download, MapPin } from "lucide-react";
+import { ArrowLeft, CircleCheckBig, Clock3, Download, MapPin, ShieldAlert } from "lucide-react";
 import { downloadIssueReceipt } from "@/lib/receiptPdf";
 import { useIssue } from "@/hooks/useIssue";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -62,6 +62,23 @@ export default function IssueDetailPage() {
       <button className="btn btn-secondary btn-sm self-start rounded-full" onClick={() => router.back()}>
         <ArrowLeft className="h-3.5 w-3.5" aria-hidden /> Back
       </button>
+
+      {issue.aiSuggestion?.safetyFlags?.length ? (
+        <div className="flex flex-col gap-2 rounded-xl border border-danger/30 bg-danger-soft px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="flex items-center gap-2 font-semibold text-danger">
+              <ShieldAlert className="h-5 w-5" aria-hidden /> Safety hazard detected
+            </p>
+            <p className="mt-1 text-sm text-danger/90">
+              {issue.aiSuggestion.safetyFlags.join(" · ")} — this issue was auto-escalated to
+              leadership for immediate action.
+            </p>
+          </div>
+          <p className="shrink-0 rounded-lg bg-white/70 px-3 py-1.5 text-xs font-medium text-graphite sm:text-right">
+            Contact Campus Security / Facilities 24×7 for urgent response
+          </p>
+        </div>
+      ) : null}
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>

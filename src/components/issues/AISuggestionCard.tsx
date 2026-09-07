@@ -6,6 +6,13 @@ import type { Issue } from "@/lib/types";
 import { api } from "@/lib/clientApi";
 import { useActionError } from "@/components/ui/Toast";
 
+const PHOTO_QUALITY_TONE: Record<string, string> = {
+  relevant: "bg-success-soft text-success",
+  irrelevant: "bg-warning-soft text-warning",
+  low_quality: "bg-warning-soft text-warning",
+  mismatch: "bg-danger-soft text-danger",
+};
+
 export function AISuggestionCard({ issue, onTriaged }: { issue: Issue; onTriaged?: () => void }) {
   const [running, setRunning] = useState(false);
   const { showError, errorEl } = useActionError();
@@ -72,6 +79,16 @@ export function AISuggestionCard({ issue, onTriaged }: { issue: Issue; onTriaged
           <div className="col-span-2">
             <dt className="text-xs uppercase tracking-wide text-slate">Photo summary</dt>
             <dd className="mt-0.5 text-slate">{suggestion.photoSummary}</dd>
+            {suggestion.photoQuality && (
+              <dd className="mt-1.5">
+                <span
+                  className={`tag ${PHOTO_QUALITY_TONE[suggestion.photoQuality] ?? "tag-outline"}`}
+                  title="AI photo quality assessment"
+                >
+                  {suggestion.photoQuality.replace("_", " ")}
+                </span>
+              </dd>
+            )}
           </div>
         )}
         {suggestion.duplicateOf && (

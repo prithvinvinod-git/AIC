@@ -9,6 +9,7 @@ import { draftClosureFlow } from "./assist";
 import { weeklyInsightsFlow, writeWeeklyInsights } from "./insights";
 import { rootCauseFlow } from "./rootCause";
 import { predictiveMaintenanceFlow } from "./predictive";
+import { slaExplainFlow, writeSlaExplanation } from "./slaExplain";
 
 export { triageFlow, writeTriage, applyTriagePriority };
 export { findDuplicatesFlow, writeDuplicates };
@@ -17,6 +18,7 @@ export { extractRequirementsFlow, draftClosureFlow };
 export { weeklyInsightsFlow, writeWeeklyInsights };
 export { rootCauseFlow };
 export { predictiveMaintenanceFlow };
+export { slaExplainFlow, writeSlaExplanation };
 
 export async function getActiveCategories(): Promise<string[]> {
   try {

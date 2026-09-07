@@ -12,6 +12,15 @@ export type Role =
   | "purchase"
   | "admin";
 
+/** F4a — pre-job technician briefing (AI-generated, persisted on the issue). */
+export interface IssueBriefing {
+  probableCause: string;
+  safetyPrecautions: string[];
+  toolsNeeded: string[];
+  skillType: string;
+  estimatedMinutes: number;
+}
+
 export const ROLES: Role[] = [
   "reporter",
   "validator",
@@ -122,6 +131,10 @@ export interface SlaState {
   pausedAt: string | null;
   totalPausedMs: number;
   breachedFlags: { response?: boolean; resolution?: boolean };
+  /** F8 — one-liner explaining why this issue is late (persisted after generate). */
+  explanation?: string;
+  explanationSource?: "ai" | "rules";
+  explanationAt?: string;
 }
 
 export interface Rejection {
@@ -163,9 +176,12 @@ export interface AISuggestion {
   suggestedPriority?: number;
   reasons?: string[];
   photoSummary?: string;
+  photoQuality?: "relevant" | "irrelevant" | "low_quality" | "mismatch";
   safetyFlags?: string[];
   isSpam?: boolean;
   spamReasons?: string[];
+  /** F4a — pre-job technician briefing persisted by the AI extract flow. */
+  briefing?: IssueBriefing;
   routing?: {
     teamId: string;
     staffIds: string[];

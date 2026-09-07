@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ListChecks, PlayCircle, Sparkles, X } from "lucide-react";
+import { ListChecks, PlayCircle, Sparkles, Wrench, X } from "lucide-react";
 import type { Issue, Requirement } from "@/lib/types";
 import { api } from "@/lib/clientApi";
 import { StatusBadge, PriorityBadge } from "@/components/ui/Badge";
@@ -13,6 +13,7 @@ import { formatDateTime } from "@/lib/format";
 import { useActionError } from "@/components/ui/Toast";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { RequirementCheck } from "@/components/issues/RequirementCheck";
+import { SlaBreachLine } from "@/components/issues/SlaBreachLine";
 
 interface DraftRequirement {
   item: string;
@@ -374,6 +375,53 @@ export function MaintenanceJobCard({
       </button>
 
       <IssuePhotos images={issue.images} placeholder />
+
+      <SlaBreachLine issue={issue} />
+
+      {["ASSIGNED", "ONGOING"].includes(issue.status) && issue.aiSuggestion?.briefing && (
+        <div className="rounded-xl bg-paper p-3">
+          <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-slate">
+            <Wrench className="h-3.5 w-3.5" aria-hidden /> Technician briefing
+          </p>
+          <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
+            <div className="col-span-2">
+              <p className="text-slate">Probable cause</p>
+              <p className="mt-0.5 text-graphite">{issue.aiSuggestion.briefing.probableCause}</p>
+            </div>
+            <div>
+              <p className="text-slate">Skill</p>
+              <p className="mt-0.5 font-medium capitalize text-graphite">
+                {issue.aiSuggestion.briefing.skillType}
+              </p>
+            </div>
+            <div>
+              <p className="text-slate">Est. time</p>
+              <p className="mt-0.5 font-medium text-graphite">
+                {issue.aiSuggestion.briefing.estimatedMinutes} min
+              </p>
+            </div>
+            {issue.aiSuggestion.briefing.toolsNeeded.length > 0 && (
+              <div className="col-span-2">
+                <p className="text-slate">Tools needed</p>
+                <div className="mt-1 flex flex-wrap gap-1.5">
+                  {issue.aiSuggestion.briefing.toolsNeeded.map((tk) => (
+                    <span key={tk} className="tag tag-outline">
+                      {tk}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          {issue.aiSuggestion.briefing.safetyPrecautions.length > 0 && (
+            <ul className="mt-2 rounded-lg bg-warning-soft px-3 py-2 text-xs text-warning">
+              {issue.aiSuggestion.briefing.safetyPrecautions.map((sp) => (
+                <li key={sp}>• {sp}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
 
       <div className="rounded-xl bg-paper p-3">
         <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-slate">

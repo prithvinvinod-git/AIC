@@ -3,6 +3,7 @@ import "server-only";
 import { FieldValue, type Firestore } from "firebase-admin/firestore";
 import { adminDb } from "./firebaseAdmin";
 import { DEFAULT_CONFIG } from "./constants";
+import { notify, notifyRole } from "./notifications";
 import type {
   AppConfig,
   Issue,
@@ -44,6 +45,8 @@ export interface TransitionInput {
   rating?: number;
   comment?: string;
   isAuto?: boolean;
+  /** System-only: auto-escalate a NEW issue carrying an AI safety flag. */
+  safetyEscalation?: boolean;
 }
 
 const nowIso = () => new Date().toISOString();
@@ -161,6 +164,14 @@ export const TRANSITION_RULES: Record<IssueStatus, TransitionRule[]> = {
         input.rejectionReason && input.rejectionReason.trim().length >= 3
           ? null
           : "A rejection reason (min 3 chars) is required.",
+    },
+    {
+      to: "ESCALATED",
+      roles: ["admin"],
+      check: (_i, _a, input) =>
+        input.safetyEscalation === true
+          ? null
+          : "Safety escalation requires an AI-detected hazard.",
     },
   ],
   VALIDATED: [
@@ -528,6 +539,17 @@ export async function applyTransition(
           required: true,
           status: "pending",
         };
+        if (input.safetyEscalation) {
+          steps.push(
+            timelineEntry(
+              issue.status,
+              "ESCALATED",
+              actor,
+              "Auto-escalated: safety hazard detected",
+              true
+            )
+          );
+        }
         break;
       }
       case "APPROVED": {
@@ -723,6 +745,59 @@ export async function applyTransition(
 
     return { ...issue, ...patches, status: finalStatus } as Issue;
   });
+}
+
+/**
+ * Safety auto-escalation. When AI (or the deterministic fallback) detects a
+ * safety hazard on a NEW issue we bypass the normal VALIDATED path and jump
+ * straight to ESCALATED so HOD/Principal review it immediately — a water leak
+ * near a panel must not wait for a validator to notice. Appends the
+ * "Auto-escalated: safety hazard detected" timeline entry and notifies dept
+ * HOD/principal + admin + reporter. No-op (returns null) when the issue is
+ * no longer NEW or carries no safety flags, so re-runs are safe.
+ */
+export async function escalateForSafety(
+  issueId: string,
+  opts: { db?: Firestore; config?: AppConfig } = {}
+): Promise<Issue | null> {
+  const db = opts.db || adminDb();
+  const snap = await db.doc(`issues/${issueId}`).get();
+  if (!snap.exists) return null;
+  const issue = { id: issueId, ...(snap.data() as Issue) };
+  if (issue.status !== "NEW") return null;
+  const flags = (issue.aiSuggestion?.safetyFlags || []).filter(Boolean);
+  if (!flags.length) return null;
+
+  const config = opts.config || (await loadConfig(db));
+  const actor: Actor = { uid: "system", name: "AI Safety Monitor", role: "admin" };
+  const updated = await applyTransition(
+    issueId,
+    actor,
+    { to: "ESCALATED", safetyEscalation: true },
+    { db, config }
+  );
+
+  const link = `/issues/${issueId}`;
+  await notifyRole(
+    ["hod", "principal", "admin"],
+    {
+      type: "escalation",
+      title: "Safety alert — immediate review",
+      body: `${updated.issueNo}: ${flags.slice(0, 3).join(", ")}. Auto-escalated — confirm severity and dispatch.`,
+      link,
+    },
+    updated.college
+  );
+  if (updated.reporter?.uid) {
+    await notify(updated.reporter.uid, {
+      type: "escalation",
+      title: "Issue escalated for safety",
+      body: `${updated.issueNo} was auto-escalated because a safety hazard was detected. Leadership is reviewing it now.`,
+      link,
+    });
+  }
+
+  return updated;
 }
 
 /** Allocate the next human-readable issue number (ISS-2026-0001). */
