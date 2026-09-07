@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebaseAdmin";
 import { requireAuth } from "@/lib/auth";
 import { json, handleError } from "@/lib/api";
+import { serverCached } from "@/lib/serverCache";
 import { STATUSES } from "@/lib/types";
 import type { IssueStatus } from "@/lib/types";
 
@@ -70,46 +71,59 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     const startMs = from ? new Date(`${from}T00:00:00.000Z`).getTime() : null;
     const endMs = to ? new Date(`${to}T23:59:59.999Z`).getTime() : null;
 
-    const snap = await db.collection("issues").orderBy("createdAt", "desc").limit(MAX).get();
-    const truncated = snap.size >= MAX;
+    // The bounded ordered read is cached per instance; per-request filtering
+    // (college, dates, text, statuses) runs on the cached base rows.
+    const baseRows = await serverCached("api:issue-history:base", 60_000, async () => {
+      const snap = await db.collection("issues").orderBy("createdAt", "desc").limit(MAX).get();
+      return {
+        size: snap.size,
+        rows: snap.docs.map(
+          (d): HistoryIssue => {
+            const data = d.data();
+            const createdAtMs = toMs(data.createdAt);
+            const updatedAtMs = toMs(data.updatedAt);
+            return {
+              id: d.id,
+              issueNo: String(data.issueNo || ""),
+              title: String(data.title || ""),
+              department: String(data.department || ""),
+              college: data.college ? String(data.college) : undefined,
+              status: (STATUSES as string[]).includes(data.status)
+                ? (data.status as IssueStatus)
+                : "NEW",
+              priority: typeof data.priority === "number" ? data.priority : 0,
+              boardHidden: data.boardHidden === true,
+              routing: data.routing
+                ? {
+                    categoryId: String(data.routing.categoryId || ""),
+                    categoryName: String(data.routing.categoryName || ""),
+                    teamId: String(data.routing.teamId || ""),
+                  }
+                : undefined,
+              reporter: data.reporter
+                ? {
+                    uid: String(data.reporter.uid || ""),
+                    name: String(data.reporter.name || ""),
+                    department: String(data.reporter.department || ""),
+                  }
+                : undefined,
+              createdAt:
+                createdAtMs !== null
+                  ? new Date(createdAtMs).toISOString()
+                  : String(data.createdAt || ""),
+              updatedAt:
+                updatedAtMs !== null
+                  ? new Date(updatedAtMs).toISOString()
+                  : String(data.updatedAt || ""),
+            };
+          }
+        ),
+      };
+    });
 
-    const issues = snap.docs
-      .map(
-        (d): HistoryIssue => {
-          const data = d.data();
-          const createdAtMs = toMs(data.createdAt);
-          const updatedAtMs = toMs(data.updatedAt);
-          return {
-            id: d.id,
-            issueNo: String(data.issueNo || ""),
-            title: String(data.title || ""),
-            department: String(data.department || ""),
-            college: data.college ? String(data.college) : undefined,
-            status: (STATUSES as string[]).includes(data.status)
-              ? (data.status as IssueStatus)
-              : "NEW",
-            priority: typeof data.priority === "number" ? data.priority : 0,
-            boardHidden: data.boardHidden === true,
-            routing: data.routing
-              ? {
-                  categoryId: String(data.routing.categoryId || ""),
-                  categoryName: String(data.routing.categoryName || ""),
-                  teamId: String(data.routing.teamId || ""),
-                }
-              : undefined,
-            reporter: data.reporter
-              ? {
-                  uid: String(data.reporter.uid || ""),
-                  name: String(data.reporter.name || ""),
-                  department: String(data.reporter.department || ""),
-                }
-              : undefined,
-            createdAt: createdAtMs !== null ? new Date(createdAtMs).toISOString() : String(data.createdAt || ""),
-            updatedAt: updatedAtMs !== null ? new Date(updatedAtMs).toISOString() : String(data.updatedAt || ""),
-          };
-        }
-      )
-      .filter((issue) => {
+    const truncated = baseRows.size >= MAX;
+
+    const issues = baseRows.rows.filter((issue) => {
         if (user.role !== "admin" && issue.college !== user.college) return false;
         const createdAt = toMs(issue.createdAt);
         if (startMs !== null && (createdAt === null || createdAt < startMs)) return false;

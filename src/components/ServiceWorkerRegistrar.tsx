@@ -6,18 +6,20 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { api } from "@/lib/clientApi";
 
 /**
- * Registers the service worker once, subscribes to foreground FCM messages,
- * and refreshes the FCM token on every login (tokens can rotate silently).
+ * Registers the (single) service worker once at app load — even before login
+ * so the app-shell offline cache is active — subscribes to foreground FCM
+ * messages, and refreshes the FCM token on every login (tokens rotate).
  */
 export default function ServiceWorkerRegistrar() {
   const { user } = useAuth();
 
+  // Registration is auth-independent: the shell cache should work on the
+  // login screen too. FCM config is injected by registerServiceWorker.
   useEffect(() => {
-    if (!user) return;
-
+    let cancelled = false;
     let unsub = () => {};
-
     void registerServiceWorker().then(() => {
+      if (cancelled) return;
       unsub = onForegroundMessage((payload) => {
         const title = payload.notification?.title || "Servox";
         const body  = payload.notification?.body  || "";
@@ -29,23 +31,26 @@ export default function ServiceWorkerRegistrar() {
           })
         );
       });
+    });
+    return () => {
+      cancelled = true;
+      unsub();
+    };
+  }, []);
 
-      /* Re-validate FCM token on every session — tokens can rotate after
-         browser updates or Firebase auto-rotation. If the new token differs
-         from the stored one, re-save it so pushes keep arriving. */
-      if (isPushSupported() && Notification.permission === "granted") {
-        void requestFcmToken().then(({ token }) => {
-          if (token) {
-            void api("/api/profile", {
-              method: "PATCH",
-              body: JSON.stringify({ fcmToken: token, pushEnabled: true }),
-            }).catch(() => {});
-          }
-        });
+  // Per-session: re-validate the FCM token on every login — tokens can rotate
+  // after browser updates or Firebase auto-rotation.
+  useEffect(() => {
+    if (!user) return;
+    if (!isPushSupported() || Notification.permission !== "granted") return;
+    void requestFcmToken().then(({ token }) => {
+      if (token) {
+        void api("/api/profile", {
+          method: "PATCH",
+          body: JSON.stringify({ fcmToken: token, pushEnabled: true }),
+        }).catch(() => {});
       }
     });
-
-    return unsub;
   }, [user]);
 
   return null;

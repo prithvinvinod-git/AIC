@@ -4,6 +4,7 @@ import { FieldValue, type Firestore } from "firebase-admin/firestore";
 import { adminDb } from "./firebaseAdmin";
 import { DEFAULT_CONFIG } from "./constants";
 import { notify, notifyRole } from "./notifications";
+import { serverCached } from "./serverCache";
 import type {
   AppConfig,
   Issue,
@@ -51,7 +52,7 @@ export interface TransitionInput {
 
 const nowIso = () => new Date().toISOString();
 
-async function loadConfig(db: Firestore): Promise<AppConfig> {
+async function readConfig(db: Firestore): Promise<AppConfig> {
   try {
     const snap = await db.doc("config/general").get();
     if (!snap.exists) return DEFAULT_CONFIG;
@@ -72,6 +73,16 @@ async function loadConfig(db: Firestore): Promise<AppConfig> {
   } catch {
     return DEFAULT_CONFIG;
   }
+}
+
+/**
+ * Current app config. TTL-cached per instance (30s) because it's merged into
+ * every transition; invalidated by POST /api/admin/config and
+ * PATCH /api/config/purchase-limit. Issue-number allocation uses its own
+ * separate document in a transaction, so this cache never affects numbering.
+ */
+async function loadConfig(db: Firestore): Promise<AppConfig> {
+  return serverCached("api:load-config", 30_000, () => readConfig(db));
 }
 
 /** SLA hours per priority (config-aware). */

@@ -3,8 +3,14 @@ import { adminDb } from "@/lib/firebaseAdmin";
 import { requireAdmin } from "@/lib/auth";
 import { json, parseBody, handleError } from "@/lib/api";
 import { categorySchema } from "@/lib/schemas";
+import { invalidateServerCache } from "@/lib/serverCache";
 
 const db = adminDb();
+
+function invalidateCategoryCaches() {
+  invalidateServerCache("api:admin:categories");
+  invalidateServerCache("api:categories");
+}
 
 /** PATCH /api/admin/categories/[id] — update a category. */
 export async function PATCH(
@@ -16,6 +22,7 @@ export async function PATCH(
     const { id } = await ctx.params;
     const body = await parseBody(req, categorySchema.partial());
     await db.doc(`categories/${id}`).update(body);
+    invalidateCategoryCaches();
     return json({ ok: true });
   } catch (e) {
     return handleError(e);
@@ -31,6 +38,7 @@ export async function DELETE(
     await requireAdmin(req);
     const { id } = await ctx.params;
     await db.doc(`categories/${id}`).update({ isActive: false });
+    invalidateCategoryCaches();
     return json({ ok: true });
   } catch (e) {
     return handleError(e);

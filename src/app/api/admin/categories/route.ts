@@ -3,6 +3,7 @@ import { adminDb } from "@/lib/firebaseAdmin";
 import { requireAdmin } from "@/lib/auth";
 import { json, parseBody, handleError } from "@/lib/api";
 import { categorySchema } from "@/lib/schemas";
+import { serverCached, invalidateServerCache } from "@/lib/serverCache";
 
 const db = adminDb();
 
@@ -10,8 +11,10 @@ const db = adminDb();
 export async function GET(req: NextRequest): Promise<NextResponse> {
   try {
     await requireAdmin(req);
-    const snap = await db.collection("categories").orderBy("name", "asc").get();
-    const categories = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    const categories = await serverCached("api:admin:categories", 60_000, async () => {
+      const snap = await db.collection("categories").orderBy("name", "asc").get();
+      return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    });
     return json({ categories });
   } catch (e) {
     return handleError(e);
@@ -26,6 +29,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const ref = db.collection("categories").doc();
     const data = { ...body, createdAt: new Date().toISOString() };
     await ref.set(data);
+    invalidateServerCache("api:admin:categories");
+    invalidateServerCache("api:categories");
     return json({ category: { id: ref.id, ...data } }, 201);
   } catch (e) {
     return handleError(e);

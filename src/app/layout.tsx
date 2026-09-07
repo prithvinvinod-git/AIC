@@ -3,6 +3,8 @@ import { Fraunces, Inter } from "next/font/google";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ToastProvider } from "@/components/ui/Toast";
+import { OfflineModeProvider } from "@/components/offline/OfflineModeProvider";
+import OfflineBanner from "@/components/offline/OfflineBanner";
 import { themeBootstrapScript } from "@/lib/themePref";
 import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
 import "./globals.css";
@@ -56,8 +58,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <ToastProvider>
           <ThemeProvider>
             <AuthProvider>
-              <ServiceWorkerRegistrar />
-              {children}
+              <OfflineModeProvider>
+                <ServiceWorkerRegistrar />
+                {children}
+                <OfflineBanner />
+              </OfflineModeProvider>
             </AuthProvider>
           </ThemeProvider>
         </ToastProvider>
