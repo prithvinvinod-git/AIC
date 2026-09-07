@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { useIssues } from "@/hooks/useIssues";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { Loading, EmptyState, BoardErrorState } from "@/components/ui/States";
 import { MaintenanceJobCard } from "@/components/issues/MaintenanceJobCard";
+import { assertRouteAccess } from "@/lib/roleGuards";
 import type { IssueStatus } from "@/lib/types";
 
 const TABS: { key: IssueStatus | "all"; label: string }[] = [
@@ -17,8 +19,11 @@ const TABS: { key: IssueStatus | "all"; label: string }[] = [
 ];
 
 export default function JobsPage() {
+  const { claims } = useAuth();
   const { issues, error, reload } = useIssues({});
   const [tab, setTab] = useState<IssueStatus | "all">("ASSIGNED");
+
+  assertRouteAccess(claims, ["maintenance"]);
 
   if (!issues) return <Loading label="Loading jobs…" />;
   if (error) {

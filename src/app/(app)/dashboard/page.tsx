@@ -8,6 +8,7 @@ import { useIssues } from "@/hooks/useIssues";
 import { IssueCard } from "@/components/ui/IssueCard";
 import { CloseIssueModal } from "@/components/issues/CloseIssueModal";
 import { Loading, EmptyState } from "@/components/ui/States";
+import { assertRouteAccess } from "@/lib/roleGuards";
 import type { Issue } from "@/lib/types";
 
 const OPEN_STATUSES = ["NEW", "VALIDATED", "ESCALATED", "APPROVED", "ASSIGNED", "ONGOING", "PENDING"];
@@ -16,6 +17,8 @@ export default function DashboardPage() {
   const { claims } = useAuth();
   const { issues, error, reload } = useIssues({ mine: true });
   const [closeIssue, setCloseIssue] = useState<Issue | null>(null);
+
+  assertRouteAccess(claims, ["reporter"]);
 
   if (error) {
     return (
@@ -54,9 +57,9 @@ export default function DashboardPage() {
       <div className="grid grid-cols-3 gap-2.5 max-md:gap-2 sm:gap-4">
         {kpis.map((k) => (
           <div key={k.label} className="kpi !px-[12px] !py-[16px] sm:!px-[24px] sm:!py-[20px]">
-            <div className={`flex items-center gap-2 ${k.tone}`}>
-              <k.icon className="h-4 w-4" aria-hidden />
-              <span className="truncate text-[10px] font-medium uppercase tracking-wide">{k.label}</span>
+<div className={`flex items-center gap-2 ${k.tone}`}>
+              <k.icon className="h-4 w-4 shrink-0" aria-hidden />
+              <span className="text-[10px] font-medium uppercase leading-tight tracking-wide">{k.label}</span>
             </div>
             <p className="mt-2 font-display text-3xl max-md:text-2xl font-semibold text-ink">{k.value}</p>
           </div>

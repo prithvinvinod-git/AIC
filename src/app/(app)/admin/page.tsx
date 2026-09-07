@@ -6,10 +6,11 @@ import { useCallback, useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { api } from "@/lib/clientApi";
-import { Loading, EmptyState } from "@/components/ui/States";
+import { Loading } from "@/components/ui/States";
 import { Modal } from "@/components/ui/Modal";
 import { useActionError } from "@/components/ui/Toast";
 import { COLLEGES, DEPARTMENTS_BY_COLLEGE, ROLE_LABEL, type College } from "@/lib/constants";
+import { assertRouteAccess } from "@/lib/roleGuards";
 import type { AppUser, Category, Team, Role } from "@/lib/types";
 
 const TABS = ["Users", "Teams", "Categories", "Config"] as const;
@@ -46,9 +47,7 @@ export default function AdminPage() {
   const [tab, setTab] = useState<Tab>("Users");
 
   if (!claims) return null;
-  if (claims.role !== "admin") {
-    return <EmptyState title="Admin only" body="This area is restricted to administrators." />;
-  }
+  assertRouteAccess(claims, ["admin"]);
 
   return (
     <div className="flex flex-col gap-6">

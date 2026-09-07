@@ -26,12 +26,14 @@ import {
   Legend,
 } from "recharts";
 import { useIssues } from "@/hooks/useIssues";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { Loading, EmptyState, BoardErrorState } from "@/components/ui/States";
 import { Modal } from "@/components/ui/Modal";
 import { StatusBadge } from "@/components/ui/Badge";
 import { api, ApiError } from "@/lib/clientApi";
 import { useActionError } from "@/components/ui/Toast";
 import { CATEGORY_COLORS } from "@/lib/chartColors";
+import { assertRouteAccess } from "@/lib/roleGuards";
 import type { Issue, Requirement } from "@/lib/types";
 
 type Tab = "queue" | "history" | "analytics";
@@ -71,6 +73,7 @@ const inr = (n: number) => `₹${Math.round(n || 0).toLocaleString("en-IN")}`;
 const sourceLabel = (s?: string) => (s === "senior" ? "Senior" : "Purchase");
 
 export default function PurchasePage() {
+  const { claims } = useAuth();
   const { issues, error, reload } = useIssues({});
   const { showError } = useActionError();
   const [tab, setTab] = useState<Tab>("queue");
@@ -86,6 +89,8 @@ export default function PurchasePage() {
   const [historyError, setHistoryError] = useState<string | null>(null);
   const [analytics, setAnalytics] = useState<AnalyticsResponse | null>(null);
   const [analyticsError, setAnalyticsError] = useState<string | null>(null);
+
+  assertRouteAccess(claims, ["purchase"]);
 
   useEffect(() => {
     api<{ purchaseApprovalLimit: number }>("/api/config/purchase-limit")

@@ -67,7 +67,7 @@ export default function SignupPage() {
         });
         await refreshClaims();
         setLastAuthMethod("email");
-        router.replace("/verify-email");
+        router.replace("/");
       } catch (err) {
         setError(friendlyAuthError(err));
       } finally {
@@ -97,7 +97,7 @@ export default function SignupPage() {
       }
 
       await refreshClaims();
-      router.replace("/dashboard");
+      router.replace("/");
     } catch (err) {
       const emailAddr = email.trim().toLowerCase();
       if (emailAddr) {
@@ -122,7 +122,7 @@ export default function SignupPage() {
     setNeedsPassword(false);
     setBusy(false);
     await refreshClaims();
-    router.replace("/dashboard");
+    router.replace("/");
   }, [refreshClaims, router]);
 
   return (

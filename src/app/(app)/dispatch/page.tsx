@@ -6,6 +6,8 @@ import { useIssues } from "@/hooks/useIssues";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Loading, EmptyState, BoardErrorState } from "@/components/ui/States";
 import { DispatchCard } from "@/components/issues/DispatchCard";
+import { assertRouteAccess } from "@/lib/roleGuards";
+import { HEAD_ROLES } from "@/lib/nav";
 import type { IssueStatus } from "@/lib/types";
 
 const TABS: { key: IssueStatus; label: string }[] = [
@@ -24,8 +26,8 @@ export default function DispatchPage() {
   if (!claims) return null;
   if (!issues) return <Loading label="Loading dispatch…" />;
 
-  const role = claims.role;
-  if (role !== "maintenance_head" && role !== "category_head") return null;
+  const role = claims.role as "maintenance_head" | "category_head";
+  assertRouteAccess(claims, HEAD_ROLES);
 
   const isMaintHead = role === "maintenance_head";
   const defaultTab: IssueStatus = isMaintHead ? "ROUTED" : "PENDING_ASSIGN";

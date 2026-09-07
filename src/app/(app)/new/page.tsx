@@ -11,6 +11,7 @@ import { useToast } from "@/components/ui/Toast";
 import { api, ApiError } from "@/lib/clientApi";
 import { fileToCompressedBase64 } from "@/lib/upload";
 import { BUILDINGS, COLLEGES, DEFAULT_FLOORS, DEPARTMENTS_BY_COLLEGE, PRIORITY_COLOR, PRIORITY_LABEL, type College } from "@/lib/constants";
+import { assertRouteAccess } from "@/lib/roleGuards";
 import type { Category, ImageRef } from "@/lib/types";
 
 const MAX_IMAGES = 3;
@@ -19,6 +20,8 @@ export default function NewIssuePage() {
   const { claims } = useAuth();
   const router = useRouter();
   const { showError } = useToast();
+
+  assertRouteAccess(claims, ["reporter"]);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");

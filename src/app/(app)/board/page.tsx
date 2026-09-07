@@ -13,6 +13,7 @@ import { RootCauseAnalysisCard } from "@/components/ai/RootCauseAnalysisCard";
 import { PriorityBadge, StatusBadge } from "@/components/ui/Badge";
 import { IssuePhotos } from "@/components/ui/IssuePhotos";
 import { useActionError } from "@/components/ui/Toast";
+import { assertRouteAccess } from "@/lib/roleGuards";
 import type { Issue } from "@/lib/types";
 
 function ValidatePanel({ issue, onDone, onTriaged }: { issue: Issue; onDone: () => void; onTriaged: () => void }) {
@@ -104,6 +105,7 @@ export default function ValidatePage() {
   const [openId, setOpenId] = useState<string | null>(null);
 
   if (!claims) return null;
+  assertRouteAccess(claims, ["validator"]);
   if (!issues) return <Loading label="Loading board…" />;
 
   const validateQueue = issues.filter((i) => i.status === "NEW");

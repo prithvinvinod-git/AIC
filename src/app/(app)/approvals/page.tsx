@@ -9,6 +9,7 @@ import { Loading, EmptyState, BoardErrorState } from "@/components/ui/States";
 import { EscalationCard } from "@/components/issues/EscalationCard";
 import { IssueCard } from "@/components/ui/IssueCard";
 import { SeniorPurchaseApprovalCard } from "@/components/purchases/SeniorPurchaseApprovalCard";
+import { assertRouteAccess } from "@/lib/roleGuards";
 
 export default function ApprovalsPage() {
   const { claims } = useAuth();
@@ -27,6 +28,7 @@ export default function ApprovalsPage() {
   }, [reloadEscalated, reloadApproved, reloadPurchases]);
 
   if (!claims) return null;
+  assertRouteAccess(claims, ["hod", "principal"]);
   if (!escalated || !approved || !purchases) return <Loading label="Loading approvals…" />;
 
   const refreshAll = () => {

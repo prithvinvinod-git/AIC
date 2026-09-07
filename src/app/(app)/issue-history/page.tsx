@@ -13,10 +13,11 @@ import { StatusBadge, PriorityBadge } from "@/components/ui/Badge";
 import { formatDate } from "@/lib/format";
 import { DEPARTMENTS } from "@/lib/constants";
 import { STATUSES } from "@/lib/types";
-import type { Category, Issue, IssueStatus } from "@/lib/types";
+import type { Category, Issue, IssueStatus, Role } from "@/lib/types";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
+import { assertRouteAccess } from "@/lib/roleGuards";
 
-const HISTORY_ROLES = ["admin", "principal", "validator"];
+const HISTORY_ROLES: Role[] = ["admin", "principal", "validator"];
 
 /** Issues at P3 or above (priority number ≤ 3) are board-eligible. */
 const BOARD_MAX_PRIORITY = 3;
@@ -135,11 +136,7 @@ export default function IssueHistoryPage() {
     (applied.statusFilter !== "all" ? 1 : 0);
 
   if (!claims) return null;
-  if (!HISTORY_ROLES.includes(claims.role)) {
-    return (
-      <EmptyState title="Role restricted" body="Admins and the Principal can view the full issue history." />
-    );
-  }
+  assertRouteAccess(claims, HISTORY_ROLES);
   if (error) return <EmptyState title="Couldn't load history" body={error} />;
   if (!issues) return <Loading label="Loading issue history…" />;
 

@@ -3,7 +3,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Megaphone, Pencil, ShieldAlert, Trash2 } from "lucide-react";
+import { Megaphone, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { api } from "@/lib/clientApi";
@@ -14,6 +14,7 @@ import { ROLE_LABEL } from "@/lib/constants";
 import { EASTER_EGG_META } from "@/lib/types";
 import { formatDateTime } from "@/lib/format";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
+import { assertRouteAccess } from "@/lib/roleGuards";
 import type { Announcement, AnnouncementAudience, Role } from "@/lib/types";
 
 const ANNOUNCER_ROLES: Role[] = ["admin", "principal", "hod"];
@@ -112,15 +113,7 @@ export default function AnnouncementsPage() {
   }, [deleting, load, show, showError]);
 
   if (!claims) return null;
-  if (!ANNOUNCER_ROLES.includes(claims.role)) {
-    return (
-      <EmptyState
-        icon={<ShieldAlert className="h-8 w-8" aria-hidden />}
-        title="Role restricted"
-        body="Admins, the Principal and HODs manage campus announcements."
-      />
-    );
-  }
+  assertRouteAccess(claims, ANNOUNCER_ROLES);
 
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-8 max-md:gap-5">

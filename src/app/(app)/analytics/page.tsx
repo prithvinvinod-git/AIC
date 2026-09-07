@@ -22,6 +22,7 @@ import { ANALYTICS_ROLES } from "@/lib/nav";
 import { CATEGORY_COLORS } from "@/lib/chartColors";
 import { AtRiskLocationsCard } from "@/components/ai/AtRiskLocationsCard";
 import { WeeklyInsightsCard } from "@/components/ai/WeeklyInsightsCard";
+import { assertRouteAccess } from "@/lib/roleGuards";
 
 interface SummaryResponse {
   summary: {
@@ -63,11 +64,7 @@ export default function AnalyticsPage() {
   }, [load]);
 
   if (!claims) return null;
-  if (!ANALYTICS_ROLES.includes(claims.role)) {
-    return (
-      <EmptyState title="Analytics are role-gated" body="HODs, the Principal, department validators and admins can view analytics." />
-    );
-  }
+  assertRouteAccess(claims, ANALYTICS_ROLES);
   if (error) return <EmptyState title="Couldn't load analytics" body={error} />;
   if (!data) return <Loading label="Crunching numbers…" />;
 
