@@ -16,14 +16,16 @@ export default function DashboardHero() {
   const access = claims ? portalRoles(claims) : [];
   const activeRole = access[0] || "reporter";
   // Principals are college-scoped (never department) — don't print a dept tag.
+  // Maintenance-family roles are scoped by category instead of department.
+  const scopeLabel = claims?.categoryName ?? claims?.department;
   const detail = [
     claims?.college,
-    access.includes("principal") ? undefined : claims?.department,
+    access.includes("principal") ? undefined : scopeLabel,
   ]
     .filter(Boolean)
     .join(" · ");
   const canReport = claims ? access.includes("reporter") : false;
-  const feed = feedFor(activeRole, claims?.department);
+  const feed = feedFor(activeRole, scopeLabel);
 
   return (
     <section className="flex min-h-[calc(100svh-48px)] items-center py-8 sm:py-14 lg:min-h-[calc(100svh-70px)]">

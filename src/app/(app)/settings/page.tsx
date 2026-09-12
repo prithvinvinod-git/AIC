@@ -6,7 +6,8 @@ import { ArrowLeft, Bell, Moon, Sun } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useTheme } from "@/components/ThemeProvider";
 import { api } from "@/lib/clientApi";
-import { ROLE_LABEL } from "@/lib/constants";
+import { ROLE_LABEL, CATEGORY_SCOPED_ROLES } from "@/lib/constants";
+import type { Role } from "@/lib/types";
 import { soundEnabled, setSoundEnabled } from "@/lib/soundPref";
 import { isPushSupported, requestFcmToken, deleteFcmToken } from "@/lib/fcm";
 import { Loading } from "@/components/ui/States";
@@ -16,6 +17,7 @@ interface SettingsData {
   email?: string;
   role?: string;
   department?: string;
+  categoryName?: string;
   college?: string;
   notifyEmail?: boolean;
   pushEnabled?: boolean;
@@ -150,11 +152,15 @@ export default function SettingsPage() {
   if (!ready) return <Loading label="Loading settings…" />;
   if (!user || !claims) return null;
 
+  const isCategoryRole = (CATEGORY_SCOPED_ROLES as Role[]).includes(claims.role as Role);
   const rows: [string, string][] = [
     ["Name", settings?.name || claims.name],
     ["Email", user.email || "—"],
     ["Role", (settings?.role || claims.role) ? ROLE_LABEL[(settings?.role || claims.role) as keyof typeof ROLE_LABEL] : "—"],
-    ["Department", settings?.department || claims.department || "—"],
+    [isCategoryRole ? "Category" : "Department",
+      isCategoryRole
+        ? settings?.categoryName || claims.categoryName || "—"
+        : settings?.department || claims.department || "—"],
     ["College", settings?.college || claims.college || "—"],
   ];
 
@@ -171,7 +177,7 @@ export default function SettingsPage() {
       <div className="card">
         <h2 className="font-display text-base font-semibold text-ink">Account</h2>
         <p className="mt-1 text-xs text-slate">
-          Role, department and college are managed by your administrator and can&apos;t be changed here.
+          Role, department/category and college are managed by your administrator and can&apos;t be changed here.
         </p>
         <dl className="mt-4 divide-y divide-silver">
           {rows.map(([k, v]) => (

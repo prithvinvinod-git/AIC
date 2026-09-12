@@ -9,7 +9,7 @@ import { api } from "@/lib/clientApi";
 import { Loading } from "@/components/ui/States";
 import { Modal } from "@/components/ui/Modal";
 import { useActionError } from "@/components/ui/Toast";
-import { CATEGORY_SCOPED_ROLES, COLLEGES, DEPARTMENTS_BY_COLLEGE, ROLE_LABEL, type College } from "@/lib/constants";
+import { CATEGORY_SCOPED_ROLES, COLLEGES, DEPARTMENTS_BY_COLLEGE, NO_ASSIGNMENT_ROLES, ROLE_LABEL, type College } from "@/lib/constants";
 import { assertRouteAccess } from "@/lib/roleGuards";
 import type { AppUser, Category, Team, Role } from "@/lib/types";
 
@@ -115,7 +115,7 @@ function UsersTab() {
   const addRole: Role = isFaculty ? role : "reporter";
   const depts = DEPARTMENTS_BY_COLLEGE[college];
   const categoryScoped = (CATEGORY_SCOPED_ROLES as Role[]).includes(addRole);
-  const noAssignment = addRole === "maintenance_head" || addRole === "principal";
+  const noAssignment = (NO_ASSIGNMENT_ROLES as Role[]).includes(addRole);
   const categoryName = (id?: string) => categories.find((c) => c.id === id)?.name ?? "—";
 
   // Keep the add-form category picker populated once categories load.
@@ -251,9 +251,7 @@ function UsersTab() {
         </select>
         {noAssignment ? (
           <select className="input lg:order-7" disabled value="">
-            <option value="">
-              {addRole === "principal" ? "— Principal has no department" : "— No category / department"}
-            </option>
+            <option value="">— No department / category</option>
           </select>
         ) : categoryScoped ? (
           <select
@@ -312,7 +310,7 @@ function UsersTab() {
                     <p className="truncate text-xs text-slate max-md:text-[11px] max-md:leading-tight">{u.email}</p>
                   </td>
                   <td className="w-[17%] max-md:w-[30%] truncate border-b border-silver px-4 py-3 max-md:px-3 max-md:py-1.5 text-slate max-md:text-[11px]">{u.college || "—"}</td>
-                  <td className="w-[17%] max-md:w-[30%] border-b border-silver px-4 py-3 max-md:px-3 max-md:py-1.5 text-slate max-md:text-[11px]">{u.role === "principal" || u.role === "maintenance_head"
+                  <td className="w-[17%] max-md:w-[30%] border-b border-silver px-4 py-3 max-md:px-3 max-md:py-1.5 text-slate max-md:text-[11px]">{u.role === "principal" || u.role === "admin"
                     ? "—"
                     : (CATEGORY_SCOPED_ROLES as Role[]).includes(u.role)
                       ? categoryName(u.categoryId)
@@ -397,17 +395,11 @@ function UsersTab() {
               ))}
             </select>
           </label>
-          {selectedUser?.role === "principal" || selectedUser?.role === "maintenance_head" ? (
+          {selectedUser?.role === "principal" || selectedUser?.role === "admin" ? (
             <label className="block">
-              <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate">
-                {selectedUser.role === "principal" ? "Department" : "Category"}
-              </span>
+              <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate">Department</span>
               <select className="input w-full" disabled value="">
-                <option value="">
-                  {selectedUser.role === "principal"
-                    ? "— Principal has no department"
-                    : "— Assigned via Categories tab"}
-                </option>
+                <option value="">— No department / category</option>
               </select>
             </label>
           ) : (CATEGORY_SCOPED_ROLES as Role[]).includes(selectedUser?.role ?? ("reporter" as Role)) ? (

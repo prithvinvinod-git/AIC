@@ -28,6 +28,9 @@ export interface SessionClaims {
   portal?: Role;
   department: string;
   college?: string;
+  /** Category a maintenance-family role is assigned to (admin-managed). */
+  categoryId?: string;
+  categoryName?: string;
   name: string;
   profilePromptDismissed?: boolean;
   hasPassword?: boolean;
@@ -72,6 +75,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       portal: result.claims.portal as Role | undefined,
       department: (result.claims.department as string) || "",
       college: result.claims.college as string | undefined,
+      categoryId: (result.claims.categoryId as string) || undefined,
+      categoryName: (result.claims.categoryName as string) || undefined,
       profilePromptDismissed: Boolean(result.claims.profilePromptDismissed),
       hasPassword: Boolean(result.claims.hasPassword),
       requiresEmailVerification: Boolean(result.claims.requiresEmailVerification),

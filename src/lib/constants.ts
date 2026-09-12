@@ -114,17 +114,23 @@ export const COLLEGES = [
 export type College = (typeof COLLEGES)[number];
 
 /** Roles whose queue is scoped to a single department — a department is
- *  required, and it is always managed by an admin, never self-service.
- *  (maintenance_head/category_head/maintenance moved to category-based
- *  assignment; see CATEGORY_SCOPED_ROLES.) */
+ *  required, and it is always managed by an admin, never self-service. */
 export const DEPARTMENT_SCOPED_ROLES: Role[] = ["validator", "hod"];
 
-/** Roles whose assignment in the admin panel is a category, not a department.
- *  category_head is additionally wired as categories/{id}.headUid (its queue
- *  is scoped by which categories it heads); maintenance/purchase just store
- *  the selection on the user doc. maintenance_head gets neither — it is
- *  assigned categories via the Categories tab. */
-export const CATEGORY_SCOPED_ROLES: Role[] = ["category_head", "maintenance", "purchase"];
+/** Roles whose assignment anywhere in the app is a category, not a
+ *  department — admin add/edit forms, profile/settings display, feed and
+ *  page headers. category_head and maintenance_head are additionally wired
+ *  as categories/{id}.headUid (their queues are scoped by which category
+ *  they head); maintenance/purchase just store the selection. */
+export const CATEGORY_SCOPED_ROLES: Role[] = [
+  "maintenance_head",
+  "category_head",
+  "maintenance",
+  "purchase",
+];
+
+/** Roles that are neither department- nor category-scoped (no picker). */
+export const NO_ASSIGNMENT_ROLES: Role[] = ["principal", "admin"];
 
 export const DEPARTMENTS_BY_COLLEGE: Record<College, string[]> = {
   Engineering: [

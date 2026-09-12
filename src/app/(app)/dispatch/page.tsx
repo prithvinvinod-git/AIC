@@ -46,8 +46,8 @@ export default function DispatchPage() {
         </h1>
         <p className="mt-1 text-sm text-slate">
           {isMaintHead
-            ? `${claims.department} · Forward validated work to the right maintenance team.`
-            : `${claims.department} · Pick teams and workers for forwarded jobs.`}
+            ? `${claims.categoryName || "No category"} · Forward validated work to the right maintenance team.`
+            : `${claims.categoryName || "No category"} · Pick teams and workers for forwarded jobs.`}
         </p>
       </div>
 

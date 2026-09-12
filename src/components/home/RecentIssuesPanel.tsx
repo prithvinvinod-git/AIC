@@ -14,7 +14,7 @@ import CompactIssueRow from "@/components/home/CompactIssueRow";
 export default function RecentIssuesPanel() {
   const { claims } = useAuth();
   const activeRole = claims ? portalRoles(claims)[0] : "reporter";
-  const feed = feedFor(activeRole, claims?.department);
+  const feed = feedFor(activeRole, claims?.categoryName ?? claims?.department);
   const { issues, error } = useIssues(feed.params ?? {});
 
   const recent = useMemo(() => {

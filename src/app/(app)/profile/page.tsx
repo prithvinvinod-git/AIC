@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { api } from "@/lib/clientApi";
-import { ROLE_LABEL, COLLEGES, DEPARTMENTS_BY_COLLEGE, type College } from "@/lib/constants";
+import { ROLE_LABEL, COLLEGES, DEPARTMENTS_BY_COLLEGE, CATEGORY_SCOPED_ROLES, type College } from "@/lib/constants";
+import type { Role } from "@/lib/types";
 import { initials } from "@/lib/format";
 import { Loading } from "@/components/ui/States";
 
@@ -189,7 +190,9 @@ export default function ProfilePage() {
             </div>
             <div>
               <label className="label" htmlFor="department">
-                Department
+                {isReporter || !(CATEGORY_SCOPED_ROLES as Role[]).includes(claims?.role as Role)
+                  ? "Department"
+                  : "Category"}
               </label>
               {isReporter ? (
                 <select
@@ -205,6 +208,8 @@ export default function ProfilePage() {
                     </option>
                   ))}
                 </select>
+              ) : (CATEGORY_SCOPED_ROLES as Role[]).includes(claims?.role as Role) ? (
+                <p className="text-sm text-graphite">{claims.categoryName || "—"}</p>
               ) : (
                 <p className="text-sm text-graphite">{claims.department || "—"}</p>
               )}
@@ -214,7 +219,7 @@ export default function ProfilePage() {
           <p className="rounded-lg bg-paper px-3 py-2 text-xs text-slate">
             {isReporter
               ? "Your college and department are used to route your reports to the right team."
-              : "Role, college and department are managed by your administrator and can&apos;t be changed here."}
+              : "Role, college and department/category are managed by your administrator and can&apos;t be changed here."}
           </p>
 
           {error && <p className="rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger">{error}</p>}

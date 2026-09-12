@@ -10,6 +10,13 @@ import type { Role } from "@/lib/types";
 
 const db = adminDb();
 
+/** Resolve a category's display name (denormalized onto the user + claims so
+ *  client UIs don't need a second lookup to label someone's assignment). */
+async function categoryNameOf(categoryId: string): Promise<string> {
+  const snap = await db.doc(`categories/${categoryId}`).get();
+  return snap.exists ? String(snap.data()?.name ?? "") : "";
+}
+
 /**
  * POST /api/auth/provision — create a user with a role + custom claim.
  * Used by the admin panel; signup for reporters and social/phone sign-ins
@@ -40,9 +47,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const role: Role = body.role;
     const name = capitalizeName(body.name || "");
     const department = role === "principal" ? "" : body.department;
-    // Category-scoped roles (category_head/maintenance/purchase) are assigned
-    // via category instead of department.
+    // Category-scoped roles (maintenance family) are assigned via category
+    // instead of department.
+    const categoryScoped = (CATEGORY_SCOPED_ROLES as Role[]).includes(role);
     const categoryId = body.categoryId || "";
+    const categoryName = categoryId ? await categoryNameOf(categoryId) : "";
 
     // Department-scoped roles (validator, hod) are useless without a
     // department — their queues would be empty.
@@ -50,7 +59,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       return json({ error: "Department is required for this role." }, 400);
     }
     // Category-scoped roles are useless without a category.
-    if ((CATEGORY_SCOPED_ROLES as Role[]).includes(role) && !categoryId) {
+    if (categoryScoped && !categoryId) {
       return json({ error: "Category is required for this role." }, 400);
     }
 
@@ -79,7 +88,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       portal: body.portal || null,
       department,
       college: body.college || null,
-      categoryId: (CATEGORY_SCOPED_ROLES as Role[]).includes(role) ? categoryId : null,
+      categoryId: categoryScoped ? categoryId : null,
+      categoryName: categoryScoped ? categoryName : null,
       requiresEmailVerification: body.requiresEmailVerification || null,
       name,
     });
@@ -92,7 +102,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         portal: body.portal || "",
         college: body.college || "",
         department,
-        ...((CATEGORY_SCOPED_ROLES as Role[]).includes(role) ? { categoryId } : {}),
+        ...(categoryScoped ? { categoryId, categoryName } : {}),
         phone: body.phone || userRecord.phoneNumber || "",
         isActive: body.isActive,
         createdAt: new Date().toISOString(),
@@ -100,9 +110,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       { merge: true }
     );
 
-    // A category head's queue is scoped by the categories they own — wire the
-    // selection so their board actually fills.
-    if (role === "category_head" && categoryId) {
+    // Maintenance family heads are scoped by the categories they own — wire the
+    // selection so their dispatch boards actually fill.
+    if ((role === "category_head" || role === "maintenance_head") && categoryId) {
       await db.doc(`categories/${categoryId}`).update({ headUid: userRecord.uid });
     }
 
@@ -156,6 +166,7 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
       body.categoryId !== undefined
         ? body.categoryId
         : (existingClaims.categoryId as string) || "";
+    const categoryName = categoryId ? await categoryNameOf(categoryId) : "";
 
     const roleChanged = body.role !== undefined;
     const categoryChanged = body.categoryId !== undefined;
@@ -169,6 +180,7 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
             ? body.college
             : (existingClaims.college as string) ?? null,
         categoryId: categoryScoped ? categoryId : null,
+        categoryName: categoryScoped ? categoryName : null,
         requiresEmailVerification: requiresEmailVerification || null,
         name:
           name !== undefined
@@ -176,15 +188,15 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
             : ((existingClaims.name as string) || existing.displayName || ""),
       });
 
-      // Keep categories/{id}.headUid in sync for category heads.
-      if (effRole === "category_head") {
+      // Keep categories/{id}.headUid in sync for the maintenance-family heads.
+      if (effRole === "category_head" || effRole === "maintenance_head") {
         const prev = await db.collection("categories").where("headUid", "==", body.uid).get();
         for (const c of prev.docs) {
           if (c.id !== categoryId) await db.doc(`categories/${c.id}`).update({ headUid: "" });
         }
         if (categoryId) await db.doc(`categories/${categoryId}`).update({ headUid: body.uid });
       } else if (roleChanged) {
-        // Moved away from category_head — stop heading any categories.
+        // Moved away from a maintenance head role — stop heading any categories.
         const prev = await db.collection("categories").where("headUid", "==", body.uid).get();
         for (const c of prev.docs) {
           await db.doc(`categories/${c.id}`).update({ headUid: "" });
@@ -199,7 +211,10 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
     if (body.college !== undefined) userData.college = body.college;
     if (body.department !== undefined) userData.department = body.department;
     if (effRole === "principal") userData.department = "";
-    if (categoryScoped) userData.categoryId = categoryId;
+    if (categoryScoped) {
+      userData.categoryId = categoryId;
+      userData.categoryName = categoryName;
+    }
     if (body.phone !== undefined) userData.phone = body.phone;
     if (body.isActive !== undefined) userData.isActive = body.isActive;
 
