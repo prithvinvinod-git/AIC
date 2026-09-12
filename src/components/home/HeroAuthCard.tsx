@@ -188,7 +188,7 @@ export default function HeroAuthCard({ onSuccess }: HeroAuthCardProps = {}) {
                     onChange={(e) => setPassword(e.target.value)}
                   />
                 </div>
-                <div className="flex items-center justify-end">
+                <div className="flex items-center justify-start">
                   <button
                     type="button"
                     onClick={() => {

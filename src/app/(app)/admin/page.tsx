@@ -336,6 +336,45 @@ function UsersTab() {
               ))}
             </select>
           </label>
+          <label className="block">
+            <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate">College</span>
+            <select
+              className="input w-full"
+              value={selectedUser?.college || ""}
+              onChange={(e) => selectedUser?.uid && void updateUser(selectedUser.uid, { college: e.target.value })}
+            >
+              <option value="">—</option>
+              {COLLEGES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate">Department</span>
+            <select
+              className="input w-full"
+              value={
+                selectedUser?.role === "principal"
+                  ? ""
+                  : selectedUser?.department || ""
+              }
+              disabled={selectedUser?.role === "principal"}
+              onChange={(e) => selectedUser?.uid && void updateUser(selectedUser.uid, { department: e.target.value })}
+            >
+              <option value="">—</option>
+              {selectedUser?.college &&
+                DEPARTMENTS_BY_COLLEGE[selectedUser.college as College].map((d) => (
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
+                ))}
+            </select>
+            {selectedUser?.role === "principal" && (
+              <span className="mt-1 block text-xs text-slate">Principals are college-scoped and have no department.</span>
+            )}
+          </label>
           <div className="flex items-center gap-2">
             <button
               type="button"

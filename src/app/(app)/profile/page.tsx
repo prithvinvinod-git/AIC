@@ -36,7 +36,7 @@ export default function ProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const isPrincipal = claims?.role === "principal";
+  const isReporter = claims?.role === "reporter";
 
   useEffect(() => {
     if (!ready) return;
@@ -69,14 +69,16 @@ export default function ProfilePage() {
       setNotice(null);
       setBusy(true);
       try {
+        // Only reporters self-manage college/department; for staff it's
+        // admin-managed, so don't send them at all.
+        const profile: Record<string, string> = { name: name.trim(), phone: phone.trim() };
+        if (isReporter) {
+          profile.college = college;
+          profile.department = department;
+        }
         await api("/api/profile", {
           method: "PATCH",
-          body: JSON.stringify({
-            name: name.trim(),
-            phone: phone.trim(),
-            college,
-            department: isPrincipal ? "" : department,
-          }),
+          body: JSON.stringify(profile),
         });
         await refreshClaims();
         setNotice("Profile updated.");
@@ -86,7 +88,7 @@ export default function ProfilePage() {
         setBusy(false);
       }
     },
-    [name, phone, college, department, isPrincipal, refreshClaims]
+    [name, phone, college, department, isReporter, refreshClaims]
   );
 
   if (!ready) return <Loading label="Loading profile…" />;
@@ -163,31 +165,33 @@ export default function ProfilePage() {
               <label className="label" htmlFor="college">
                 College
               </label>
-              <select
-                id="college"
-                className="input"
-                value={college}
-                disabled={busy}
-                onChange={(e) => {
-                  const c = e.target.value as College;
-                  setCollege(c);
-                  if (!isPrincipal) setDepartment(DEPARTMENTS_BY_COLLEGE[c][0]);
-                }}
-              >
-                {COLLEGES.map((c) => (
-                  <option key={c} value={c}>
-                    {c} College
-                  </option>
-                ))}
-              </select>
+              {isReporter ? (
+                <select
+                  id="college"
+                  className="input"
+                  value={college}
+                  disabled={busy}
+                  onChange={(e) => {
+                    const c = e.target.value as College;
+                    setCollege(c);
+                    setDepartment(DEPARTMENTS_BY_COLLEGE[c][0]);
+                  }}
+                >
+                  {COLLEGES.map((c) => (
+                    <option key={c} value={c}>
+                      {c} College
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <p className="text-sm text-graphite">{claims.college || "—"}</p>
+              )}
             </div>
             <div>
               <label className="label" htmlFor="department">
                 Department
               </label>
-              {isPrincipal ? (
-                <p className="text-sm text-graphite">—</p>
-              ) : (
+              {isReporter ? (
                 <select
                   id="department"
                   className="input"
@@ -201,12 +205,16 @@ export default function ProfilePage() {
                     </option>
                   ))}
                 </select>
+              ) : (
+                <p className="text-sm text-graphite">{claims.department || "—"}</p>
               )}
             </div>
           </div>
 
           <p className="rounded-lg bg-paper px-3 py-2 text-xs text-slate">
-            Role and email are managed by your administrator and can&apos;t be changed here.
+            {isReporter
+              ? "Your college and department are used to route your reports to the right team."
+              : "Role, college and department are managed by your administrator and can&apos;t be changed here."}
           </p>
 
           {error && <p className="rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger">{error}</p>}

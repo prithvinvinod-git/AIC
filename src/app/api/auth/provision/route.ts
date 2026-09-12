@@ -3,6 +3,7 @@ import { adminAuth, adminDb } from "@/lib/firebaseAdmin";
 import { json, parseBody, handleError } from "@/lib/api";
 import { clientIp, isRateLimited } from "@/lib/rateLimit";
 import { adminUserSchema } from "@/lib/schemas";
+import { DEPARTMENT_SCOPED_ROLES } from "@/lib/constants";
 import { invalidateServerCache } from "@/lib/serverCache";
 import { capitalizeName } from "@/lib/format";
 import type { Role } from "@/lib/types";
@@ -39,6 +40,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const role: Role = body.role;
     const name = capitalizeName(body.name || "");
     const department = role === "principal" ? "" : body.department;
+
+    // Department-scoped roles (validator, hod, heads, maintenance) are useless
+    // without a department — their queues would be empty.
+    if ((DEPARTMENT_SCOPED_ROLES as Role[]).includes(role) && !department) {
+      return json({ error: "Department is required for this role." }, 400);
+    }
 
     let userRecord;
     if (body.uid) {
@@ -125,6 +132,9 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
           : body.department !== undefined
             ? body.department
             : (existingClaims.department as string) ?? "";
+      if ((DEPARTMENT_SCOPED_ROLES as Role[]).includes(body.role) && !department) {
+        return json({ error: "Department is required for this role." }, 400);
+      }
       await adminAuth().setCustomUserClaims(body.uid, {
         role: body.role,
         portal: body.portal !== undefined ? body.portal : (existingClaims.portal as string) || null,

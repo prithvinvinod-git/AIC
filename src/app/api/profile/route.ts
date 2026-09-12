@@ -58,6 +58,17 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
       await adminAuth().setCustomUserClaims(user.uid, claims);
     }
 
+    // College + department are admin-managed for every role except reporter
+    // (who self-onboards). Anything else would let a validator silently
+    // re-scope their own queue.
+    const wantOverride = body.college !== undefined || body.department !== undefined;
+    if (wantOverride && user.role !== "reporter") {
+      return json(
+        { error: "College and department are managed by an administrator and can't be changed here." },
+        403
+      );
+    }
+
     const userData: Record<string, unknown> = {
       updatedAt: new Date().toISOString(),
     };

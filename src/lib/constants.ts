@@ -113,6 +113,16 @@ export const COLLEGES = [
 
 export type College = (typeof COLLEGES)[number];
 
+/** Roles whose queue is scoped to a single department (a department is
+ *  required, and it is always managed by an admin, never self-service). */
+export const DEPARTMENT_SCOPED_ROLES: Role[] = [
+  "validator",
+  "hod",
+  "maintenance_head",
+  "category_head",
+  "maintenance",
+];
+
 export const DEPARTMENTS_BY_COLLEGE: Record<College, string[]> = {
   Engineering: [
     "Computer Science",
