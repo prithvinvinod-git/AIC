@@ -58,7 +58,13 @@ export async function runStaleCriticalScan(): Promise<number> {
 
   for (const doc of snap.docs) {
     const issue = { id: doc.id, ...(doc.data() as Issue) } as Issue;
-    if ((issue.priority ?? 5) > 2) continue;
+    // W-21: `priority` `0` means "reporter never chose one" — treat it as
+    // unset, not critical. Only genuinely flagged P1–2 issues escalate.
+    const prio = issue.priority ?? 0;
+    if (!(prio >= 1 && prio <= 2)) continue;
+    // If the AI already weighed in that this is non-critical, defer to it.
+    const aiPrio = issue.aiSuggestion?.suggestedPriority ?? 0;
+    if (aiPrio >= 1 && aiPrio > 2) continue;
     if (issue.escalation?.required) continue;
     const createdAt = new Date(issue.createdAt).getTime();
     if (!Number.isFinite(createdAt) || createdAt > new Date(cutoff).getTime()) continue;

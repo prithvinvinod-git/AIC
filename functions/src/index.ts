@@ -1,7 +1,7 @@
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { logger } from "firebase-functions";
 import { initializeApp } from "firebase-admin/app";
-import { getFirestore } from "firebase-admin/firestore";
+import { getFirestore, type DocumentSnapshot } from "firebase-admin/firestore";
 import { getMessaging } from "firebase-admin/messaging";
 
 /**
@@ -89,20 +89,45 @@ async function pushTimeline(
   by: { uid: string; name: string; role: string }
 ): Promise<void> {
   const ref = db.doc(`issues/${issueId}`);
-  const snap = await ref.get();
-  const counters = snap.get("counters") || {};
-  await ref.update({
-    updatedAt: new Date().toISOString(),
-    counters: { ...counters, timelineCount: (counters.timelineCount || 0) + 1 },
+  // E-3: counter increment + timeline member write in ONE transaction so a
+  // concurrent breach scan can never desync the counter from the rows.
+  await db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    const counters = snap.data()?.counters || {};
+    tx.update(ref, {
+      updatedAt: new Date().toISOString(),
+      counters: { ...counters, timelineCount: (counters.timelineCount || 0) + 1 },
+    });
+    tx.set(db.collection(`issues/${issueId}/timeline`).doc(), {
+      from,
+      to,
+      by,
+      note,
+      at: new Date().toISOString(),
+      isAuto: true,
+    });
   });
-  await db.collection(`issues/${issueId}/timeline`).add({
-    from,
-    to,
-    by,
-    note,
-    at: new Date().toISOString(),
-    isAuto: true,
-  });
+}
+
+/** Drain a Firestore query in bounded pages. Returns everything fetched,
+ *  capping the total at `maxTotal` so a single scheduled run can't hang or
+ *  burn reads; `lastDoc` carries the cursor across calls. */
+const PAGE_SIZE = 200;
+const MAX_PAGES = 5;
+
+async function drainQuery(
+  build: (lastDoc: DocumentSnapshot | null) => FirebaseFirestore.Query,
+  maxTotal: number = PAGE_SIZE * MAX_PAGES
+): Promise<FirebaseFirestore.QueryDocumentSnapshot[]> {
+  const all: FirebaseFirestore.QueryDocumentSnapshot[] = [];
+  let last: DocumentSnapshot | null = null;
+  for (let page = 0; page < MAX_PAGES && all.length < maxTotal; page++) {
+    const snap = await build(last).limit(PAGE_SIZE).get();
+    if (snap.empty) break;
+    all.push(...snap.docs);
+    last = snap.docs[snap.docs.length - 1];
+  }
+  return all;
 }
 
 /** Flag resolution-SLA breaches for open issues and alert the chain. */
@@ -111,19 +136,23 @@ export const checkSlaBreaches = onSchedule(
   async () => {
     logger.info("checkSlaBreaches: running");
     const nowIso = new Date().toISOString();
-    const snap = await db
-      .collection("issues")
-      .where("status", "in", OPEN_STATUSES)
-      .where("sla.resolutionDeadline", "<=", nowIso)
-      .limit(200)
-      .get();
+    // E-2: filter out already-flagged issues so a backlog of past breaches can't
+    // starve freshly-breached ones (which would otherwise sit behind them forever).
+    const snaps = await drainQuery((last) => {
+      let q = db
+        .collection("issues")
+        .where("status", "in", OPEN_STATUSES)
+        .where("sla.breachedFlags.resolution", "==", false)
+        .where("sla.resolutionDeadline", "<=", nowIso)
+        .orderBy("sla.resolutionDeadline", "asc");
+      if (last) q = q.startAfter(last);
+      return q;
+    });
 
     let breached = 0;
     await Promise.allSettled(
-      snap.docs.map(async (doc) => {
+      snaps.map(async (doc) => {
         const data = doc.data();
-        const flags = data.sla?.breachedFlags || {};
-        if (flags.resolution) return;
 
         const issueId = doc.id;
         const issueNo = data.issueNo || issueId;
@@ -170,17 +199,20 @@ export const sendDeadlineReminders = onSchedule({ schedule: "every 60 minutes" }
   const nowIso = new Date().toISOString();
   const upperIso = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
-  const snap = await db
-    .collection("issues")
-    .where("status", "in", OPEN_STATUSES)
-    .where("sla.resolutionDeadline", ">=", nowIso)
-    .where("sla.resolutionDeadline", "<=", upperIso)
-    .limit(200)
-    .get();
+  const snaps = await drainQuery((last) => {
+    let q = db
+      .collection("issues")
+      .where("status", "in", OPEN_STATUSES)
+      .where("sla.resolutionDeadline", ">=", nowIso)
+      .where("sla.resolutionDeadline", "<=", upperIso)
+      .orderBy("sla.resolutionDeadline", "asc");
+    if (last) q = q.startAfter(last);
+    return q;
+  });
 
   let reminded = 0;
   await Promise.allSettled(
-    snap.docs.map(async (doc) => {
+    snaps.map(async (doc) => {
       const data = doc.data();
       const last = data.sla?.lastReminderAt;
       if (last && Date.now() - new Date(last).getTime() < 6 * 60 * 60 * 1000) return;
@@ -219,14 +251,18 @@ export const sendWeeklyDigest = onSchedule(
     logger.info("sendWeeklyDigest: running");
     const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-    const snap = await db.collection("issues").where("createdAt", ">=", since).limit(1000).get();
+    const snaps = await drainQuery((last) => {
+      let q = db.collection("issues").where("createdAt", ">=", since).orderBy("createdAt", "asc");
+      if (last) q = q.startAfter(last);
+      return q;
+    });
 
     const byStatus: Record<string, number> = {};
     const byCategory: Record<string, number> = {};
     let closed = 0;
     let slaBreached = 0;
 
-    for (const doc of snap.docs) {
+    for (const doc of snaps) {
       const d = doc.data();
       byStatus[d.status] = (byStatus[d.status] || 0) + 1;
       const cat = d.routing?.categoryName || "Uncategorised";
@@ -239,7 +275,7 @@ export const sendWeeklyDigest = onSchedule(
 
     const title = "Weekly maintenance digest";
     const body =
-      `${snap.size} issues in the last 7 days · ` +
+      `${snaps.length} issues in the last 7 days · ` +
       `${closed} resolved · ${slaBreached} SLA breaches · ` +
       `top area: ${topCategory ? `${topCategory[0]} (${topCategory[1]})` : "—"}.`;
 

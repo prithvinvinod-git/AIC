@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { QueryDocumentSnapshot } from "firebase-admin/firestore";
 import { adminDb } from "../firebaseAdmin";
 import { mailEnabled, sendMail } from "./client";
 import { getRecipientEmails, getTeamEmails } from "./recipients";
@@ -95,39 +96,55 @@ const REMINDER_COOLDOWN_MS = 12 * 60 * 60 * 1000;
  *  the window or already breached. Cooldown prevents reminder spam. */
 export async function sendSlaReminderEmails(): Promise<number> {
   if (!mailEnabled()) return 0;
-  const snap = await db.collection("issues").where("status", "in", ["ASSIGNED", "ONGOING"]).get();
   const now = Date.now();
   let sent = 0;
 
-  for (const doc of snap.docs) {
-    const data = doc.data();
-    const sla = data.sla;
-    if (!sla?.resolutionDeadline) continue;
-    const deadline = new Date(sla.resolutionDeadline).getTime();
-    if (!Number.isFinite(deadline)) continue;
+  // Bound the scan: page through in batches so a large open queue can't hang
+  // the daily cron, and every doc is eventually considered.
+  let cursor: QueryDocumentSnapshot | null = null;
+  for (let page = 0; page < 6; page++) {
+    let q = db
+      .collection("issues")
+      .where("status", "in", ["ASSIGNED", "ONGOING"])
+      .orderBy("createdAt", "asc")
+      .limit(200);
+    if (cursor) q = q.startAfter(cursor);
+    const snap = await q.get();
+    if (snap.empty) break;
 
-    const lastReminder = sla.emailReminderAt ? new Date(sla.emailReminderAt).getTime() : 0;
-    if (lastReminder && now - lastReminder < REMINDER_COOLDOWN_MS) continue;
+    for (const doc of snap.docs) {
+      const data = doc.data();
+      const sla = data.sla;
+      if (!sla?.resolutionDeadline) continue;
+      const deadline = new Date(sla.resolutionDeadline).getTime();
+      if (!Number.isFinite(deadline)) continue;
 
-    const breached = now > deadline || sla.breachedFlags?.resolution === true;
-    if (!breached && deadline - now > REMINDER_WINDOW_MS) continue;
+      const lastReminder = sla.emailReminderAt ? new Date(sla.emailReminderAt).getTime() : 0;
+      if (lastReminder && now - lastReminder < REMINDER_COOLDOWN_MS) continue;
 
-    const issue = { id: doc.id, ...data } as Issue;
-    const staffUids = (issue.routing?.staff || []).map((s) => s.uid);
-    const to = issue.routing?.teamId
-      ? await getTeamEmails(issue.routing.teamId, staffUids)
-      : await getTeamEmails("", staffUids);
-    if (to.length === 0) continue;
+      const breached = now > deadline || sla.breachedFlags?.resolution === true;
+      if (!breached && deadline - now > REMINDER_WINDOW_MS) continue;
 
-    const t = jobAssignmentTemplate(issue);
-    await sendMail({
-      to,
-      subject: `SLA ${breached ? "BREACHED" : "deadline approaching"} — ${issue.issueNo}`,
-      html: t.html,
-      text: t.text,
-    });
-    await db.doc(`issues/${doc.id}`).update({ "sla.emailReminderAt": new Date().toISOString() });
-    sent += 1;
+      const issue = { id: doc.id, ...data } as Issue;
+      const staffUids = (issue.routing?.staff || []).map((s) => s.uid);
+      const to = issue.routing?.teamId
+        ? await getTeamEmails(issue.routing.teamId, staffUids)
+        : await getTeamEmails("", staffUids);
+      if (to.length === 0) continue;
+
+      const t = jobAssignmentTemplate(issue);
+      // E-1: claim the reminder BEFORE the SMTP hop — if the send times out,
+      // the 12h cooldown prevents a duplicate mail on the next run.
+      await db.doc(`issues/${doc.id}`).update({ "sla.emailReminderAt": new Date().toISOString() });
+      await sendMail({
+        to,
+        subject: `SLA ${breached ? "BREACHED" : "deadline approaching"} — ${issue.issueNo}`,
+        html: t.html,
+        text: t.text,
+      });
+      sent += 1;
+    }
+    cursor = snap.docs[snap.docs.length - 1];
   }
   return sent;
 }

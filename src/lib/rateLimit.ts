@@ -44,9 +44,18 @@ export function isRateLimited(key: string, opts: RateLimitOptions): boolean {
   return false;
 }
 
-/** Best available client IP (Vercel sets x-forwarded-for). */
+/** Best available client IP. On Vercel the request passed through the
+ *  platform proxy (`x-vercel-proxied: 1`), which *appends* to
+ *  `x-forwarded-for` — so the last hop is the real client and any earlier
+ *  entries are client-spoofable and ignored. Outside the proxy (local dev)
+ *  the header is not trustworthy either way, so we keep the legacy first-hop
+ *  behaviour only for local runs. */
 export function clientIp(req: NextRequest): string {
+  const viaProxy = req.headers.get("x-vercel-proxied") === "1";
   const fwd = req.headers.get("x-forwarded-for");
-  if (fwd) return fwd.split(",")[0]?.trim() || "unknown";
+  if (fwd) {
+    const parts = fwd.split(",").map((s) => s.trim()).filter(Boolean);
+    if (parts.length > 0) return viaProxy ? parts[parts.length - 1] : parts[0];
+  }
   return req.headers.get("x-real-ip") || "unknown";
 }

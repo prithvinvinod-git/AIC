@@ -20,7 +20,7 @@ export const imageSchema = z.object({
 
 export const createIssueSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters").max(140),
-  description: z.string().min(10, "Describe the issue in at least 10 characters"),
+  description: z.string().min(10, "Describe the issue in at least 10 characters").max(2000),
   college: z.string().optional(),
   department: z.string().min(1, "Department is required"),
   location: locationSchema,
@@ -43,13 +43,18 @@ export const statusTransitionSchema = z.object({
   maintenanceHeadUid: z.string().optional(),
   rejectionReason: z.string().optional(),
   sendBackReason: z.string().optional(),
-  rating: z.number().int().min(1).max(5).optional(),
+  rating: z
+    .number()
+    .min(0.5)
+    .max(5)
+    .refine((r) => r % 0.5 === 0, "Rating must be in half steps (0.5–5)")
+    .optional(),
   verdict: z.string().optional(),
 });
 
 export const requirementSchema = z.object({
   item: z.string().min(2, "Requirement item is required"),
-  qty: z.number().int().min(0).default(1),
+  qty: z.number().int().min(1).default(1),
   needsApproval: z.boolean().default(false),
   resolved: z.boolean().default(false),
 });

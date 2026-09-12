@@ -28,13 +28,11 @@ export async function ensureReporterProvisioned(opts?: {
     }
     return;
   }
-  await api("/api/auth/provision", {
+  await api("/api/auth/self-provision", {
     method: "POST",
     body: JSON.stringify({
-      uid: user.uid,
       name: capitalizeName(user.displayName || user.email || user.phoneNumber || "User"),
       email,
-      role: "reporter",
       college: opts?.college || "",
       department: opts?.department || "Computer Science",
     }),

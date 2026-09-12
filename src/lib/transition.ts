@@ -6,6 +6,7 @@ import type { ZodSchema } from "zod";
 import { adminDb } from "./firebaseAdmin";
 import { requireAuth } from "./auth";
 import { json, parseBody, handleError } from "./api";
+import { isRateLimited } from "./rateLimit";
 import { applyTransition } from "./issueMachine";
 import { notifyRecipientsForIssue } from "./notifications";
 import type { Issue } from "./types";
@@ -28,6 +29,12 @@ export async function runTransition(
 ): Promise<NextResponse> {
   try {
     const user = await requireAuth(req);
+    if (isRateLimited(`transition:${user.uid}`, { limit: 120, windowMs: 60_000 })) {
+      return NextResponse.json(
+        { error: "Too many requests. Please slow down and try again." },
+        { status: 429, headers: { "Retry-After": "60" } }
+      );
+    }
     const body = preParsed ?? (await parseBody(req, schema));
 
     const beforeSnap = await adminDb().doc(`issues/${issueId}`).get();
@@ -36,11 +43,19 @@ export async function runTransition(
 
     const issue = (await applyTransition(
       issueId,
-      { uid: user.uid, name: user.name, role: user.role },
+      {
+        uid: user.uid,
+        name: user.name,
+        role: user.role,
+        college: user.college,
+        department: user.department,
+      },
       { ...body, ...(toOverride ? { to: toOverride } : {}) } as TransitionInput
     )) as Issue;
 
     void notifyRecipientsForIssue(issue, before.status, issue.status);
+    const out = { ...issue } as Issue & { trackingToken?: string };
+    delete out.trackingToken;
 
     // Best-effort emails keyed on the final status. Approvals reach HOD +
     // Principal; assignments reach the maintenance team; a CLOSED issue tells
@@ -61,7 +76,7 @@ export async function runTransition(
       }
     });
 
-    return json({ issue });
+    return json({ issue: out });
   } catch (e) {
     return handleError(e);
   }

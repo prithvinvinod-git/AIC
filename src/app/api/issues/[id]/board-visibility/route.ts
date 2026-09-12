@@ -4,6 +4,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { adminDb } from "@/lib/firebaseAdmin";
 import { requireAuth } from "@/lib/auth";
 import { json, parseBody, handleError } from "@/lib/api";
+import type { Issue } from "@/lib/types";
 
 const BOARD_ROLES = ["admin", "principal"];
 
@@ -34,11 +35,34 @@ export async function POST(
     if (!snap.exists) return json({ error: "Issue not found." }, 404);
 
     const now = new Date().toISOString();
-    if (hidden) {
-      await ref.update({ boardHidden: true, updatedAt: now });
-    } else {
-      await ref.update({ boardHidden: FieldValue.delete(), updatedAt: now });
-    }
+    await db.runTransaction(async (tx) => {
+      const txSnap = await tx.get(ref);
+      if (!txSnap.exists) throw Object.assign(new Error("Issue not found."), { statusCode: 404 });
+      const data = txSnap.data() as Issue;
+      if (hidden) {
+        tx.update(ref, {
+          boardHidden: true,
+          updatedAt: now,
+          "counters.timelineCount": FieldValue.increment(1),
+        });
+      } else {
+        tx.update(ref, {
+          boardHidden: FieldValue.delete(),
+          updatedAt: now,
+          "counters.timelineCount": FieldValue.increment(1),
+        });
+      }
+      tx.set(db.collection(`issues/${id}/timeline`).doc(), {
+        from: "",
+        to: (data.status as string) ?? "",
+        by: { uid: user.uid, name: user.name, role: user.role },
+        note: hidden
+          ? `Hidden from the shared issue board by ${user.name}`
+          : `Restored to the shared issue board by ${user.name}`,
+        at: now,
+        isAuto: false,
+      });
+    });
 
     return json({ ok: true, boardHidden: hidden });
   } catch (e) {

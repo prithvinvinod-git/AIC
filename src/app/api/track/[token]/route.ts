@@ -28,9 +28,51 @@ function isRevoked(issue: Issue): boolean {
  * GET /api/track/[token] — public lookup by the unguessable `trackingToken`
  * (same pattern as /api/images/[id]). Intentionally auth-free so email
  * recipients without a session aren't stuck at the login wall. Exposes only
- * what a tracking page needs (issue + timeline); comments and attachments are
- * deliberately excluded. Cached per token — tracking status is low-churn.
+ * what the tracking page needs; PII (trackingToken, reporter uid/department,
+ * routing, requirements/prices, AI suggestion, counters) is stripped server-side.
+ * Cached per token — tracking status is low-churn.
  */
+
+/** A-9: only these fields may leave the server for a public tracking view. */
+function publicIssue(issue: Issue): unknown {
+  return {
+    id: issue.id,
+    issueNo: issue.issueNo,
+    title: issue.title,
+    description: issue.description,
+    status: issue.status,
+    priority: issue.priority,
+    college: issue.college,
+    department: issue.department,
+    location: {
+      building: issue.location?.building,
+      floor: issue.location?.floor,
+      name: issue.location?.name,
+    },
+    reporter: issue.reporter ? { name: issue.reporter.name } : undefined,
+    createdAt: issue.createdAt,
+    images: (issue.images || []).map((img) => ({
+      url: img.url,
+      at: img.at,
+    })),
+    escalation: issue.escalation
+      ? { required: Boolean(issue.escalation.required) }
+      : undefined,
+    sla: issue.sla
+      ? {
+          responseDeadline: issue.sla.responseDeadline,
+          resolutionDeadline: issue.sla.resolutionDeadline,
+        }
+      : undefined,
+    completion: issue.completion
+      ? { report: issue.completion.report, completedAt: issue.completion.completedAt }
+      : undefined,
+    feedback: issue.feedback
+      ? { rating: issue.feedback.rating, comment: issue.feedback.comment }
+      : undefined,
+  };
+}
+
 export async function GET(
   req: NextRequest,
   ctx: { params: Promise<{ token: string }> }
@@ -55,15 +97,24 @@ export async function GET(
       const doc = snap.docs[0];
       const timelineSnap = await doc.ref.collection("timeline").orderBy("at", "asc").get();
       const issue = { id: doc.id, ...doc.data() } as Issue;
-      const timeline = timelineSnap.docs.map(
-        (d) => ({ id: d.id, ...d.data() }) as unknown as TimelineEntry
-      );
-      return { issue, timeline };
+      const timeline = timelineSnap.docs.map((d) => {
+        const t = d.data() as TimelineEntry;
+        return {
+          id: d.id,
+          from: t.from,
+          to: t.to,
+          note: t.note,
+          at: t.at,
+          isAuto: t.isAuto,
+          by: t.by ? { name: t.by.name } : undefined,
+        };
+      });
+      return { raw: issue, issue: publicIssue(issue), timeline };
     });
     if (!payload) return json({ error: "Issue not found." }, 404);
     // Decided live (outside the cache) so revocation takes effect immediately.
-    if (isRevoked(payload.issue)) return json({ error: "This tracking link has been revoked." }, 410);
-    return json(payload);
+    if (isRevoked(payload.raw)) return json({ error: "This tracking link has been revoked." }, 410);
+    return json({ issue: payload.issue, timeline: payload.timeline });
   } catch (e) {
     return handleError(e);
   }

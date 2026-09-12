@@ -53,16 +53,13 @@ export default function SignupPage() {
           url: `${window.location.origin}/verify-email`,
           handleCodeInApp: true,
         });
-        await api("/api/auth/provision", {
+        await api("/api/auth/self-provision", {
           method: "POST",
           body: JSON.stringify({
-            uid: cred.user.uid,
             name: fullName,
             email: email.trim(),
-            role: "reporter",
             college,
             department,
-            requiresEmailVerification: true,
           }),
         });
         await refreshClaims();

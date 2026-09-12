@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebaseAdmin";
 import { requireAuth } from "@/lib/auth";
 import { json, handleError } from "@/lib/api";
+import { isRateLimited } from "@/lib/rateLimit";
 import { extractRequirementsFlow } from "@/lib/ai";
 
 /** POST /api/ai/extract-requirements — draft requirements from an issue. */
@@ -10,6 +11,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const user = await requireAuth(req);
     if (!["maintenance", "validator", "admin"].includes(user.role)) {
       return json({ error: "Not allowed." }, 403);
+    }
+    if (isRateLimited(`ai:extract:${user.uid}`, { limit: 20, windowMs: 60_000 })) {
+      return NextResponse.json(
+        { error: "Too many AI requests. Please slow down." },
+        { status: 429, headers: { "Retry-After": "60" } }
+      );
     }
     const body = (await req.json().catch(() => ({}))) as { issueId?: string };
     if (!body.issueId) return json({ error: "issueId is required." }, 400);

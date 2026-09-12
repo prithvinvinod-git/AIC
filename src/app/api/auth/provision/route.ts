@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminAuth, adminDb } from "@/lib/firebaseAdmin";
 import { json, parseBody, handleError } from "@/lib/api";
+import { requireAdmin } from "@/lib/auth";
 import { clientIp, isRateLimited } from "@/lib/rateLimit";
 import { adminUserSchema } from "@/lib/schemas";
 import { CATEGORY_SCOPED_ROLES, DEPARTMENT_SCOPED_ROLES } from "@/lib/constants";
@@ -19,12 +20,13 @@ async function categoryNameOf(categoryId: string): Promise<string> {
 
 /**
  * POST /api/auth/provision — create a user with a role + custom claim.
- * Used by the admin panel; signup for reporters and social/phone sign-ins
- * also route through here with role=reporter. When `uid` is supplied the
- * Auth account already exists (created client-side) and is only claimed.
+ * ADMIN ONLY. Used by the admin panel; signup for reporters and social
+ * sign-ins use the caller-own POST /api/auth/self-provision instead.
  */
 export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
+    const actor = await requireAdmin(req);
+    void actor;
     const body = await parseBody(req, adminUserSchema);
 
     // Server-side rate limiting — this is the only Next-route auth door
@@ -123,9 +125,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 }
 
-/** PATCH /api/auth/provision — update role + claims for an existing user. */
+/** PATCH /api/auth/provision — update role + claims for an existing user.
+ *  ADMIN ONLY — this can mint any role and reset any user's password. */
 export async function PATCH(req: NextRequest): Promise<NextResponse> {
   try {
+    await requireAdmin(req);
     if (isRateLimited(`provision:patch:ip:${clientIp(req)}`, { limit: 60, windowMs: 60_000 })) {
       return NextResponse.json(
         { error: "Too many requests from this device. Please try again later." },

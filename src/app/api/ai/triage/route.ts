@@ -2,12 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebaseAdmin";
 import { requireAuth } from "@/lib/auth";
 import { json, handleError } from "@/lib/api";
+import { isRateLimited } from "@/lib/rateLimit";
+import { loadConfig } from "@/lib/issueMachine";
 import { triageFlow, writeTriage, applyTriagePriority, getActiveCategories } from "@/lib/ai";
 
 /** POST /api/ai/triage — run triage for an issue (async-safe, one-shot). */
 export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
     const user = await requireAuth(req);
+    if (isRateLimited(`ai:triage:${user.uid}`, { limit: 10, windowMs: 60_000 })) {
+      return NextResponse.json(
+        { error: "Too many AI requests. Please slow down." },
+        { status: 429, headers: { "Retry-After": "60" } }
+      );
+    }
     const body = (await req.json().catch(() => ({}))) as { issueId?: string };
     if (!body.issueId) return json({ error: "issueId is required." }, 400);
 
@@ -25,15 +33,22 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     }
 
     const categories = await getActiveCategories();
-    const result = await triageFlow({
-      description: issue.description,
-      imageUrl: issue.images?.[0]?.url,
-      department: issue.department,
-      categories,
-    });
-    await writeTriage(body.issueId, result);
-    await applyTriagePriority(body.issueId, result);
-    return json({ result, cached: false });
+    const config = await loadConfig(adminDb());
+    const result = await triageFlow(
+      {
+        description: issue.description,
+        imageUrl: issue.images?.[0]?.url,
+        department: issue.department,
+        categories,
+      },
+      { triageModel: config.ai?.triageModel }
+    );
+    const claimed = await writeTriage(body.issueId, result);
+    const cached = !claimed;
+    if (claimed) {
+      await applyTriagePriority(body.issueId, result);
+    }
+    return json({ result, cached });
   } catch (e) {
     return handleError(e);
   }

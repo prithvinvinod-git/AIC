@@ -279,43 +279,43 @@ The codebase is strong where it matters most: **all state changes flow through o
 ## Fix list — prioritized todo
 
 ### P0 — close the critical hole (do before anything else)
-- [ ] **A‑1** Lock down `/api/auth/provision`: `requireAdmin` for role-bearing POST/PATCH; add authenticated `/api/auth/self-provision` that only creates `reporter` on the caller's own uid. Add a rollout step: verify no account can change its own role via any endpoint.
+- [x] **A‑1** Lock down `/api/auth/provision`: `requireAdmin` for role-bearing POST/PATCH; add authenticated `/api/auth/self-provision` that only creates `reporter` on the caller's own uid. Add a rollout step: verify no account can change its own role via any endpoint. *(FIXED 2026-09-12 — `self-provision` route, provision gated to admin, self-role-change test.)*
 
 ### P1 — authorization & defense-in-depth (HIGH)
-- [ ] **W‑1/A‑4** Add college/department/category scoping predicates inside `applyTransition` + `firestore.rules` (mirror lists and transitions).
-- [ ] **W‑2** `VERIFIED→CLOSED` requires `issue.reporter.uid === actor.uid`.
-- [ ] **W‑3** Assigned-staff check on `→ PENDING` (mirror ONGOING/COMPLETED).
-- [ ] **A‑10/D‑1** Role-scope `GET /api/issues/[id]`; strip `trackingToken` outside admin/principal.
-- [ ] **A‑5** Harden `firestore.rules`: notification create `uid == uid`; issue create reporter-ownership; scope users/issues reads; update field allowlists.
-- [ ] **A‑6** Apply `isRateLimited` (uid+IP) to all mutation routes (issues, comments, requirements, AI POSTs — AI‑2).
-- [ ] **A‑7** Add security headers/CSP in `next.config.ts`.
-- [ ] **A‑2** `verifyIdToken(token, true)` + revocation handling; **A‑3** cross-check `users/{uid}` `isActive` in `requireAuth`.
-- [ ] **R‑1** Add hod/principal branches to `GET /api/issues`; **R‑2** `slice(0,10)` safety on maintenance teamIds.
+- [x] **W‑1/A‑4** Add college/department/category scoping predicates inside `applyTransition` + `firestore.rules` (mirror lists and transitions).
+- [x] **W‑2** `VERIFIED→CLOSED` requires `issue.reporter.uid === actor.uid`.
+- [x] **W‑3** Assigned-staff check on `→ PENDING` (mirror ONGOING/COMPLETED).
+- [x] **A‑10/D‑1** Role-scope `GET /api/issues/[id]`; strip `trackingToken` outside admin/principal.
+- [x] **A‑5** Harden `firestore.rules`: notification create `uid == uid`; issue create reporter-ownership; scope users/issues reads; update field allowlists.
+- [x] **A‑6** Apply `isRateLimited` (uid+IP) to all mutation routes (issues, comments, requirements, AI POSTs — AI‑2).
+- [x] **A‑7** Add security headers/CSP in `next.config.ts`.
+- [x] **A‑2** `verifyIdToken(token, true)` + revocation handling; **A‑3** cross-check `users/{uid}` `isActive` in `requireAuth`.
+- [x] **R‑1** Add hod/principal branches to `GET /api/issues`; **R‑2** `slice(0,10)` safety on maintenance teamIds.
 
 ### P2 — correctness & scale (MED)
-- [ ] **D‑2** Add the three missing indexes (`status+createdAt`, `maintenanceHeadUid+status+createdAt`, `college+location.name`).
-- [ ] **AI‑1** Transactional `aiProcessed` guard.
-- [ ] **AI‑3** `maxOutputTokens` on all calls; clamp `description`; truncate root-cause/predictive/punch-list inputs.
-- [ ] **W‑9** CLOSED guard on requirement approve/reject/senior routes.
-- [ ] **W‑15** `allocateIssueNo` → `tx.update`/increment (don't clobber the counter doc).
-- [ ] **W‑14** Fix timeline-count consistency; audit row for board-hides.
-- [ ] **W‑6/W‑7** SLA: don't extend response deadline on pause; pause P1‑2 clock through routing states.
-- [ ] **W‑5** Staff/team membership validation on assign + ONGOING consistency.
-- [ ] **D‑4** Bound cron scans (auto-close, stale-critical) with limit+cursor.
-- [ ] **E‑2/E‑3** SLA-scan starvation filter; transactional `pushTimeline`.
-- [ ] **AI‑4** Wire `config.ai.*` to the gate/flows or remove the admin controls.
-- [ ] **W‑12** Fix or delete `allowedTransitions`.
+- [x] **D‑2** Add the three missing indexes (`status+createdAt`, `maintenanceHeadUid+status+createdAt`, `college+location.name`). *(Also added `status+location.name+createdAt`, `college+status+location.name+createdAt` for AI‑9 and `priority+createdAt`, `college+priority+createdAt` for D‑3.)*
+- [x] **AI‑1** Transactional `aiProcessed` guard.
+- [x] **AI‑3** `maxOutputTokens` on all calls; clamp `description`; truncate root-cause/predictive/punch-list inputs.
+- [x] **W‑9** CLOSED guard on requirement approve/reject/senior routes.
+- [x] **W‑15** `allocateIssueNo` → `tx.update`/increment (don't clobber the counter doc).
+- [x] **W‑14** Fix timeline-count consistency; audit row for board-hides.
+- [x] **W‑6/W‑7** SLA: don't extend response deadline on pause; pause P1‑2 clock through routing states.
+- [x] **W‑5** Staff/team membership validation on assign + ONGOING consistency.
+- [x] **D‑4** Bound cron scans (auto-close, stale-critical) with limit+cursor.
+- [x] **E‑2/E‑3** SLA-scan starvation filter; transactional `pushTimeline`.
+- [x] **AI‑4** Wire `config.ai.*` to the gate/flows or remove the admin controls.
+- [x] **W‑12** Fix or delete `allowedTransitions`.
 
 ### P3 — hygiene & debt (LOW)
-- [ ] **D‑3** Board: real `priority ≤ 3` + `createdAt desc` query.
-- [ ] **E‑1** Batch SLA-reminder reads; persist cooldown before sending.
-- [ ] **W‑11/W‑10** Comment 404; transactional like toggle.
-- [ ] **AI‑8** Split `duplicatesProcessed` flag; backfill duplicates.
-- [ ] **AI‑9** Duplicates: status-query first, drop dead guard, wire threshold.
+- [x] **D‑3** Board: real `priority ≤ 3` + `createdAt desc` query.
+- [x] **E‑1** Batch SLA-reminder reads; persist cooldown before sending.
+- [x] **W‑11** Comment 404 when the parent issue is missing. *(W‑10 transactional like-toggle still pending.)*
+- [x] **AI‑8** Split `duplicatesProcessed` flag; backfill duplicates.
+- [x] **AI‑9** Duplicates: status-query first, drop dead guard, wire threshold.
 - [ ] **AI‑10** `defaultTeamId` isActive check; fix/relabel `done` scoring; chunk member queries.
-- [ ] **AI‑12** Transactional `applyTriagePriority` with `status==NEW` precondition.
-- [ ] **AI‑13** Draft-requirements review modal before "Add all".
-- [ ] **W‑18** `INSPECTED` repair rule / remove from step order.
+- [x] **AI‑12** Transactional `applyTriagePriority` with `status==NEW` precondition.
+- [x] **AI‑13** Draft-requirements review modal before "Add all".
+- [x] **W‑18** `INSPECTED` repair rule / remove from step order.
 - [ ] **B‑1** Rewrite `CONTEXT.md`/`docs/app_status.md` state machine + roles to the current 14-state model.
 - [ ] **A‑15/B‑4** Placeholder-only `.env.example`; CI job (tsc/eslint/build).
 - [ ] **B‑2** Unit tests for `TRANSITION_RULES`.
@@ -327,3 +327,6 @@ The codebase is strong where it matters most: **all state changes flow through o
 
 ## Verified claims
 Re-verified against source during this audit (not merely read-level): A‑1, A‑2, A‑3, A‑4, A‑5, A‑6, A‑7, A‑10, R‑1, R‑2, R‑3, W‑1, W‑2, W‑3, W‑4, W‑12, W‑13, W‑14, W‑15, W‑18, AI‑1, AI‑2, AI‑3, AI‑4, AI‑9, D‑1, D‑2, D‑3, E‑1, U‑3, B‑1. Everything else is a read-level finding to confirm while fixing.
+
+## Fix ledger — applied 2026-09-12 (all verified with `npx tsc --noEmit`, `npx eslint src`, `npm run build`)
+Fixed beyond the checkbox list above (table rows): **A‑8** `clientIp` trusts `x-forwarded-for` last-hop only behind `x-vercel-proxied` (`src/lib/rateLimit.ts`); **A‑9** public `/api/track/[token]` now returns a trimmed whitelist (no trackingToken/reporter-uid/routing/requirements/aiSuggestion) (`src/app/api/track/[token]/route.ts`); **W‑8** category-head inspect scope falls back to `actor.categoryId` vs `routing.categoryId` when `routing.categoryHeadUid` is unset (`src/lib/issueMachine.ts`); **W‑13** ratings accept 0.5 steps; **W‑16** issueNo allocated inside the create transaction; **W‑19** auto-close anchored on `verification.verifiedAt`; **W‑20** generic 500 in `handleError`; **W‑21** stale-critical treats priority 0 as unset + AI-suggestion deference; **W‑22** least-loaded maintenance head pick; **D‑6** `pendingPurchaseCount` recomputed from the array on add; **AI‑8/AI‑12** transactional claims (`writeDuplicates`, `applyTriagePriority`); **AI‑9** status-first duplicates query + 2 new indexes; AI‑4 already wired threshold/models. Remaining P3+: AI‑10, B‑1, B‑2, A‑15/B‑4, D‑11, E‑7, AD‑2, W‑10.

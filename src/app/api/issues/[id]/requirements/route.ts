@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebaseAdmin";
 import { requireAuth } from "@/lib/auth";
 import { json, parseBody, handleError } from "@/lib/api";
+import { isRateLimited } from "@/lib/rateLimit";
 import { requirementSchema } from "@/lib/schemas";
 import { notifyRole } from "@/lib/notifications";
-import type { Issue } from "@/lib/types";
+import { pendingCount } from "@/lib/purchase";
+import type { Issue, Requirement } from "@/lib/types";
 
 const ALLOWED_ROLES = ["maintenance", "admin"];
 
@@ -18,6 +20,12 @@ export async function POST(
     const user = await requireAuth(req);
     if (!ALLOWED_ROLES.includes(user.role)) {
       return json({ error: "Only maintenance staff can log requirements." }, 403);
+    }
+    if (isRateLimited(`requirements:${user.uid}`, { limit: 40, windowMs: 60_000 })) {
+      return NextResponse.json(
+        { error: "Too many requests. Please slow down and try again." },
+        { status: 429, headers: { "Retry-After": "60" } }
+      );
     }
     const body = await parseBody(req, requirementSchema);
 
@@ -42,10 +50,11 @@ export async function POST(
       const data = snap.data() as Issue;
       if (data.status === "CLOSED") throw new Error("issue-closed");
       issueCollege = data.college;
+      const updated = [...(data.requirements || []), requirement as unknown as Requirement];
       await tx.update(ref, {
-        requirements: [...(data.requirements || []), requirement],
-        pendingPurchaseCount:
-          body.needsApproval ? (data.pendingPurchaseCount || 0) + 1 : data.pendingPurchaseCount || 0,
+        requirements: updated,
+        // D-6: recompute from the array (no raw increment drift).
+        pendingPurchaseCount: pendingCount(updated),
         updatedAt: now,
       });
     });

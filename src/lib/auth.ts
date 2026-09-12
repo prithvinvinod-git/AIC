@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { adminAuth } from "./firebaseAdmin";
+import { adminAuth, adminDb } from "./firebaseAdmin";
 import type { Role } from "./types";
 
 export interface AuthUser {
@@ -27,7 +27,9 @@ export async function requireAuth(req: NextRequest): Promise<AuthUser> {
   const token = header.slice("Bearer ".length);
   let decoded;
   try {
-    decoded = await adminAuth().verifyIdToken(token);
+    // checkRevoked=true so token revocation (account disable/delete) takes
+    // effect immediately instead of lingering for the ~1 h token lifetime.
+    decoded = await adminAuth().verifyIdToken(token, true);
   } catch {
     const err = new Error("Unauthorized") as Error & { statusCode: number };
     err.statusCode = 401;
@@ -43,6 +45,27 @@ export async function requireAuth(req: NextRequest): Promise<AuthUser> {
     err.statusCode = 403;
     throw err;
   }
+
+  // Defense-in-depth: cross-check the mirrored users/{uid} doc. The doc is
+  // written by provisioning after the claims, so a missing doc just falls
+  // back to claims; an explicitly deactivated account is rejected up front.
+  const userSnap = await adminDb().doc(`users/${decoded.uid}`).get();
+  if (userSnap.exists) {
+    const userData = userSnap.data() ?? {};
+    if (userData.isActive === false) {
+      const err = new Error("This account has been deactivated.") as Error & {
+        statusCode: number;
+      };
+      err.statusCode = 403;
+      throw err;
+    }
+    if (userData.role && userData.role !== (decoded.role as string)) {
+      // Doc and claims drifted — trust the mirrored doc (single source the
+      // admin UI writes first) to avoid stale-claim escalation.
+      decoded.role = userData.role as string;
+    }
+  }
+
   const role: Role = (decoded.role as Role) || "reporter";
   const name = (decoded.name as string) || decoded.email?.split("@")[0] || "User";
   return {

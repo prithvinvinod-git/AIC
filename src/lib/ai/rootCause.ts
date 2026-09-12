@@ -115,10 +115,11 @@ export async function rootCauseFlow(input: { college?: string } = {}): Promise<R
     const issueTexts = issues
       .map(
         (i) =>
-          `Issue ID: ${i.issueNo}\nTitle: ${i.title}\nDescription: ${i.description}\n` +
+          `Issue ID: ${i.issueNo}\nTitle: ${i.title}\nDescription: ${(i.description || "").slice(0, 500)}\n` +
           `Category: ${i.category}\nLocation: ${i.location}\nStatus: ${i.status}`
       )
-      .join("\n---\n");
+      .join("\n---\n")
+      .slice(0, 16000);
 
     const res = await ai.generate({
       model: `googleai/${aiModelName()}`,
@@ -133,7 +134,7 @@ export async function rootCauseFlow(input: { college?: string } = {}): Promise<R
         }),
         format: "json",
       },
-      config: { temperature: 0.3 },
+      config: { temperature: 0.3, maxOutputTokens: 1024 },
     });
 
     const out = res.output as RootCauseResult;

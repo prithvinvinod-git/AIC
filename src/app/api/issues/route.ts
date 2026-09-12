@@ -5,8 +5,8 @@ import type { Query } from "firebase-admin/firestore";
 import { adminDb } from "@/lib/firebaseAdmin";
 import { requireAuth } from "@/lib/auth";
 import { json, parseBody, handleError } from "@/lib/api";
+import { isRateLimited } from "@/lib/rateLimit";
 import { createIssueSchema } from "@/lib/schemas";
-import { allocateIssueNo } from "@/lib/issueMachine";
 import { notifyRole } from "@/lib/notifications";
 import { incrementCategoryCount, incrementStatusCount } from "@/lib/stats";
 import { capitalizeFirst } from "@/lib/format";
@@ -25,6 +25,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     if (user.role !== "reporter") {
       return json({ error: "Only reporters can submit issues." }, 403);
     }
+    if (isRateLimited(`issues:create:${user.uid}`, { limit: 10, windowMs: 60_000 })) {
+      return NextResponse.json(
+        { error: "Too many issue submissions. Please slow down and try again." },
+        { status: 429, headers: { "Retry-After": "60" } }
+      );
+    }
 
     const body = await parseBody(req, createIssueSchema);
 
@@ -33,7 +39,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const cat = catSnap.data()!;
     if (!cat.isActive) return json({ error: "Category is inactive." }, 400);
 
-    const issueNo = await allocateIssueNo(db);
     const trackingToken = randomUUID();
     const ref = db.collection("issues").doc();
     const now = new Date().toISOString();
@@ -42,7 +47,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const description = capitalizeFirst(body.description.trim());
 
     const issueData = {
-      issueNo,
+      issueNo: "",
       trackingToken,
       title,
       description,
@@ -66,12 +71,23 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         name: user.name,
         department: body.department,
       },
-      counters: { commentCount: 0, timelineCount: 0 },
+      counters: { commentCount: 0, timelineCount: 1 },
       createdAt: now,
       updatedAt: now,
     };
 
+    // W-16: the issue number is allocated inside the SAME transaction that
+    // writes the issue, so a failed create can no longer burn a sequence.
+    const seqRef = db.doc("config/sequenceCounters");
+    let issueNo = "";
     await db.runTransaction(async (tx) => {
+      const seqSnap = await tx.get(seqRef);
+      const current = seqSnap.exists ? ((seqSnap.data()?.issues as number) || 0) : 0;
+      const next = current + 1;
+      tx.set(seqRef, { issues: next }, { merge: true });
+      issueNo = `ISS-${new Date().getFullYear()}-${String(next).padStart(4, "0")}`;
+      issueData.issueNo = issueNo;
+
       tx.set(ref, issueData);
       tx.set(ref.collection("timeline").doc(), {
         from: "",
@@ -168,7 +184,14 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       if (user.role !== "admin" && user.college) {
         query = query.where("college", "==", user.college);
       }
-      const snap = await query.orderBy("createdAt", "desc").limit(200).get();
+      // D-3/D-15: push the priority window into the query (priority 0 counts
+      // as "not yet triaged" → treated as P3) so the newest relevant issues
+      // always surface instead of being crowded out by a fixed 200-doc cut.
+      query = query
+        .where("priority", "in", [0, 1, 2, BOARD_MAX_PRIORITY])
+        .orderBy("createdAt", "desc")
+        .limit(200);
+      const snap = await query.get();
       const issues: Issue[] = snap.docs
         .map((d) => {
           const data = d.data();
@@ -178,7 +201,6 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         .filter(
           (i) =>
             typeof i.priority === "number" &&
-            i.priority >= 1 &&
             i.priority <= BOARD_MAX_PRIORITY &&
             i.boardHidden !== true
         )
@@ -220,18 +242,24 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         .collection("teams")
         .where("members", "array-contains", user.uid)
         .get();
-      const teamIds = teamSnap.docs.map((d) => d.id);
+      const teamIds = teamSnap.docs.map((d) => d.id).slice(0, 10);
       if (teamIds.length) query = query.where("routing.teamId", "in", teamIds);
       else return json({ issues: [] });
+      if (user.college) query = query.where("college", "==", user.college);
+    } else if (user.role === "hod") {
+      if (user.college) query = query.where("college", "==", user.college);
+      if (user.department) query = query.where("department", "==", user.department);
+    } else if (user.role === "principal") {
       if (user.college) query = query.where("college", "==", user.college);
     }
 
     if (status && status !== "all") query = query.where("status", "==", status);
 
     const snap = await query.orderBy("createdAt", "desc").limit(100).get();
-    const issues = snap.docs.map((d) => {
+const issues = snap.docs.map((d) => {
       const data = d.data();
       if (!Array.isArray(data.requirements)) data.requirements = [];
+      delete data.trackingToken;
       return { id: d.id, ...data };
     });
 

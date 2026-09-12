@@ -22,8 +22,11 @@ export async function runAutoCloseJob(): Promise<number> {
 
   for (const doc of snap.docs) {
     const issue = { id: doc.id, ...(doc.data() as Issue) };
-    const anchor = issue.verification?.verifiedAt || issue.updatedAt;
-    const t = new Date(anchor).getTime();
+    // W-19: anchor strictly on the verification timestamp — falling back to
+    // `updatedAt` could auto-close off the wrong clock. Docs missing
+    // `verifiedAt` are skipped (they're either legacy or mid-transition).
+    if (!issue.verification?.verifiedAt) continue;
+    const t = new Date(issue.verification.verifiedAt).getTime();
     if (!Number.isFinite(t)) continue;
     if (now - t < graceMs) continue;
     candidates.push({ id: doc.id, issue });

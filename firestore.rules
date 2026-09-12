@@ -3,69 +3,111 @@ rules_version = '2';
 // Second wall behind Next.js route handlers. Route handlers are the source of
 // truth (RBAC + state machine in src/lib/issueMachine.ts); these rules stop a
 // malicious client from bypassing the app and writing `status` directly.
+//
+// The client SDK only ever reads the current user's own notification feed —
+// every issue/user/team write and read goes through the Next.js API — so these
+// rules can be stricter than the app's own routes without breaking anything.
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    function isAuthed() {
+      return request.auth != null;
+    }
+
+    // College scope from the caller's custom claim (empty on either side = OK,
+    // keeps legacy/global accounts and missing-college demo data working).
+    function scopedToCollege() {
+      return request.auth.token.college == null
+          || resource.data.college == null
+          || request.auth.token.college == resource.data.college;
+    }
+
+    // Department scope for dept-scoped roles (validator/hod).
+    function scopedToDept() {
+      return request.auth.token.department == null
+          || resource.data.department == null
+          || request.auth.token.department == resource.data.department;
+    }
+
+    function scopedIssue() {
+      return request.auth.token.role == 'admin'
+          || (scopedToCollege()
+             && (request.auth.token.role in ['validator', 'hod'] ? scopedToDept() : true));
+    }
+
+    // Status may only ever change through the state machine in the route
+    // handlers (Admin SDK bypasses these rules); a client must not be able to
+    // flip it directly.
+    function statusUnchanged() {
+      return !('status' in request.resource.data.diff(resource.data));
+    }
+
     match /issues/{id} {
-      allow create: if request.auth != null
+      allow create: if isAuthed()
+                    && request.auth.uid == request.resource.data.reporter.uid
                     && request.auth.token.role == 'reporter'
                     && request.resource.data.status == 'NEW';
-      allow update: if request.auth != null && (
-                    (request.auth.token.role == 'validator'    && resource.data.status in ['NEW', 'VALIDATED', 'APPROVED', 'PENDING', 'ASSIGNED', 'ONGOING'])
-                 || (request.auth.token.role == 'hod'          && resource.data.status == 'ESCALATED')
-                 || (request.auth.token.role == 'principal'    && resource.data.status == 'ESCALATED')
-                 || (request.auth.token.role == 'maintenance_head' && resource.data.status in ['ROUTED', 'PENDING_ASSIGN'])
-                 || (request.auth.token.role == 'category_head'   && resource.data.status in ['PENDING_ASSIGN', 'COMPLETED'])
-                 || (request.auth.token.role == 'maintenance'  && resource.data.status in ['ASSIGNED', 'ONGOING'])
-                 || (request.auth.token.role == 'admin'));
-      allow read: if request.auth != null;
+      allow update: if isAuthed()
+                    && statusUnchanged()
+                    && scopedIssue()
+                    && (
+                       (request.auth.token.role == 'validator'     && resource.data.status in ['NEW', 'VALIDATED', 'APPROVED', 'PENDING', 'ASSIGNED', 'ONGOING'])
+                    || (request.auth.token.role == 'hod'           && resource.data.status == 'ESCALATED')
+                    || (request.auth.token.role == 'principal'     && resource.data.status == 'ESCALATED')
+                    || (request.auth.token.role == 'maintenance_head' && resource.data.status in ['ROUTED', 'PENDING_ASSIGN'])
+                    || (request.auth.token.role == 'category_head'   && resource.data.status in ['PENDING_ASSIGN', 'COMPLETED'])
+                    || (request.auth.token.role == 'maintenance'  && resource.data.status in ['ASSIGNED', 'ONGOING'])
+                    || (request.auth.token.role == 'admin'));
+      allow read: if isAuthed() && scopedIssue();
     }
 
     match /issues/{id}/timeline/{entryId} {
-      allow read, create: if request.auth != null;
+      allow read: if isAuthed();
+      allow create: if isAuthed() && request.auth.uid == request.resource.data.by.uid;
     }
 
     match /issues/{id}/comments/{commentId} {
-      allow read, create: if request.auth != null;
+      allow read: if isAuthed();
+      allow create: if isAuthed() && request.auth.uid == request.resource.data.author.uid;
     }
 
     match /issues/{id}/attachments/{attId} {
-      allow read, create: if request.auth != null;
+      allow read: if isAuthed();
+      allow create: if isAuthed() && request.auth.uid == request.resource.data.uploadedBy;
     }
 
     match /users/{uid} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.token.role == 'admin';
+      allow read: if isAuthed() && (request.auth.uid == uid || request.auth.token.role == 'admin');
+      allow write: if isAuthed() && request.auth.token.role == 'admin';
     }
 
     match /teams/{teamId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.token.role == 'admin';
+      allow read: if isAuthed();
+      allow write: if isAuthed() && request.auth.token.role == 'admin';
     }
 
     match /categories/{catId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.token.role == 'admin';
+      allow read: if isAuthed();
+      allow write: if isAuthed() && request.auth.token.role == 'admin';
     }
 
     match /notifications/{uid}/items/{docId} {
-      allow read, update, delete: if request.auth != null && request.auth.uid == uid;
-      allow create: if request.auth != null;
+      allow read, create, update, delete: if isAuthed() && request.auth.uid == uid;
     }
 
     match /announcements/{id} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.token.role in ['admin', 'principal', 'hod'];
+      allow read: if isAuthed();
+      allow write: if isAuthed() && request.auth.token.role in ['admin', 'principal', 'hod'];
     }
 
     match /config/{docId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.token.role == 'admin';
+      allow read: if isAuthed();
+      allow write: if isAuthed() && request.auth.token.role == 'admin';
     }
 
     match /stats/{doc} {
-      allow read: if request.auth != null && request.auth.token.role in ['admin', 'validator', 'hod', 'principal'];
+      allow read: if isAuthed() && request.auth.token.role in ['admin', 'validator', 'hod', 'principal'];
       allow write: if false;
     }
   }

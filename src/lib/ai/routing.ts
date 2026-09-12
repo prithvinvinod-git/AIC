@@ -80,11 +80,14 @@ async function rankCandidates(issueId: string, categoryId: string) {
  * (optional) improves the reason. The Validator always confirms before anything is
  * written to `routing`.
  */
-export async function suggestAssignmentFlow(input: {
-  issueId: string;
-  categoryId: string;
-  description?: string;
-}): Promise<RoutingResult> {
+export async function suggestAssignmentFlow(
+  input: {
+    issueId: string;
+    categoryId: string;
+    description?: string;
+  },
+  opts?: { routingModel?: string }
+): Promise<RoutingResult> {
   const { teamId, catName, ranked } = await rankCandidates(input.issueId, input.categoryId);
 
   if (!teamId || !ranked.length) {
@@ -118,7 +121,7 @@ export async function suggestAssignmentFlow(input: {
       const ai = await (await import("./genkit")).getGenkit();
       const { z } = await import("genkit");
       const res = await ai.generate({
-        model: `googleai/${aiModelName()}`,
+        model: opts?.routingModel ? `googleai/${opts.routingModel}` : `googleai/${aiModelName()}`,
         system:
           "You assign campus maintenance jobs. Explain, in one sentence, why this staff member is the best pick, referencing workload and experience.",
         prompt: `Staff ranking (highest score best): ${staffNames
@@ -128,6 +131,7 @@ export async function suggestAssignmentFlow(input: {
           schema: z.object({ reason: z.string() }),
           format: "json",
         },
+        config: { maxOutputTokens: 256 },
       });
       reason = (res.output as { reason: string }).reason;
     } catch {

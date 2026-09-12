@@ -163,7 +163,7 @@ export async function weeklyInsightsFlow(
         model: `googleai/${aiModelName()}`,
         system:
           "Summarize this week's campus maintenance data. Highlight SLA breaches, worst categories and trends vs last week. Max 120 words. Return ONLY structured JSON.",
-        prompt: `Created: ${insights.totals.created}, Closed: ${insights.totals.closed}, Breaches: ${insights.totals.breached}, Avg resolution: ${insights.totals.avgResolutionHours}h, Still open: ${insights.totals.open}. By category: ${JSON.stringify(byCategory)}. By priority: ${JSON.stringify(byPriority)}. By department: ${JSON.stringify(byDepartment)}`,
+        prompt: `Created: ${insights.totals.created}, Closed: ${insights.totals.closed}, Breaches: ${insights.totals.breached}, Avg resolution: ${insights.totals.avgResolutionHours}h, Still open: ${insights.totals.open}. By category: ${JSON.stringify(byCategory)}. By priority: ${JSON.stringify(byPriority)}. By department: ${JSON.stringify(byDepartment)}`.slice(0, 4000),
         output: {
           schema: z.object({
             executiveSummary: z.string(),
@@ -171,6 +171,7 @@ export async function weeklyInsightsFlow(
           }),
           format: "json",
         },
+        config: { maxOutputTokens: 1024 },
       });
       const out = res.output as { executiveSummary: string; recommendations: string[] };
       return {

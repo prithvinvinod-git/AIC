@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { json, handleError } from "@/lib/api";
+import { isRateLimited } from "@/lib/rateLimit";
 import { serverCached } from "@/lib/serverCache";
 import { predictiveMaintenanceFlow } from "@/lib/ai/predictive";
 
@@ -10,6 +11,12 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     const user = await requireAuth(req);
     if (!["admin", "validator", "hod", "principal"].includes(user.role)) {
       return json({ error: "Not allowed." }, 403);
+    }
+    if (isRateLimited(`ai:at-risk:${user.uid}`, { limit: 6, windowMs: 10 * 60_000 })) {
+      return NextResponse.json(
+        { error: "Too many AI requests. Please slow down." },
+        { status: 429, headers: { "Retry-After": "600" } }
+      );
     }
     const college = user.role === "admin" ? undefined : user.college;
     // Regenerate at most every 5 min per college; the scan + model call is

@@ -29,6 +29,12 @@ export interface Actor {
   uid: string;
   name: string;
   role: Role;
+  /** Scope fields mirror the actor's custom claims. Used only for explicit
+   *  cross-tenant checks; empty means "no restriction" so legacy/global
+   *  accounts (and demo data without a college) keep working. */
+  college?: string;
+  department?: string;
+  categoryId?: string;
 }
 
 export interface TransitionInput {
@@ -131,26 +137,37 @@ export interface TransitionRule {
 
 const never = (): string | null => null;
 
+/** W-8 — category-head scope without trusting the denormalized uid alone:
+ *  when `routing.categoryHeadUid` is set it must match; otherwise fall back
+ *  to the actor's `categoryId` claim vs the routing's `categoryId` (college
+ *  scope is enforced separately by `actorScopeError`). Empty claim on either
+ *  side keeps legacy/backfilled accounts working (same rule as the college
+ *  scope guard). */
+const inspectScopeError = (issue: Issue, actor: Actor): string | null => {
+  if (actor.role !== "category_head") return null;
+  if (issue.routing?.categoryHeadUid) {
+    return issue.routing.categoryHeadUid === actor.uid
+      ? null
+      : "This issue belongs to another category head.";
+  }
+  const catId = issue.routing?.categoryId;
+  if (catId && actor.categoryId && catId !== actor.categoryId)
+    return "This issue belongs to another category.";
+  return null;
+};
+
 /** Category head verifies work done for their own category (on-site check). */
 const checkInspect = (issue: Issue, actor: Actor, input: TransitionInput): string | null => {
-  if (
-    actor.role === "category_head" &&
-    issue.routing?.categoryHeadUid &&
-    issue.routing.categoryHeadUid !== actor.uid
-  )
-    return "This issue belongs to another category head.";
+  const scopeError = inspectScopeError(issue, actor);
+  if (scopeError) return scopeError;
   return input.verdict && input.verdict.trim().length >= 2
     ? null
     : "A short in-site verification note is required.";
 };
 
 const checkInspectSendBack = (issue: Issue, actor: Actor, input: TransitionInput): string | null => {
-  if (
-    actor.role === "category_head" &&
-    issue.routing?.categoryHeadUid &&
-    issue.routing.categoryHeadUid !== actor.uid
-  )
-    return "This issue belongs to another category head.";
+  const scopeError = inspectScopeError(issue, actor);
+  if (scopeError) return scopeError;
   return input.sendBackReason && input.sendBackReason.trim().length >= 3
     ? null
     : "A send-back reason is required.";
@@ -286,20 +303,32 @@ export const TRANSITION_RULES: Record<IssueStatus, TransitionRule[]> = {
     {
       to: "PENDING",
       roles: ["maintenance", "validator", "admin"],
-      check: (_i, _a, input) =>
-        input.note && input.note.trim().length >= 3
+      check: (issue, actor, input) => {
+        if (
+          actor.role === "maintenance" &&
+          !issue.routing?.staff?.some((s) => s.uid === actor.uid)
+        )
+          return "You are not assigned to this job.";
+        return input.note && input.note.trim().length >= 3
           ? null
-          : "A blocker reason is required to set pending.",
+          : "A blocker reason is required to set pending.";
+      },
     },
   ],
   ONGOING: [
     {
       to: "PENDING",
       roles: ["maintenance", "validator", "admin"],
-      check: (_i, _a, input) =>
-        input.note && input.note.trim().length >= 3
+      check: (issue, actor, input) => {
+        if (
+          actor.role === "maintenance" &&
+          !issue.routing?.staff?.some((s) => s.uid === actor.uid)
+        )
+          return "You are not assigned to this job.";
+        return input.note && input.note.trim().length >= 3
           ? null
-          : "A blocker reason is required to set pending.",
+          : "A blocker reason is required to set pending.";
+      },
     },
     {
       to: "COMPLETED",
@@ -343,13 +372,25 @@ export const TRANSITION_RULES: Record<IssueStatus, TransitionRule[]> = {
       check: checkInspectSendBack,
     },
   ],
-  INSPECTED: [],
+  INSPECTED: [
+    // W-18: modern flow cascades COMPLETED→INSPECTED→VERIFIED inside one
+    // transaction, so no doc should sit here. But legacy docs stranded at
+    // INSPECTED had no way out (empty rules above) — this repair rule lets a
+    // category head/admin carry them to VERIFIED.
+    {
+      to: "VERIFIED",
+      roles: ["category_head", "admin"],
+      check: never,
+    },
+  ],
   VERIFIED: [
     {
       to: "CLOSED",
-      roles: ["reporter"],
-      check: (_i, _a, input) => {
+      roles: ["reporter", "admin"],
+      check: (issue, actor, input) => {
         if (input.isAuto) return null;
+        if (issue.reporter?.uid && actor.role !== "admin" && actor.uid !== issue.reporter.uid)
+          return "Only the reporter who raised this issue can close it with feedback.";
         return input.rating &&
           input.rating >= 0.5 &&
           input.rating <= 5 &&
@@ -363,6 +404,30 @@ export const TRANSITION_RULES: Record<IssueStatus, TransitionRule[]> = {
   CLOSED: [],
 };
 
+/**
+ * Cross-tenant guard: a college-scoped staff member may only act on issues
+ * from their own college; validator/hod additionally must match the issue's
+ * department. `admin` and `reporter` (who only act on their own tickets via
+ * W-2 ownership) are exempt. Empty scope on the actor = unrestricted, which
+ * keeps admin-backfilled accounts and legacy demo data working.
+ */
+function actorScopeError(issue: Issue, actor: Actor): string | null {
+  if (actor.role === "admin" || actor.role === "reporter") return null;
+  const college = actor.college || "";
+  if (college && issue.college && college !== issue.college) {
+    return "This issue belongs to another college.";
+  }
+  if (
+    (actor.role === "validator" || actor.role === "hod") &&
+    actor.department &&
+    issue.department &&
+    actor.department !== issue.department
+  ) {
+    return "This issue belongs to another department.";
+  }
+  return null;
+}
+
 export function isTransitionAllowed(
   issue: Issue,
   to: IssueStatus,
@@ -375,22 +440,14 @@ export function isTransitionAllowed(
   if (!rule) return `No transition from ${issue.status} to ${to}.`;
   if (!rule.roles.includes(actor.role))
     return `${actor.role} cannot move an issue from ${issue.status} to ${to}.`;
+  const scopeError = actorScopeError(issue, actor);
+  if (scopeError) return scopeError;
   return rule.check(issue, actor, input as TransitionInput, config);
 }
 
-/** All transitions the actor may legally trigger right now. */
-export function allowedTransitions(
-  issue: Issue,
-  actor: Actor,
-  config: AppConfig = DEFAULT_CONFIG
-): IssueStatus[] {
-  return (TRANSITION_RULES[issue.status] || [])
-    .filter((r) => {
-      if (!r.roles.includes(actor.role)) return false;
-      return r.check(issue, actor, {} as TransitionInput, config) === null;
-    })
-    .map((r) => r.to);
-}
+/** All transitions the actor may legally trigger right now. Was `allowedTransitions`:
+ *  it evaluated preconditions with an empty input, producing a wrong matrix, and
+ *  had zero callers — the UI builds its own action list. Deleted (W-12). */
 
 function timelineEntry(
   from: IssueStatus | "",
@@ -455,11 +512,44 @@ export async function resolveTeamForCategory(
   return { teamId: "", categoryName: cat.name || categoryId };
 }
 
+/** Pick the leader with the fewest open routed/assigned jobs (W-22): instead
+ *  of always landing every auto-route on the first active head, spread the
+ *  load so no single person's queue starves the rest. */
+async function pickLeastLoadedHead(db: Firestore, uids: string[]): Promise<string> {
+  if (uids.length <= 1) return uids[0];
+  try {
+    const snap = await db
+      .collection("issues")
+      .where("routing.maintenanceHeadUid", "in", uids.slice(0, 10))
+      .where("status", "in", ["ROUTED", "PENDING_ASSIGN", "ASSIGNED", "ONGOING", "PENDING"])
+      .get();
+    const load = new Map<string, number>();
+    for (const d of snap.docs) {
+      const uid = d.data().routing?.maintenanceHeadUid;
+      if (uid) load.set(uid, (load.get(uid) || 0) + 1);
+    }
+    let best = uids[0];
+    let bestLoad = Infinity;
+    for (const uid of uids) {
+      const l = load.get(uid) || 0;
+      if (l < bestLoad) {
+        best = uid;
+        bestLoad = l;
+      }
+    }
+    return best;
+  } catch (e) {
+    console.error("pickLeastLoadedHead failed, using first:", e);
+    return uids[0];
+  }
+}
+
 /**
  * Resolve the maintenance head responsible for dispatching an issue.
  * Preference: an active head for the issue's department (per-department
  * model), then an active head for the issue's college, then any active head.
- * Returns null only when no maintenance head exists.
+ * Within the matched tier the least-loaded head wins. Returns null only when
+ * no maintenance head exists.
  */
 export async function resolveMaintenanceHead(
   db: Firestore,
@@ -474,11 +564,56 @@ export async function resolveMaintenanceHead(
   if (issue.department) attempts.push(["department", issue.department]);
   if (issue.college) attempts.push(["college", issue.college]);
   for (const [field, value] of attempts) {
-    const snap = await base().where(field, "==", value).limit(1).get();
-    if (!snap.empty) return snap.docs[0].id;
+    const snap = await base().where(field, "==", value).limit(50).get();
+    if (!snap.empty) {
+      return pickLeastLoadedHead(db, snap.docs.map((d) => d.id));
+    }
   }
-  const any = await base().limit(1).get();
-  return any.empty ? null : any.docs[0].id;
+  const any = await base().limit(50).get();
+  return any.empty ? null : pickLeastLoadedHead(db, any.docs.map((d) => d.id));
+}
+
+/**
+ * W-5 — assignment forge guard. Before a routing write with team/staff,
+ * verify the team exists + is active and every assigned staff member is a
+ * real, active `maintenance` user (and a member of that team when one is
+ * given). Runs inside the same transaction as the transition so a forged
+ * `staff` array can't be written.
+ */
+async function validateAssignInputs(
+  db: Firestore,
+  tx: FirebaseFirestore.Transaction,
+  input: TransitionInput
+): Promise<void> {
+  if (input.teamId) {
+    const teamSnap = await tx.get(db.doc(`teams/${input.teamId}`));
+    if (!teamSnap.exists) {
+      throw new MachineError("Assigned team does not exist.", 404);
+    }
+    const team = teamSnap.data() ?? {};
+    if (team.isActive === false) {
+      throw new MachineError("Assigned team is not active.", 400);
+    }
+    const members: string[] = Array.isArray(team.members) ? team.members : [];
+    for (const uid of input.staff ?? []) {
+      const userSnap = await tx.get(db.doc(`users/${uid}`));
+      const role = userSnap.exists ? (userSnap.data()?.role as string) : "";
+      if (!userSnap.exists || role !== "maintenance") {
+        throw new MachineError(`Invalid assignee: ${uid} is not a maintenance member.`, 400);
+      }
+      if (!members.includes(uid)) {
+        throw new MachineError(`Assignee ${uid} is not a member of the selected team.`, 400);
+      }
+    }
+    return;
+  }
+  for (const uid of input.staff ?? []) {
+    const userSnap = await tx.get(db.doc(`users/${uid}`));
+    const role = userSnap.exists ? (userSnap.data()?.role as string) : "";
+    if (!userSnap.exists || role !== "maintenance") {
+      throw new MachineError(`Invalid assignee: ${uid} is not a maintenance member.`, 400);
+    }
+  }
 }
 
 /**
@@ -501,6 +636,9 @@ export async function applyTransition(
     const snap = await tx.get(ref);
     if (!snap.exists) throw new MachineError("Issue not found.", 404);
     const issue = { id: issueId, ...(snap.data() as Issue) };
+
+    const scopeError = actorScopeError(issue, actor);
+    if (scopeError) throw new MachineError(scopeError, 403);
 
     const error = isTransitionAllowed(issue, input.to, actor, input, config);
     if (error) throw new MachineError(error, 403);
@@ -574,15 +712,14 @@ export async function applyTransition(
         break;
       }
       case "APPROVED": {
-        const finalPriority = input.priority ?? issue.priority;
         if (input.priority && input.priority !== issue.priority) {
           patches.priority = input.priority;
           patches.prioritySetBy = { uid: actor.uid, name: actor.name };
           patches.prioritySetAt = nowIso();
         }
-        if (finalPriority <= 2) {
-          sla = sla || initSla(finalPriority, config);
-        }
+        // W-7: P1–2 clock does NOT start at approval — approval→assignment can
+        // sit in ROUTED/PENDING_ASSIGN for days before maintenance ever sees
+        // the job. The clock starts at ASSIGNED (the ASSIGNED branch inits it).
         patches.escalation = {
           required: issue.escalation?.required !== false,
           status: "confirmed",
@@ -603,9 +740,10 @@ export async function applyTransition(
             ...sla,
             totalPausedMs,
             pausedAt: null,
-            responseDeadline: sla.responseDeadline
-              ? extend(sla.responseDeadline)
-              : sla.responseDeadline,
+            // W-6: only the resolution deadline is extended. The response
+            // deadline is about acknowledging the assignment — a maintenance
+            // pause is job-related, not response-related, so extending it
+            // would mask a response breach.
             resolutionDeadline: sla.resolutionDeadline
               ? extend(sla.resolutionDeadline)
               : sla.resolutionDeadline,
@@ -614,6 +752,7 @@ export async function applyTransition(
         if (!sla) sla = initSla(issue.priority, config);
         const r = issue.routing || { categoryId: "", categoryName: "", teamId: "", staff: [] };
         if (input.teamId || input.staff?.length) {
+          await validateAssignInputs(db, tx, input);
           let staffObjs = r.staff || [];
           if (input.staff && input.staff.length) {
             staffObjs = await Promise.all(
@@ -830,7 +969,7 @@ export async function allocateIssueNo(db: Firestore): Promise<string> {
       ? ((snap.data()?.issues as number) || 0)
       : 0;
     const next = current + 1;
-    tx.set(seqRef, { issues: next });
+    tx.set(seqRef, { issues: next }, { merge: true });
     const year = new Date().getFullYear();
     return `ISS-${year}-${String(next).padStart(4, "0")}`;
   });

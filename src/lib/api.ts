@@ -49,6 +49,5 @@ export function handleError(e: unknown, ctx: ErrorContext = {}): NextResponse {
   }
   console.error("API error:", e);
   void logError(e, ctx);
-  const msg = e instanceof Error ? e.message : "Internal server error.";
-  return err(msg, 500);
+  return err("Internal server error.", 500);
 }

@@ -123,14 +123,14 @@ export async function slaExplainFlow(issueId: string): Promise<SlaExplanationRes
         "plain and specific (e.g. 'Waiting on purchase approval for 2 materials since Tuesday', " +
         "'Assigned to Plumbing team but not started yet'). Do not mention deadlines or pressure, " +
         "just state the reason. Return ONLY structured JSON.",
-      prompt: JSON.stringify(facts),
+      prompt: JSON.stringify(facts).slice(0, 6000),
       output: {
         schema: z.object({
           explanation: z.string().min(1).max(240),
         }),
         format: "json",
       },
-      config: { temperature: 0.2 },
+      config: { temperature: 0.2, maxOutputTokens: 384 },
     });
 
     const out = res.output as { explanation?: string } | null;

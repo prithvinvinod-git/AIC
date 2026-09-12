@@ -222,12 +222,15 @@ export function fallbackTriage(description: string, hasImage = false): TriageRes
  * returns a category (constrained to the configured list), priority and
  * safety flags. Runs async after submission; writes aiSuggestion only.
  */
-export async function triageFlow(input: {
-  description: string;
-  imageUrl?: string;
-  department: string;
-  categories?: string[];
-}): Promise<TriageResult> {
+export async function triageFlow(
+  input: {
+    description: string;
+    imageUrl?: string;
+    department: string;
+    categories?: string[];
+  },
+  opts?: { triageModel?: string }
+): Promise<TriageResult> {
   if (!aiEnabled()) return fallbackTriage(input.description, Boolean(input.imageUrl));
 
   const ai = await getGenkit();
@@ -248,8 +251,10 @@ export async function triageFlow(input: {
   });
 
   // Try a chain of providers/models so a single quota/RateLimit error (429) on
-  // one model doesn't silently drop us to the fallback classifier.
-  const models = triageModelChain();
+  // one model doesn't silently drop us to the fallback classifier. The
+  // admin-configured `config.ai.triageModel` leads the chain when set (AI-4).
+  const configured = opts?.triageModel;
+  const models = configured ? [configured, ...triageModelChain()] : triageModelChain();
   const promptParts: Part[] = [{ text: input.description }];
   if (image) {
     promptParts.push({ media: { url: `data:${image.mimeType};base64,${image.data}` } });
@@ -269,7 +274,7 @@ If a photo is provided, inspect it carefully and describe in photoSummary what y
 If no photo is provided, omit photoSummary and photoQuality. Return ONLY structured JSON.`,
         prompt: promptParts,
         output: { schema, format: "json" },
-        config: { temperature: 0.2 },
+        config: { temperature: 0.2, maxOutputTokens: 1024 },
       });
 
       const out = res.output as TriageResult;
@@ -296,11 +301,19 @@ If no photo is provided, omit photoSummary and photoQuality. Return ONLY structu
   return fallbackTriage(input.description, Boolean(input.imageUrl));
 }
 
-/** Persist a triage suggestion onto the issue (never touches status). */
-export async function writeTriage(issueId: string, result: TriageResult) {
-  await adminDb()
-    .doc(`issues/${issueId}`)
-    .update({
+/** Persist a triage suggestion onto the issue (never touches status).
+ *  Returns `false` when the issue is already triaged (concurrent create-hook +
+ *  manual "Run triage") so the caller can skip duplicate work. The claim +
+ *  write happen in one transaction — the `aiProcessed` guard is no longer a
+ *  racy read-then-write. */
+export async function writeTriage(issueId: string, result: TriageResult): Promise<boolean> {
+  const db = adminDb();
+  const ref = db.doc(`issues/${issueId}`);
+  return await db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists) return false;
+    if (snap.data()?.aiSuggestion?.aiProcessed) return false;
+    tx.update(ref, {
       "aiSuggestion.category": result.category,
       "aiSuggestion.suggestedPriority": result.suggestedPriority,
       "aiSuggestion.reasons": result.reasons,
@@ -313,6 +326,8 @@ export async function writeTriage(issueId: string, result: TriageResult) {
       "aiSuggestion.aiModel": result.modelUsed || "fallback-classifier",
       "aiSuggestion.processedAt": new Date().toISOString(),
     });
+    return true;
+  });
 }
 
 /**
@@ -324,43 +339,54 @@ export async function writeTriage(issueId: string, result: TriageResult) {
 export async function applyTriagePriority(issueId: string, result: TriageResult): Promise<void> {
   try {
     const db = adminDb();
-    const snap = await db.doc(`issues/${issueId}`).get();
-    if (!snap.exists) return;
-    const issue = snap.data() as {
-      status?: string;
-      priority?: number;
-      department?: string;
-      issueNo?: string;
-    };
-    if (issue.status !== "NEW") return;
+    const ref = db.doc(`issues/${issueId}`);
+    let applied = false;
+    let department = "";
+    let issueNo = "";
+    // AI-12: the read + the `status == NEW` precondition + the priority write
+    // happen in ONE transaction so a just-validated issue can't be overwritten
+    // by a racing triage write.
+    await db.runTransaction(async (tx) => {
+      const snap = await tx.get(ref);
+      if (!snap.exists) return;
+      const issue = snap.data();
+      if (!issue) return;
+      if (issue.status !== "NEW") return;
 
-    const target = result.isSpam ? 5 : result.suggestedPriority;
-    if (!target || target < 1 || target > 5) return;
+      const target = result.isSpam ? 5 : result.suggestedPriority;
+      if (!target || target < 1 || target > 5) return;
 
-    await db.doc(`issues/${issueId}`).update({
-      priority: target,
-      prioritySetBy: { uid: "ai-triage", name: "AI Triage" },
-      prioritySetAt: new Date().toISOString(),
+      tx.update(ref, {
+        priority: target,
+        prioritySetBy: { uid: "ai-triage", name: "AI Triage" },
+        prioritySetAt: new Date().toISOString(),
+      });
+      applied = true;
+      department = issue.department || "";
+      issueNo = issue.issueNo || "";
     });
+
+    if (!applied) return;
 
     if (result.isSpam) {
       const validatorSnap = await db
         .collection("users")
         .where("role", "==", "validator")
-        .where("department", "==", issue.department || "")
+        .where("department", "==", department)
         .get();
       await notifyMany(
         validatorSnap.docs.map((d) => d.id),
         {
           type: "spam",
           title: "Possible spam issue",
-          body: `${issue.issueNo || issueId} was flagged as likely spam by AI — review and reject if invalid.`,
+          body: `${issueNo || issueId} was flagged as likely spam by AI — review and reject if invalid.`,
           link: `/issues/${issueId}`,
         }
       );
     }
 
     // Safety hazard on a NEW issue → machine auto-escalates to leadership.
+    // Runs after the transaction above completes (it starts its own).
     if (!result.isSpam && result.safetyFlags.length > 0) {
       await escalateForSafety(issueId);
     }

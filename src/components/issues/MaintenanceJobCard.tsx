@@ -32,13 +32,14 @@ export function MaintenanceJobCard({
 }) {
   const router = useRouter();
   const { user, claims } = useAuth();
-  const [mode, setMode] = useState<"start" | "block" | "complete" | "req" | null>(null);
+  const [mode, setMode] = useState<"start" | "block" | "complete" | "req" | "draft" | null>(null);
   const [note, setNote] = useState("");
   const [reqItem, setReqItem] = useState("");
   const [reqQty, setReqQty] = useState("1");
   const [reqApproval, setReqApproval] = useState(false);
   const [busy, setBusy] = useState(false);
   const [drafting, setDrafting] = useState(false);
+  const [draft, setDraft] = useState<DraftRequirement[] | null>(null);
   const { showError, errorEl } = useActionError();
   const canRemove =
     claims?.role === "admin" ||
@@ -110,20 +111,57 @@ export function MaintenanceJobCard({
         method: "POST",
         body: JSON.stringify({ issueId: issue.id }),
       });
-      for (const r of res.requirements) {
-        await api(`/api/issues/${issue.id}/requirements`, {
-          method: "POST",
-          body: JSON.stringify(r),
-        });
-      }
-      setMode(null);
-      onRefresh();
+      // AI-13: nothing is persisted yet — hold the rows for a review modal.
+      setDraft(res.requirements.length ? res.requirements : [{ item: "", qty: 1, needsApproval: false }]);
+      setMode("draft");
     } catch (e) {
       showError(e);
     } finally {
       setDrafting(false);
     }
-  }, [issue.id, onRefresh, showError]);
+  }, [issue.id, showError]);
+
+  const updateDraft = useCallback((i: number, patch: Partial<DraftRequirement>) => {
+    setDraft((prev) => (prev ? prev.map((r, j) => (j === i ? { ...r, ...patch } : r)) : prev));
+  }, []);
+
+  const removeDraft = useCallback((i: number) => {
+    setDraft((prev) => (prev ? prev.filter((_, j) => j !== i) : prev));
+  }, []);
+
+  const saveDraft = useCallback(async () => {
+    const rows = (draft ?? []).filter((r) => r.item.trim().length >= 2);
+    if (rows.length === 0) {
+      showError("Add at least one requirement item before saving.");
+      return;
+    }
+    setBusy(true);
+    try {
+      for (const r of rows) {
+        await api(`/api/issues/${issue.id}/requirements`, {
+          method: "POST",
+          body: JSON.stringify({
+            item: r.item.trim(),
+            qty: Math.max(1, r.qty),
+            needsApproval: r.needsApproval,
+          }),
+        });
+      }
+      setDraft(null);
+      setMode(null);
+      onRefresh();
+    } catch (e) {
+      showError(e);
+      return;
+    } finally {
+      setBusy(false);
+    }
+  }, [draft, issue.id, onRefresh, showError]);
+
+  const closeDraft = useCallback(() => {
+    setDraft(null);
+    setMode(null);
+  }, []);
 
   const toggleRequirement = useCallback(
     async (r: Requirement) => {
@@ -533,6 +571,56 @@ export function MaintenanceJobCard({
       </Modal>
       <Modal open={mode === "req"} onClose={() => setMode(null)} title="Add requirement">
         {reqForm}
+      </Modal>
+      <Modal open={mode === "draft"} onClose={closeDraft} title="Review AI-drafted requirements">
+        <div className="flex flex-col gap-3">
+          <p className="text-xs text-slate">
+            Review and edit the AI-extracted parts before adding them to the job. Nothing is saved until you confirm.
+          </p>
+          <div className="flex flex-col gap-2">
+            {(draft ?? []).map((d, i) => (
+              <div key={`${i}-${d.item}`} className="rounded-xl bg-paper p-2">
+                <div className="grid grid-cols-[1fr_64px] gap-2">
+                  <input
+                    className="input"
+                    value={d.item}
+                    minLength={2}
+                    placeholder="Item"
+                    onChange={(e) => updateDraft(i, { item: e.target.value })}
+                  />
+                  <input
+                    className="input"
+                    type="number"
+                    min={1}
+                    value={d.qty}
+                    onChange={(e) => updateDraft(i, { qty: Number(e.target.value) || 1 })}
+                  />
+                </div>
+                <div className="mt-2 flex items-center justify-between">
+                  <label className="flex items-center gap-2 text-sm text-slate">
+                    <input
+                      type="checkbox"
+                      checked={d.needsApproval}
+                      onChange={(e) => updateDraft(i, { needsApproval: e.target.checked })}
+                    />
+                    Needs purchase approval
+                  </label>
+                  <button type="button" className="text-xs font-medium text-danger" onClick={() => removeDraft(i)}>
+                    Remove
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <button className="btn btn-primary btn-sm" onClick={() => void saveDraft()} disabled={busy}>
+              {draft && draft.some((r) => r.item.trim().length >= 2) ? "Add to job" : "Add all to job"}
+            </button>
+            <button className="btn btn-ghost btn-sm" onClick={closeDraft}>
+              Discard
+            </button>
+          </div>
+        </div>
       </Modal>
     </div>
   );

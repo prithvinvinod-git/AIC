@@ -94,13 +94,13 @@ export async function extractRequirementsFlow(input: {
           "needsApproval=true for costly items. probableCause: the likely reason, one sentence. safetyPrecautions: 1-3 concrete steps. " +
           "toolsNeeded: only what is plausibly needed. skillType: one of 'general', 'electrical', 'plumbing', 'carpentry', 'housekeeping', 'electronics / IT'. " +
           "estimatedMinutes: a realistic job duration between 5 and 600. Return ONLY structured JSON.",
-        prompt: input.description,
+        prompt: input.description.slice(0, 2000),
         output: {
           schema: z.object({
             requirements: z.array(
               z.object({
                 item: z.string(),
-                qty: z.number().int().min(0),
+                qty: z.number().int().min(1),
                 needsApproval: z.boolean(),
               })
             ),
@@ -114,6 +114,7 @@ export async function extractRequirementsFlow(input: {
           }),
           format: "json",
         },
+        config: { maxOutputTokens: 1024 },
       });
       const out = res.output as
         | { requirements?: RequirementDraft[]; briefing?: RequestBriefing }
@@ -168,11 +169,12 @@ export async function draftClosureFlow(input: { bullets: string[] }): Promise<st
         model: `googleai/${aiModelName()}`,
         system:
           "Expand these maintenance notes into a concise structured closure report: work done, parts used, hours spent, and any follow-up. Keep under 120 words.",
-        prompt: bullets.join("\n"),
+        prompt: bullets.join("\n").slice(0, 2000),
         output: {
           schema: z.object({ report: z.string() }),
           format: "json",
         },
+        config: { maxOutputTokens: 768 },
       });
       const r = (res.output as { report: string }).report;
       if (r) return r;

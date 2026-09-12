@@ -94,7 +94,8 @@ export async function predictiveMaintenanceFlow(
     }
     const locationTexts = [...byLocation.entries()]
       .map(([loc, items]) => `${loc}: ${items.join("; ")}`)
-      .join("\n");
+      .join("\n")
+      .slice(0, 16000);
 
     const res = await ai.generate({
       model: `googleai/${aiModelName()}`,
@@ -113,7 +114,7 @@ export async function predictiveMaintenanceFlow(
         ),
         format: "json",
       },
-      config: { temperature: 0.3 },
+      config: { temperature: 0.3, maxOutputTokens: 2048 },
     });
 
     const out = res.output as AtRiskLocation[];

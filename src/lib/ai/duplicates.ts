@@ -54,17 +54,22 @@ export async function findDuplicatesFlow(input: {
   const similar: { id: string; issueNo: string; score: number }[] = [];
 
   try {
-    const base = adminDb().collection("issues");
-    const scoped = input.college ? base.where("college", "==", input.college) : base;
+    const base = adminDb().collection("issues").where("status", "in", OPEN);
+    const scoped = input.college
+      ? base.where("college", "==", input.college)
+      : base;
+    // AI-9: filter by open status FIRST, then the location — so a busy
+    // location with many closed/completed docs can't crowd out the open
+    // duplicates this scan is meant to find.
     const snap = await scoped
       .where("location.name", "==", input.location)
+      .orderBy("createdAt", "desc")
       .limit(50)
       .get();
 
     for (const doc of snap.docs) {
       const d = doc.data();
       if (doc.id === input.issueId) continue;
-      if (!OPEN.includes(d.status)) continue;
       const score = overlapScore(input.description, d.description || "");
       if (score > 0) {
         similar.push({ id: doc.id, issueNo: d.issueNo || doc.id, score });
@@ -76,10 +81,7 @@ export async function findDuplicatesFlow(input: {
 
   similar.sort((a, b) => b.score - a.score);
   const top = similar[0];
-  const duplicateOf =
-    top && top.score >= threshold && top.issueNo !== input.issueId
-      ? top.id
-      : null;
+  const duplicateOf = top && top.score >= threshold ? top.id : null;
 
   return {
     duplicateOf,
@@ -89,15 +91,28 @@ export async function findDuplicatesFlow(input: {
   };
 }
 
-export async function writeDuplicates(issueId: string, result: DuplicateResult) {
-  await adminDb()
-    .doc(`issues/${issueId}`)
-    .update({
+/** Persist dup results — claims the slot in a transaction so a background
+ *  create-hook and a manual re-run can't double-write. Return `false` when
+ *  duplicates are already processed for this issue (AI-8). */
+export async function writeDuplicates(
+  issueId: string,
+  result: DuplicateResult
+): Promise<boolean> {
+  const db = adminDb();
+  const ref = db.doc(`issues/${issueId}`);
+  return await db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists) return false;
+    if (snap.data()?.aiSuggestion?.duplicatesProcessed) return false;
+    tx.update(ref, {
       "aiSuggestion.duplicateOf": result.duplicateOf,
       "aiSuggestion.duplicateIssueNo": result.duplicateIssueNo,
       "aiSuggestion.matchScore": result.matchScore,
       "aiSuggestion.similarIssues": result.similarIssues,
+      "aiSuggestion.duplicatesProcessed": true,
       "aiSuggestion.aiModel": aiEnabled() ? `googleai/${aiModelName()}` : "fallback-classifier",
       "aiSuggestion.processedAt": new Date().toISOString(),
     });
+    return true;
+  });
 }

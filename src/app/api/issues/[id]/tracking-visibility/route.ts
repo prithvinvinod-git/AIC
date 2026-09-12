@@ -37,20 +37,35 @@ export async function POST(
     if (!snap.exists) return json({ error: "Issue not found." }, 404);
 
     const now = new Date().toISOString();
-    if (revoked) {
-      await ref.update({ trackingRevoked: true, updatedAt: now });
-    } else {
-      await ref.update({ trackingRevoked: FieldValue.delete(), updatedAt: now });
-    }
 
-    const issue = snap.data() as Issue;
-    await db.collection(`issues/${id}/timeline`).add({
-      from: "",
-      to: (issue.status as string) ?? "",
-      by: { uid: user.uid, name: user.name, role: user.role },
-      note: revoked ? `Public tracking link revoked by ${user.name}` : `Public tracking link restored by ${user.name}`,
-      at: now,
-      isAuto: false,
+    const issue = await db.runTransaction(async (tx) => {
+      const snap = await tx.get(ref);
+      if (!snap.exists) throw Object.assign(new Error("Issue not found."), { statusCode: 404 });
+      const data = snap.data() as Issue;
+      if (revoked) {
+        tx.update(ref, {
+          trackingRevoked: true,
+          updatedAt: now,
+          "counters.timelineCount": FieldValue.increment(1),
+        });
+      } else {
+        tx.update(ref, {
+          trackingRevoked: FieldValue.delete(),
+          updatedAt: now,
+          "counters.timelineCount": FieldValue.increment(1),
+        });
+      }
+      tx.set(db.collection(`issues/${id}/timeline`).doc(), {
+        from: "",
+        to: (data.status as string) ?? "",
+        by: { uid: user.uid, name: user.name, role: user.role },
+        note: revoked
+          ? `Public tracking link revoked by ${user.name}`
+          : `Public tracking link restored by ${user.name}`,
+        at: now,
+        isAuto: false,
+      });
+      return data;
     });
 
     // Drop any cached copy of the tracking payload so the change is visible.

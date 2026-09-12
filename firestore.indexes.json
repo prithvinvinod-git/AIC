@@ -3,6 +3,28 @@
     { "collectionGroup": "issues", "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ] },
+    { "collectionGroup": "issues", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "college", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ] },
+    { "collectionGroup": "issues", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "routing.maintenanceHeadUid", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ] },
+    { "collectionGroup": "issues", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "college", "order": "ASCENDING" },
+        { "fieldPath": "location.name", "order": "ASCENDING" }
+      ] },
+    { "collectionGroup": "issues", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
         { "fieldPath": "sla.resolutionDeadline", "order": "ASCENDING" }
       ] },
     { "collectionGroup": "issues", "queryScope": "COLLECTION",
@@ -154,6 +176,30 @@
       "fields": [
         { "fieldPath": "routing.staff", "order": "ASCENDING" },
         { "fieldPath": "status", "order": "ASCENDING" }
+      ] },
+    { "collectionGroup": "issues", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "location.name", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ] },
+    { "collectionGroup": "issues", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "college", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "location.name", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ] },
+    { "collectionGroup": "issues", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "priority", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ] },
+    { "collectionGroup": "issues", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "college", "order": "ASCENDING" },
+        { "fieldPath": "priority", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
       ] },
     { "collectionGroup": "teams", "queryScope": "COLLECTION",
       "fields": [

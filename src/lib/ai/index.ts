@@ -1,6 +1,7 @@
 import "server-only";
 
 import { adminDb } from "../firebaseAdmin";
+import { loadConfig } from "../issueMachine";
 import { triageFlow, writeTriage, applyTriagePriority } from "./triage";
 import { findDuplicatesFlow, writeDuplicates } from "./duplicates";
 import { suggestAssignmentFlow, writeRoutingSuggestion } from "./routing";
@@ -42,32 +43,50 @@ export async function getActiveCategories(): Promise<string[]> {
  */
 export async function runAiOnCreate(issueId: string): Promise<void> {
   try {
-    const snap = await adminDb().doc(`issues/${issueId}`).get();
+    const db = adminDb();
+    const snap = await db.doc(`issues/${issueId}`).get();
     if (!snap.exists) return;
     const issue = snap.data()!;
-    if (issue.aiSuggestion?.aiProcessed) return;
+    if (issue.aiSuggestion?.aiProcessed && issue.aiSuggestion?.duplicatesProcessed) return;
+
+    // AI-4: flows honor the persisted config.ai.* values.
+    const config = await loadConfig(db);
+    const threshold = config.ai?.threshold ?? 0.45;
 
     const imageUrl = issue.images?.[0]?.url;
     const categories = await getActiveCategories();
 
-    const triage = await triageFlow({
-      description: issue.description || "",
-      imageUrl,
-      department: issue.department || "",
-      categories,
-    });
-    await writeTriage(issueId, triage);
-    // AI owns severity while the issue is still NEW (spam → P5).
-    await applyTriagePriority(issueId, triage);
+    if (!issue.aiSuggestion?.aiProcessed) {
+      const triage = await triageFlow(
+        {
+          description: issue.description || "",
+          imageUrl,
+          department: issue.department || "",
+          categories,
+        },
+        { triageModel: config.ai?.triageModel }
+      );
+      // Transactional claim — if a manual "Run triage" won the race, skip the
+      // rest so we don't re-run priorities, re-flag spam or re-scan duplicates.
+      const claimed = await writeTriage(issueId, triage);
+      if (claimed) {
+        // AI owns severity while the issue is still NEW (spam → P5).
+        await applyTriagePriority(issueId, triage);
+      }
+    }
 
-    const dupe = await findDuplicatesFlow({
-      issueId,
-      description: issue.description || "",
-      location: issue.location?.name || "",
-      threshold: 0.45,
-      college: issue.college || undefined,
-    });
-    await writeDuplicates(issueId, dupe);
+    // AI-8: duplicates are independently guarded — a triage success followed
+    // by a duplicates failure no longer blocks a later backfill.
+    if (!issue.aiSuggestion?.duplicatesProcessed) {
+      const dupe = await findDuplicatesFlow({
+        issueId,
+        description: issue.description || "",
+        location: issue.location?.name || "",
+        threshold,
+        college: issue.college || undefined,
+      });
+      await writeDuplicates(issueId, dupe);
+    }
   } catch (e) {
     console.error("runAiOnCreate failed:", e);
   }
