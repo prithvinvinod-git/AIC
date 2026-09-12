@@ -53,30 +53,69 @@ export async function findDuplicatesFlow(input: {
   const threshold = input.threshold ?? 0.45;
   const similar: { id: string; issueNo: string; score: number }[] = [];
 
-  try {
-    const base = adminDb().collection("issues").where("status", "in", OPEN);
-    const scoped = input.college
-      ? base.where("college", "==", input.college)
-      : base;
-    // AI-9: filter by open status FIRST, then the location — so a busy
-    // location with many closed/completed docs can't crowd out the open
-    // duplicates this scan is meant to find.
-    const snap = await scoped
+  const db = adminDb();
+
+  // Composite index (status in OPEN + location + createdAt) needs the
+  // community index deployed on `issues`; fall back to a single-field
+  // `location.name` scan + in-memory filtering when that index is missing
+  // (verify: FAILED_PRECONDITION / code 9 on old prod).
+  const queryContract = async (): Promise<
+    FirebaseFirestore.DocumentSnapshot<FirebaseFirestore.DocumentData>[]
+  > => {
+    const base = db.collection("issues");
+    const q = input.college
+      ? base
+          .where("status", "in", OPEN)
+          .where("college", "==", input.college)
+          .where("location.name", "==", input.location)
+          .orderBy("createdAt", "desc")
+          .limit(50)
+      : base
+          .where("status", "in", OPEN)
+          .where("location.name", "==", input.location)
+          .orderBy("createdAt", "desc")
+          .limit(50);
+    const snap = await q.get();
+    return snap.docs;
+  };
+
+  const fallbackLocations = async (): Promise<
+    FirebaseFirestore.DocumentSnapshot<FirebaseFirestore.DocumentData>[]
+  > => {
+    const snap = await db
+      .collection("issues")
       .where("location.name", "==", input.location)
       .orderBy("createdAt", "desc")
-      .limit(50)
+      .limit(200)
       .get();
+    return snap.docs.filter(
+      (doc) =>
+        OPEN.includes(doc.data().status) &&
+        (!input.college || doc.data().college === input.college)
+    );
+  };
 
-    for (const doc of snap.docs) {
-      const d = doc.data();
-      if (doc.id === input.issueId) continue;
-      const score = overlapScore(input.description, d.description || "");
-      if (score > 0) {
-        similar.push({ id: doc.id, issueNo: d.issueNo || doc.id, score });
-      }
-    }
+  let docs: FirebaseFirestore.DocumentSnapshot<FirebaseFirestore.DocumentData>[];
+  try {
+    docs = await queryContract();
   } catch (e) {
-    console.error("findDuplicates query error:", e);
+    const failed = (e as { code?: number; message?: string })?.code === 9;
+    if (!failed) {
+      console.error("findDuplicates query error:", e);
+      docs = [];
+    } else {
+      console.warn("duplicates composite index missing — using location-only scan");
+      docs = await fallbackLocations();
+    }
+  }
+
+  for (const doc of docs) {
+    const d = doc.data()!;
+    if (doc.id === input.issueId) continue;
+    const score = overlapScore(input.description, d.description || "");
+    if (score > 0) {
+      similar.push({ id: doc.id, issueNo: d.issueNo || doc.id, score });
+    }
   }
 
   similar.sort((a, b) => b.score - a.score);

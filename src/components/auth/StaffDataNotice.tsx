@@ -21,6 +21,9 @@ export default function StaffDataNotice() {
   if (!claims || dismissed || claims.assignmentNoticeDismissed) return null;
 
   const role = claims.role as Role;
+  // Category heads are intentionally exempt — they don't self-manage their
+  // college/category assignment, and this banner was pure noise for them.
+  if (role === "category_head") return null;
   const isStaff = role !== "reporter" && role !== "admin";
   if (!isStaff) return null;
 

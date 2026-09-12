@@ -293,7 +293,7 @@ The codebase is strong where it matters most: **all state changes flow through o
 - [x] **R‑1** Add hod/principal branches to `GET /api/issues`; **R‑2** `slice(0,10)` safety on maintenance teamIds.
 
 ### P2 — correctness & scale (MED)
-- [x] **D‑2** Add the three missing indexes (`status+createdAt`, `maintenanceHeadUid+status+createdAt`, `college+location.name`). *(Also added `status+location.name+createdAt`, `college+status+location.name+createdAt` for AI‑9 and `priority+createdAt`, `college+priority+createdAt` for D‑3.)*
+- [x] **D‑2** Add the three missing indexes (`status+createdAt`, `maintenanceHeadUid+status+createdAt`, `college+location.name`). *(Also added `status+location.name+createdAt`, `college+status+location.name+createdAt` for AI‑9. The D‑3 `priority+createdAt` composites were added, but removed again — see D‑3 below.)*
 - [x] **AI‑1** Transactional `aiProcessed` guard.
 - [x] **AI‑3** `maxOutputTokens` on all calls; clamp `description`; truncate root-cause/predictive/punch-list inputs.
 - [x] **W‑9** CLOSED guard on requirement approve/reject/senior routes.
@@ -307,7 +307,7 @@ The codebase is strong where it matters most: **all state changes flow through o
 - [x] **W‑12** Fix or delete `allowedTransitions`.
 
 ### P3 — hygiene & debt (LOW)
-- [x] **D‑3** Board: real `priority ≤ 3` + `createdAt desc` query.
+- [x] **D‑3** Board: `priority ≤ 3` + `createdAt desc` — done as a **JS-filtered query** (400-doc window + `priority ≤ 3` + `!boardHidden` + `slice(10)`), because the `[priority+createdAt]` composite isn't deployed on prod (verified via probe-indexes: FAILED_PRECONDITION). Keeps D‑15 priority-0-byte behavior.
 - [x] **E‑1** Batch SLA-reminder reads; persist cooldown before sending.
 - [x] **W‑11** Comment 404 when the parent issue is missing. *(W‑10 transactional like-toggle still pending.)*
 - [x] **AI‑8** Split `duplicatesProcessed` flag; backfill duplicates.
@@ -329,4 +329,18 @@ The codebase is strong where it matters most: **all state changes flow through o
 Re-verified against source during this audit (not merely read-level): A‑1, A‑2, A‑3, A‑4, A‑5, A‑6, A‑7, A‑10, R‑1, R‑2, R‑3, W‑1, W‑2, W‑3, W‑4, W‑12, W‑13, W‑14, W‑15, W‑18, AI‑1, AI‑2, AI‑3, AI‑4, AI‑9, D‑1, D‑2, D‑3, E‑1, U‑3, B‑1. Everything else is a read-level finding to confirm while fixing.
 
 ## Fix ledger — applied 2026-09-12 (all verified with `npx tsc --noEmit`, `npx eslint src`, `npm run build`)
-Fixed beyond the checkbox list above (table rows): **A‑8** `clientIp` trusts `x-forwarded-for` last-hop only behind `x-vercel-proxied` (`src/lib/rateLimit.ts`); **A‑9** public `/api/track/[token]` now returns a trimmed whitelist (no trackingToken/reporter-uid/routing/requirements/aiSuggestion) (`src/app/api/track/[token]/route.ts`); **W‑8** category-head inspect scope falls back to `actor.categoryId` vs `routing.categoryId` when `routing.categoryHeadUid` is unset (`src/lib/issueMachine.ts`); **W‑13** ratings accept 0.5 steps; **W‑16** issueNo allocated inside the create transaction; **W‑19** auto-close anchored on `verification.verifiedAt`; **W‑20** generic 500 in `handleError`; **W‑21** stale-critical treats priority 0 as unset + AI-suggestion deference; **W‑22** least-loaded maintenance head pick; **D‑6** `pendingPurchaseCount` recomputed from the array on add; **AI‑8/AI‑12** transactional claims (`writeDuplicates`, `applyTriagePriority`); **AI‑9** status-first duplicates query + 2 new indexes; AI‑4 already wired threshold/models. Remaining P3+: AI‑10, B‑1, B‑2, A‑15/B‑4, D‑11, E‑7, AD‑2, W‑10.
+Fixed beyond the checkbox list above (table rows): **A‑8** `clientIp` trusts `x-forwarded-for` last-hop only behind `x-vercel-proxied` (`src/lib/rateLimit.ts`); **A‑9** public `/api/track/[token]` now returns a trimmed whitelist (no trackingToken/reporter-uid/routing/requirements/aiSuggestion) (`src/app/api/track/[token]/route.ts`); **W‑8** category-head inspect scope falls back to `actor.categoryId` vs `routing.categoryId` when `routing.categoryHeadUid` is unset (`src/lib/issueMachine.ts`); **W‑13** ratings accept 0.5 steps; **W‑16** issueNo allocated inside the create transaction; **W‑19** auto-close anchored on `verification.verifiedAt`; **W‑20** generic 500 in `handleError`; **W‑21** stale-critical treats priority 0 as unset + AI-suggestion deference; **W‑22** least-loaded maintenance head pick; **D‑6** `pendingPurchaseCount` recomputed from the array on add; **AI‑8/AI‑12** transactional claims (`writeDuplicates`, `applyTriagePriority`); **AI‑9** status-first duplicates query + 2 new indexes; AI‑4 already wired threshold/models.
+
+<details><summary>Follow-up on 2026‑09‑12 (prod regression from the D‑3/AI‑9 index additions)</summary>
+
+The `[priority+createdAt]`, `[college+priority+createdAt]` (D‑3) and `[status+location.name+createdAt]`, `[college+status+location.name+createdAt]` (AI‑9) composites were NOT deployed on prod → `GET /api/issues?scope=board` 500'd and clones silently lost duplicate detection. Probing with the Admin SDK (see temporary `scripts/probe-indexes.mjs`, since deleted) confirmed code-9 FAILED_PRECONDITION on exactly those four, everything else PASS.
+
+Fixes:
+- **D‑3**: board query reverted to an index-safe JS-filtered scan — `orderBy createdAt desc limit 400` + `(priority unset ‖ ≤ 3) && !boardHidden`, `slice(0, BOARD_LIMIT)`. The two `priority+createdAt` composites were removed from `firestore.indexes.json`.
+- **AI‑9**: `findDuplicatesFlow` now tries the composite contract first; on error code 9 it falls back to a single-field `location.name` scan (`limit 200`) with in-memory OPEN-status + college filtering. Kept the two `status+location.name+createdAt` composites in the file for a future deploy.
+- **CSP**: `img-src`/`media-src` in `next.config.ts` now whitelist the Onam page's Google-hosted image (`lh3.googleusercontent.com`) and CloudFront video — the exact assets the old `img-src 'self' data: blob:` was logging CSP violations for.
+- **StaffDataNotice**: categories-head notice suppressed for `category_head` (user request — it's an admin-managed assignment).
+
+</details>
+
+Remaining P3+: AI‑10, B‑1, B‑2, A‑15/B‑4, D‑11, E‑7, AD‑2, W‑10.

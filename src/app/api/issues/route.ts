@@ -184,14 +184,10 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       if (user.role !== "admin" && user.college) {
         query = query.where("college", "==", user.college);
       }
-      // D-3/D-15: push the priority window into the query (priority 0 counts
-      // as "not yet triaged" → treated as P3) so the newest relevant issues
-      // always surface instead of being crowded out by a fixed 200-doc cut.
-      query = query
-        .where("priority", "in", [0, 1, 2, BOARD_MAX_PRIORITY])
-        .orderBy("createdAt", "desc")
-        .limit(200);
-      const snap = await query.get();
+      // D-3/D-15: fetch a generous window of the newest issues (the
+      // [college+priority+createdAt] composite isn't deployed on prod yet), then
+      // filter in JS. Priority 0 / missing = "not yet triaged" → treated as P3.
+      const snap = await query.orderBy("createdAt", "desc").limit(400).get();
       const issues: Issue[] = snap.docs
         .map((d) => {
           const data = d.data();
@@ -200,8 +196,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         })
         .filter(
           (i) =>
-            typeof i.priority === "number" &&
-            i.priority <= BOARD_MAX_PRIORITY &&
+            (typeof i.priority !== "number" || i.priority <= BOARD_MAX_PRIORITY) &&
             i.boardHidden !== true
         )
         .slice(0, BOARD_LIMIT);
