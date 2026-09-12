@@ -380,7 +380,7 @@ function QueueTab({
           (r) => r.approvalStatus !== "approved" && r.approvalStatus !== "rejected"
         );
         return (
-          <div key={issue.id} className="card flex h-full flex-col gap-3">
+          <div key={issue.id} className="card flex h-full min-w-0 flex-col gap-3 overflow-hidden">
             <button
               type="button"
               className="flex w-full flex-col gap-2 text-left"

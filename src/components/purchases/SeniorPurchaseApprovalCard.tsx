@@ -67,7 +67,7 @@ export function SeniorPurchaseApprovalCard({
   };
 
   return (
-    <div className="card">
+    <div className="card min-w-0 overflow-hidden">
       <button
         type="button"
         className="flex w-full flex-col gap-2 text-left"

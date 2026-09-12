@@ -346,7 +346,7 @@ export function MaintenanceJobCard({
   ) : null;
 
   return (
-    <div className="card flex h-full flex-col gap-3">
+    <div className="card flex h-full min-w-0 flex-col gap-3 overflow-hidden">
       <button
         type="button"
         className="flex w-full flex-col gap-2 text-left"
@@ -441,7 +441,7 @@ export function MaintenanceJobCard({
             const isApprovalApproved = isApproval && r.approvalStatus === "approved";
             const toggleable = !isApproval;
             return (
-              <li key={`${(r as Requirement & { id?: string }).id || i}`} className="flex items-center gap-3 text-sm">
+              <li key={`${(r as Requirement & { id?: string }).id || i}`} className="flex min-w-0 items-center gap-3 text-sm">
                 {readOnly || !toggleable ? (
                   <RequirementCheck
                     checked={r.resolved}
@@ -461,20 +461,20 @@ export function MaintenanceJobCard({
                 {isApproval && (
                   isApprovalApproved ? (
                     <span
-                      className="rounded bg-success-soft px-1.5 py-0.5 text-[10px] font-medium text-success"
+                      className="shrink-0 rounded bg-success-soft px-1.5 py-0.5 text-[10px] font-medium text-success"
                       title={r.approvalBy?.name ? `Approved by ${r.approvalBy.name}` : "Approved"}
                     >
                       Approved · ₹{r.price ?? 0}
                     </span>
                   ) : isApprovalRejected ? (
                     <span
-                      className="rounded bg-danger-soft px-1.5 py-0.5 text-[10px] font-medium text-danger"
+                      className="shrink-0 rounded bg-danger-soft px-1.5 py-0.5 text-[10px] font-medium text-danger"
                       title={r.rejectReason || "Rejected"}
                     >
                       Rejected
                     </span>
                   ) : (
-                    <span className="rounded bg-warning-soft px-1.5 py-0.5 text-[10px] font-medium text-warning">
+                    <span className="shrink-0 rounded bg-warning-soft px-1.5 py-0.5 text-[10px] font-medium text-warning">
                       Awaiting approval
                     </span>
                   )
@@ -484,7 +484,7 @@ export function MaintenanceJobCard({
                     type="button"
                     onClick={() => void resubmitRequirement(r)}
                     disabled={busy}
-                    className="text-xs font-medium text-accent hover:underline"
+                    className="shrink-0 text-xs font-medium text-accent hover:underline"
                   >
                     Resubmit
                   </button>
@@ -496,7 +496,7 @@ export function MaintenanceJobCard({
                     disabled={busy}
                     aria-label={`Remove requirement ${r.item}`}
                     title="Remove requirement"
-                    className="ml-auto rounded p-0.5 text-slate transition-colors hover:bg-danger-soft hover:text-danger"
+                    className="ml-auto shrink-0 rounded p-0.5 text-slate transition-colors hover:bg-danger-soft hover:text-danger"
                   >
                     <X className="h-3.5 w-3.5" aria-hidden />
                   </button>

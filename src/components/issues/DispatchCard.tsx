@@ -218,7 +218,7 @@ export function DispatchCard({
   );
 
   return (
-    <div className="card flex h-full flex-col gap-3">
+    <div className="card flex h-full min-w-0 flex-col gap-3 overflow-hidden">
       <button
         type="button"
         className="flex w-full flex-col gap-2 text-left"
