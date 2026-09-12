@@ -3,6 +3,7 @@ import "server-only";
 import { FieldValue, type Firestore } from "firebase-admin/firestore";
 import { adminDb } from "./firebaseAdmin";
 import { DEFAULT_CONFIG } from "./constants";
+import { canApproveEscalation, escalationBand } from "./escalationBand";
 import { notify, notifyRole } from "./notifications";
 import { serverCached } from "./serverCache";
 import type {
@@ -206,19 +207,28 @@ export const TRANSITION_RULES: Record<IssueStatus, TransitionRule[]> = {
     {
       to: "APPROVED",
       roles: ["hod", "principal", "admin"],
-      check: (_i, _a, input) =>
-        !input.priority ||
-        (input.priority >= 1 && input.priority <= 5)
+      check: (issue, actor, input) => {
+        if (!canApproveEscalation(actor.role, issue.priority))
+          return escalationBand(issue.priority) === "principal"
+            ? "Critical (P1) escalations are approved by the Principal."
+            : "High (P2) escalations are approved by the HOD.";
+        return !input.priority || (input.priority >= 1 && input.priority <= 5)
           ? null
-          : "Severity revision must be between 1 and 5.",
+          : "Severity revision must be between 1 and 5.";
+      },
     },
     {
       to: "REJECTED",
       roles: ["hod", "principal", "admin"],
-      check: (_i, _a, input) =>
-        input.rejectionReason && input.rejectionReason.trim().length >= 3
+      check: (issue, actor, input) => {
+        if (!canApproveEscalation(actor.role, issue.priority))
+          return escalationBand(issue.priority) === "principal"
+            ? "Critical (P1) escalations are rejected by the Principal."
+            : "High (P2) escalations are rejected by the HOD.";
+        return input.rejectionReason && input.rejectionReason.trim().length >= 3
           ? null
-          : "A rejection reason (min 3 chars) is required.",
+          : "A rejection reason (min 3 chars) is required.";
+      },
     },
   ],
   APPROVED: [

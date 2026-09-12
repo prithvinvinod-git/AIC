@@ -10,6 +10,8 @@ import { EscalationCard } from "@/components/issues/EscalationCard";
 import { IssueCard } from "@/components/ui/IssueCard";
 import { SeniorPurchaseApprovalCard } from "@/components/purchases/SeniorPurchaseApprovalCard";
 import { assertRouteAccess } from "@/lib/roleGuards";
+import { canApproveEscalation } from "@/lib/escalationBand";
+import type { Role } from "@/lib/types";
 
 export default function ApprovalsPage() {
   const { claims } = useAuth();
@@ -31,6 +33,11 @@ export default function ApprovalsPage() {
   assertRouteAccess(claims, ["hod", "principal"]);
   if (!escalated || !approved || !purchases) return <Loading label="Loading approvals…" />;
 
+  const effectiveRole = (claims.portal ?? claims.role) as Role;
+  const approvableEscalated = (escalated ?? []).filter((i) =>
+    canApproveEscalation(effectiveRole, i.priority)
+  );
+
   const refreshAll = () => {
     void reloadEscalated();
     void reloadApproved();
@@ -42,7 +49,10 @@ export default function ApprovalsPage() {
       <div>
         <h1 className="font-display text-2xl max-md:text-xl font-semibold text-ink">Approvals</h1>
         <p className="mt-1 text-sm text-slate">
-          {claims.name} · Approve critical escalations and over-limit purchases, and track approved work.
+          {claims.name} ·{" "}
+          {effectiveRole === "principal"
+            ? "Approve critical (P1) escalations and over-limit purchases, and track approved work."
+            : "Approve high-severity (P2) escalations and over-limit purchases, and track approved work."}
         </p>
       </div>
 
@@ -55,14 +65,18 @@ export default function ApprovalsPage() {
         </div>
         {escalatedError ? (
           <BoardErrorState message={escalatedError} onRetry={() => void reloadEscalated()} />
-        ) : escalated.length === 0 ? (
+        ) : approvableEscalated.length === 0 ? (
           <EmptyState
             icon={<CheckCheck className="h-8 w-8" aria-hidden />}
             title="Approval queue is clear"
-            body="Critical issues will appear here once escalated by department validators."
+            body={
+              effectiveRole === "principal"
+                ? "Critical (P1) issues will appear here once escalated by department validators."
+                : "High-severity (P2) issues will appear here once escalated by department validators."
+            }
           />
         ) : (
-          escalated.map((issue) => (
+          approvableEscalated.map((issue) => (
             <EscalationCard key={issue.id} issue={issue} onAction={refreshAll} />
           ))
         )}

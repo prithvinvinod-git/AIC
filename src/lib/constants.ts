@@ -116,12 +116,10 @@ export type College = (typeof COLLEGES)[number];
 export const DEPARTMENTS_BY_COLLEGE: Record<College, string[]> = {
   Engineering: [
     "Computer Science",
-    "Information Technology",
     "Electronics & Communication",
     "Electrical",
     "Mechanical",
     "Civil",
-    "Automobile",
   ],
   Dental: [
     "Oral Medicine",

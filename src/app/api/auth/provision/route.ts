@@ -38,6 +38,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     const role: Role = body.role;
     const name = capitalizeName(body.name || "");
+    const department = role === "principal" ? "" : body.department;
 
     let userRecord;
     if (body.uid) {
@@ -62,7 +63,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     await adminAuth().setCustomUserClaims(userRecord.uid, {
       role,
       portal: body.portal || null,
-      department: body.department,
+      department,
       college: body.college || null,
       requiresEmailVerification: body.requiresEmailVerification || null,
       name,
@@ -75,7 +76,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         role,
         portal: body.portal || "",
         college: body.college || "",
-        department: body.department,
+        department,
         phone: body.phone || userRecord.phoneNumber || "",
         isActive: body.isActive,
         createdAt: new Date().toISOString(),
@@ -116,13 +117,18 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
         body.requiresEmailVerification !== undefined
           ? body.requiresEmailVerification
           : Boolean(existingClaims.requiresEmailVerification);
+      // Principals are college-scoped, never department-scoped — a role change
+      // to principal clears any previously set department.
+      const department =
+        body.role === "principal"
+          ? ""
+          : body.department !== undefined
+            ? body.department
+            : (existingClaims.department as string) ?? "";
       await adminAuth().setCustomUserClaims(body.uid, {
         role: body.role,
         portal: body.portal !== undefined ? body.portal : (existingClaims.portal as string) || null,
-        department:
-          body.department !== undefined
-            ? body.department
-            : (existingClaims.department as string) ?? "",
+        department,
         college:
           body.college !== undefined
             ? body.college
@@ -141,6 +147,7 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
     if (body.portal !== undefined) userData.portal = body.portal;
     if (body.college !== undefined) userData.college = body.college;
     if (body.department !== undefined) userData.department = body.department;
+    if (body.role === "principal") userData.department = "";
     if (body.phone !== undefined) userData.phone = body.phone;
     if (body.isActive !== undefined) userData.isActive = body.isActive;
 

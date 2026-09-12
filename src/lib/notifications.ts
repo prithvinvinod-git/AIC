@@ -2,6 +2,7 @@ import "server-only";
 
 import { adminDb, adminApp } from "./firebaseAdmin";
 import { getMessaging } from "firebase-admin/messaging";
+import { escalationApprovers, escalationReviewerLabel } from "./escalationBand";
 import type { Issue, Role } from "./types";
 
 export interface NotificationInput {
@@ -127,10 +128,14 @@ export function notifyRecipientsForIssue(issue: Issue, oldStatus: string, newSta
         issue.college
       );
       break;
-    case "ESCALATED":
-      toReporter("Issue escalated", `${issue.issueNo} escalated for HOD/Principal review.`);
+    case "ESCALATED": {
+      toReporter(
+        "Issue escalated",
+        `${issue.issueNo} escalated for ${escalationReviewerLabel(issue.priority)} approval.`
+      );
+      const approvers = escalationApprovers(issue.priority).filter((r) => r !== "admin");
       notifyRole(
-        ["hod", "principal"],
+        approvers,
         {
           type: "escalation",
           title: "Escalation needs review",
@@ -140,6 +145,7 @@ export function notifyRecipientsForIssue(issue: Issue, oldStatus: string, newSta
         issue.college
       );
       break;
+    }
     case "APPROVED":
       toReporter("Issue approved", `${issue.issueNo} approved — routing next.`);
       break;

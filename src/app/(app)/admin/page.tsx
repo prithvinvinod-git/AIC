@@ -185,7 +185,15 @@ function UsersTab() {
         <input className="input" placeholder="Email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
         <input className="input" placeholder="Password" type="text" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
         {isFaculty ? (
-          <select className="input" value={role} onChange={(e) => setRole(e.target.value as Role)}>
+          <select
+            className="input"
+            value={role}
+            onChange={(e) => {
+              const next = e.target.value as Role;
+              setRole(next);
+              if (next === "principal") setDepartment("");
+            }}
+          >
             {FACULTY_ROLES.map((r) => (
               <option key={r} value={r}>
                 {ROLE_LABEL[r]}
@@ -215,12 +223,21 @@ function UsersTab() {
             </option>
           ))}
         </select>
-        <select className="input lg:order-7" value={department} onChange={(e) => setDepartment(e.target.value)}>
-          {depts.map((d) => (
-            <option key={d} value={d}>
-              {d}
-            </option>
-          ))}
+        <select
+          className="input lg:order-7"
+          value={department}
+          disabled={addRole === "principal"}
+          onChange={(e) => setDepartment(e.target.value)}
+        >
+          {addRole === "principal" ? (
+            <option value="">— Principal has no department</option>
+          ) : (
+            depts.map((d) => (
+              <option key={d} value={d}>
+                {d}
+              </option>
+            ))
+          )}
         </select>
       </form>
 
@@ -253,7 +270,7 @@ function UsersTab() {
                     <p className="truncate text-xs text-slate max-md:text-[11px] max-md:leading-tight">{u.email}</p>
                   </td>
                   <td className="w-[17%] max-md:w-[30%] truncate border-b border-silver px-4 py-3 max-md:px-3 max-md:py-1.5 text-slate max-md:text-[11px]">{u.college || "—"}</td>
-                  <td className="w-[17%] max-md:w-[30%] border-b border-silver px-4 py-3 max-md:px-3 max-md:py-1.5 text-slate max-md:text-[11px]">{u.department || "—"}</td>
+                  <td className="w-[17%] max-md:w-[30%] border-b border-silver px-4 py-3 max-md:px-3 max-md:py-1.5 text-slate max-md:text-[11px]">{u.role === "principal" ? "—" : u.department || "—"}</td>
                   <td className="w-[14%] max-md:hidden border-b border-silver px-4 py-3 max-md:px-3 max-md:py-1.5">
                     <select
                       className="input w-full py-1 text-xs max-md:py-0.5 max-md:text-[11px]"

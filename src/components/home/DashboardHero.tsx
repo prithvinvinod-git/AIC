@@ -13,9 +13,16 @@ export default function DashboardHero() {
   const { claims } = useAuth();
 
   const firstName = claims?.name.split(" ")[0] || "there";
-  const detail = [claims?.college, claims?.department].filter(Boolean).join(" · ");
-  const canReport = claims ? portalRoles(claims).includes("reporter") : false;
-  const activeRole = claims ? portalRoles(claims)[0] : "reporter";
+  const access = claims ? portalRoles(claims) : [];
+  const activeRole = access[0] || "reporter";
+  // Principals are college-scoped (never department) — don't print a dept tag.
+  const detail = [
+    claims?.college,
+    access.includes("principal") ? undefined : claims?.department,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  const canReport = claims ? access.includes("reporter") : false;
   const feed = feedFor(activeRole, claims?.department);
 
   return (

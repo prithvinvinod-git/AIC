@@ -2,6 +2,7 @@ import "server-only";
 
 import { adminDb } from "./firebaseAdmin";
 import { applyTransition } from "./issueMachine";
+import { escalationBand, escalationReviewerLabel } from "./escalationBand";
 import { notifyMany, notifyRole } from "./notifications";
 import type { Issue, Role } from "./types";
 
@@ -79,25 +80,37 @@ export async function runStaleCriticalScan(): Promise<number> {
       const issueNo = updated.issueNo || id;
       const link = `/issues/${id}`;
       const staffTitle = "Critical issue auto-escalated";
-      const staffBody = `${issueNo} wasn't actioned within 24 hours and was escalated for HOD/Principal review.`;
+      const reviewer = escalationReviewerLabel(issue.priority);
+      const staffBody = `${issueNo} wasn't actioned within 24 hours and was escalated for ${reviewer} review.`;
 
-      await notifyDepartment(["validator", "hod"], issue.department, {
+      // Dept validators always; the severity approver (P1 → Principal, P2 →
+      // HOD) gets the decision alert. HOD is department-scoped.
+      await notifyDepartment(["validator"], issue.department, {
         type: "issue",
         title: staffTitle,
         body: staffBody,
         link,
       });
-      await notifyRole(["principal"], {
-        type: "issue",
-        title: staffTitle,
-        body: staffBody,
-        link,
-      });
+      if (escalationBand(issue.priority) === "principal") {
+        await notifyRole(["principal"], {
+          type: "issue",
+          title: staffTitle,
+          body: staffBody,
+          link,
+        });
+      } else {
+        await notifyDepartment(["hod"], issue.department, {
+          type: "issue",
+          title: staffTitle,
+          body: staffBody,
+          link,
+        });
+      }
       if (issue.reporter?.uid) {
         await notifyMany([issue.reporter.uid], {
           type: "issue",
           title: "Your issue needs urgent attention",
-          body: `${issueNo} wasn't validated within 24 hours and was auto-escalated to HOD/Principal.`,
+          body: `${issueNo} wasn't validated within 24 hours and was auto-escalated to ${reviewer}.`,
           link,
         });
       }

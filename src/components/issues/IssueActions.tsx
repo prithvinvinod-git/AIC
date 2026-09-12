@@ -2,11 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Sparkles, X } from "lucide-react";
-import type { Issue, Requirement, TeamWithMembers } from "@/lib/types";
+import type { Issue, Requirement, Role, TeamWithMembers } from "@/lib/types";
 import { api } from "@/lib/clientApi";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useActionError } from "@/components/ui/Toast";
 import { RequirementCheck } from "@/components/issues/RequirementCheck";
+import { canApproveEscalation } from "@/lib/escalationBand";
 
 interface Props {
   issue: Issue;
@@ -73,7 +74,13 @@ export function IssueActions({ issue, onChanged }: Props) {
     }
   }
 
-  if (["hod", "principal"].includes(role) && issue.status === "ESCALATED") {
+  // Severity-band approval: P1 → Principal, P2 → HOD (portal roles included).
+  const approverRole = (claims.portal ?? claims.role) as Role;
+  if (
+    (role === "hod" || role === "principal" || claims.portal) &&
+    issue.status === "ESCALATED" &&
+    canApproveEscalation(approverRole, issue.priority)
+  ) {
     return (
       <div className="card">
         <p className="font-medium text-graphite">Approve this escalation</p>

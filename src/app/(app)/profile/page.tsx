@@ -36,6 +36,7 @@ export default function ProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const isPrincipal = claims?.role === "principal";
 
   useEffect(() => {
     if (!ready) return;
@@ -70,7 +71,12 @@ export default function ProfilePage() {
       try {
         await api("/api/profile", {
           method: "PATCH",
-          body: JSON.stringify({ name: name.trim(), phone: phone.trim(), college, department }),
+          body: JSON.stringify({
+            name: name.trim(),
+            phone: phone.trim(),
+            college,
+            department: isPrincipal ? "" : department,
+          }),
         });
         await refreshClaims();
         setNotice("Profile updated.");
@@ -80,7 +86,7 @@ export default function ProfilePage() {
         setBusy(false);
       }
     },
-    [name, phone, college, department, refreshClaims]
+    [name, phone, college, department, isPrincipal, refreshClaims]
   );
 
   if (!ready) return <Loading label="Loading profile…" />;
@@ -165,7 +171,7 @@ export default function ProfilePage() {
                 onChange={(e) => {
                   const c = e.target.value as College;
                   setCollege(c);
-                  setDepartment(DEPARTMENTS_BY_COLLEGE[c][0]);
+                  if (!isPrincipal) setDepartment(DEPARTMENTS_BY_COLLEGE[c][0]);
                 }}
               >
                 {COLLEGES.map((c) => (
@@ -179,19 +185,23 @@ export default function ProfilePage() {
               <label className="label" htmlFor="department">
                 Department
               </label>
-              <select
-                id="department"
-                className="input"
-                value={department}
-                disabled={busy}
-                onChange={(e) => setDepartment(e.target.value)}
-              >
-                {DEPARTMENTS_BY_COLLEGE[college].map((d) => (
-                  <option key={d} value={d}>
-                    {d}
-                  </option>
-                ))}
-              </select>
+              {isPrincipal ? (
+                <p className="text-sm text-graphite">—</p>
+              ) : (
+                <select
+                  id="department"
+                  className="input"
+                  value={department}
+                  disabled={busy}
+                  onChange={(e) => setDepartment(e.target.value)}
+                >
+                  {DEPARTMENTS_BY_COLLEGE[college].map((d) => (
+                    <option key={d} value={d}>
+                      {d}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
           </div>
 
