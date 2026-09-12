@@ -21,13 +21,15 @@ export function IssueCard({ issue, onClose }: { issue: Issue; onClose?: () => vo
     <div className="card flex flex-col gap-3 transition-shadow hover:shadow-[var(--shadow-card-hover)]">
       <Link href={`/issues/${issue.id}`} className="flex flex-1 flex-col gap-3">
         <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="text-xs font-medium uppercase tracking-wide text-slate">{issue.issueNo}</p>
-            <h3 className="mt-0.5 truncate font-display text-[15px] font-medium text-graphite">
+            <h3 className="mt-0.5 line-clamp-2 break-words font-display text-[15px] font-medium leading-snug text-graphite">
               {issue.title}
             </h3>
           </div>
-          <StatusBadge status={issue.status} />
+          <div className="shrink-0">
+            <StatusBadge status={issue.status} />
+          </div>
         </div>
 
         <p className="line-clamp-2 text-sm text-slate max-md:text-[13px]">{issue.description}</p>

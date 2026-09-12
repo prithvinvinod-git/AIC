@@ -193,6 +193,36 @@ export const BUILDINGS = [
 
 export const DEFAULT_FLOORS = ["Ground", "1", "2", "3", "4", "Roof"];
 
+/** Per-college building lists shown in the report form. */
+export const BUILDINGS_BY_COLLEGE: Record<College, string[]> = {
+  Engineering: [
+    "Office",
+    "Seminar Hall",
+    "Auditorium",
+    "Library",
+    "Canteen",
+    "Lab",
+    "Workshop",
+    "Main building",
+    "Toilet",
+    "Classroom",
+    "Department",
+  ],
+  Dental: BUILDINGS,
+  Pharmaceutical: BUILDINGS,
+  Medical: BUILDINGS,
+  Nursing: BUILDINGS,
+};
+
+/** Per-college floor lists shown in the report form. */
+export const FLOORS_BY_COLLEGE: Record<College, string[]> = {
+  Engineering: ["Underground", "Ground", "1", "2", "3", "Roof"],
+  Dental: DEFAULT_FLOORS,
+  Pharmaceutical: DEFAULT_FLOORS,
+  Medical: DEFAULT_FLOORS,
+  Nursing: DEFAULT_FLOORS,
+};
+
 export const SAMPLE_CATEGORIES = [
   "Electrical",
   "Plumbing",

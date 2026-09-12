@@ -10,7 +10,7 @@ import ProfileOnboarding from "@/components/auth/ProfileOnboarding";
 import { useToast } from "@/components/ui/Toast";
 import { api, ApiError } from "@/lib/clientApi";
 import { fileToCompressedBase64 } from "@/lib/upload";
-import { BUILDINGS, COLLEGES, DEFAULT_FLOORS, DEPARTMENTS_BY_COLLEGE, PRIORITY_COLOR, PRIORITY_LABEL, type College } from "@/lib/constants";
+import { BUILDINGS_BY_COLLEGE, COLLEGES, DEPARTMENTS_BY_COLLEGE, FLOORS_BY_COLLEGE, PRIORITY_COLOR, PRIORITY_LABEL, type College } from "@/lib/constants";
 import { assertRouteAccess } from "@/lib/roleGuards";
 import type { Category, ImageRef } from "@/lib/types";
 
@@ -37,8 +37,8 @@ export default function NewIssuePage() {
   );
   const [categoryId, setCategoryId] = useState("");
   const [priority, setPriority] = useState(3);
-  const [building, setBuilding] = useState(BUILDINGS[0]);
-  const [floor, setFloor] = useState(DEFAULT_FLOORS[0]);
+  const [building, setBuilding] = useState(BUILDINGS_BY_COLLEGE[college][0]);
+  const [floor, setFloor] = useState(FLOORS_BY_COLLEGE[college][0]);
   const [locationName, setLocationName] = useState("");
   const [images, setImages] = useState<{ url: string; preview: string; uploading: boolean }[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -232,6 +232,8 @@ export default function NewIssuePage() {
                 const c = e.target.value as College;
                 setCollege(c);
                 setDepartment(DEPARTMENTS_BY_COLLEGE[c][0]);
+                setBuilding(BUILDINGS_BY_COLLEGE[c][0]);
+                setFloor(FLOORS_BY_COLLEGE[c][0]);
               }}
             >
               {COLLEGES.map((c) => (
@@ -297,7 +299,7 @@ export default function NewIssuePage() {
               value={building}
               onChange={(e) => setBuilding(e.target.value)}
             >
-              {BUILDINGS.map((b) => (
+              {BUILDINGS_BY_COLLEGE[college].map((b) => (
                 <option key={b} value={b}>
                   {b}
                 </option>
@@ -314,16 +316,16 @@ export default function NewIssuePage() {
               value={floor}
               onChange={(e) => setFloor(e.target.value)}
             >
-              {DEFAULT_FLOORS.map((f) => (
+              {FLOORS_BY_COLLEGE[college].map((f) => (
                 <option key={f} value={f}>
-                  {f === "Ground" ? "Ground" : `Floor ${f}`}
+                  {f === "Underground" ? "Underground" : f === "Roof" ? "Roof" : f === "Ground" ? "Ground" : `Floor ${f}`}
                 </option>
               ))}
             </select>
           </div>
           <div>
             <label className="label" htmlFor="room">
-              Room / landmark
+              Landmark
             </label>
             <input
               id="room"

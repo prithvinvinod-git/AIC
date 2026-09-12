@@ -150,9 +150,9 @@ export default function ValidatePage() {
                     onClick={() => setOpenId(open ? null : issue.id || null)}
                   >
                     <div className="flex items-center justify-between gap-3">
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <p className="text-xs font-medium uppercase tracking-wide text-slate">{issue.issueNo}</p>
-                        <h3 className="truncate font-display text-base font-medium text-graphite">
+                        <h3 className="line-clamp-2 break-words font-display text-base font-medium leading-snug text-graphite">
                           {issue.title}
                         </h3>
                       </div>
