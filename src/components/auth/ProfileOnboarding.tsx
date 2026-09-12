@@ -5,7 +5,8 @@ import { usePathname } from "next/navigation";
 import { X } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { api, ApiError } from "@/lib/clientApi";
-import { COLLEGES, DEPARTMENTS_BY_COLLEGE, type College } from "@/lib/constants";
+import { COLLEGES, DEPARTMENTS_BY_COLLEGE, CATEGORY_SCOPED_ROLES, type College } from "@/lib/constants";
+import type { Role } from "@/lib/types";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 interface Props {
@@ -15,6 +16,25 @@ interface Props {
   inline?: boolean;
   /** Called after the profile is saved. */
   onDone?: () => void;
+}
+
+/** Best-effort "don't show this again" marker, fired on Skip/Close too so the
+ *  modal doesn't reappear on the next navigation. Local state closes it
+ *  immediately regardless of network. */
+function persistDismiss(
+  refreshClaims: () => Promise<unknown>,
+  setBusy: (v: boolean) => void,
+  setError: (e: string | null) => void
+) {
+  setBusy(true);
+  setError(null);
+  api("/api/profile", {
+    method: "PATCH",
+    body: JSON.stringify({ profilePromptDismissed: true }),
+  })
+    .then(() => refreshClaims())
+    .catch((e) => setError(e instanceof Error ? e.message : "Couldn't save your preference."))
+    .finally(() => setBusy(false));
 }
 
 /**
@@ -36,33 +56,52 @@ export default function ProfileOnboarding({ required, inline, onDone }: Props = 
       ? claims.department
       : DEPARTMENTS_BY_COLLEGE[college][0]
   );
-  const [dontAsk, setDontAsk] = useState(false);
+  const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
+  const [categoryId, setCategoryId] = useState("");
+  const [dismissed, setDismissed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const dialogRef = useRef<HTMLDivElement | null>(null);
 
+  const isCategoryRole =
+    !!claims && (CATEGORY_SCOPED_ROLES as Role[]).includes(claims.role as Role);
+
+  useEffect(() => {
+    let cancelled = false;
+    api<{ categories: { id: string; name: string }[] }>("/api/categories")
+      .then((res) => {
+        if (cancelled) return;
+        setCategories(res.categories);
+        setCategoryId(
+          claims?.categoryId && res.categories.some((c) => c.id === claims.categoryId)
+            ? claims.categoryId
+            : res.categories[0]?.id || ""
+        );
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [claims?.categoryId]);
+
+  // Category-scoped roles (maintenance family) complete their assignment via a
+  // category picker instead of a department; everything still needs a college.
   const needsCompletion =
-    !!claims && claims.role !== "admin" && !claims.college;
+    !!claims &&
+    claims.role !== "admin" &&
+    (!claims.college || (isCategoryRole && !claims.categoryId));
   const autoShow =
     needsCompletion &&
     !required &&
     !claims!.profilePromptDismissed &&
     pathname !== "/new";
+  const showDialog = !dismissed && (autoShow || (required && needsCompletion));
 
   const close = useCallback(() => {
     if (busy || required) return;
-    if (dontAsk) {
-      setBusy(true);
-      setError(null);
-      api("/api/profile", {
-        method: "PATCH",
-        body: JSON.stringify({ profilePromptDismissed: true }),
-      })
-        .then(() => refreshClaims())
-        .catch((e) => setError(e instanceof Error ? e.message : "Couldn't save your preference."))
-        .finally(() => setBusy(false));
-    }
-  }, [busy, required, dontAsk, refreshClaims]);
+    setDismissed(true);
+    persistDismiss(refreshClaims, setBusy, setError);
+  }, [busy, required, refreshClaims]);
 
   useEffect(() => {
     if (!autoShow) return;
@@ -77,19 +116,24 @@ export default function ProfileOnboarding({ required, inline, onDone }: Props = 
     };
   }, [autoShow, close]);
 
-  useFocusTrap(dialogRef, !inline && !!(autoShow || (required && needsCompletion)));
+  useFocusTrap(dialogRef, !inline && !!showDialog);
 
   const confirm = useCallback(async () => {
     setBusy(true);
     setError(null);
     try {
+      const body: Record<string, unknown> = {
+        college,
+        profilePromptDismissed: true,
+      };
+      if (isCategoryRole) {
+        body.categoryId = categoryId;
+      } else {
+        body.department = department;
+      }
       await api("/api/profile", {
         method: "PATCH",
-        body: JSON.stringify({
-          college,
-          department,
-          profilePromptDismissed: true,
-        }),
+        body: JSON.stringify(body),
       });
       await refreshClaims();
       onDone?.();
@@ -98,9 +142,9 @@ export default function ProfileOnboarding({ required, inline, onDone }: Props = 
     } finally {
       setBusy(false);
     }
-  }, [college, department, refreshClaims, onDone]);
+  }, [college, department, categoryId, isCategoryRole, refreshClaims, onDone]);
 
-  if (!autoShow && !(required && needsCompletion)) return null;
+  if (!showDialog) return null;
 
   const panel = (
     <div className="card relative w-full max-w-md">
@@ -112,7 +156,9 @@ export default function ProfileOnboarding({ required, inline, onDone }: Props = 
           <p className="mt-1 text-sm text-slate">
             {required
               ? "You need a college and department to report an issue."
-              : `Welcome, ${claims?.name || "there"} — tell us where you belong.`}
+              : isCategoryRole
+                ? `Welcome, ${claims?.name || "there"} — pick your college and maintenance category.`
+                : `Welcome, ${claims?.name || "there"} — tell us where you belong.`}
           </p>
         </div>
         {!required && (
@@ -151,24 +197,46 @@ export default function ProfileOnboarding({ required, inline, onDone }: Props = 
             ))}
           </select>
         </div>
-        <div>
-          <label className="label" htmlFor="onboarding-department">
-            Department
-          </label>
-          <select
-            id="onboarding-department"
-            className="input"
-            value={department}
-            disabled={busy}
-            onChange={(e) => setDepartment(e.target.value)}
-          >
-            {DEPARTMENTS_BY_COLLEGE[college].map((d) => (
-              <option key={d} value={d}>
-                {d}
-              </option>
-            ))}
-          </select>
-        </div>
+        {isCategoryRole ? (
+          <div>
+            <label className="label" htmlFor="onboarding-category">
+              Category
+            </label>
+            <select
+              id="onboarding-category"
+              className="input"
+              value={categoryId}
+              disabled={busy}
+              onChange={(e) => setCategoryId(e.target.value)}
+            >
+              {categories.length === 0 && <option value="">Loading categories…</option>}
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : (
+          <div>
+            <label className="label" htmlFor="onboarding-department">
+              Department
+            </label>
+            <select
+              id="onboarding-department"
+              className="input"
+              value={department}
+              disabled={busy}
+              onChange={(e) => setDepartment(e.target.value)}
+            >
+              {DEPARTMENTS_BY_COLLEGE[college].map((d) => (
+                <option key={d} value={d}>
+                  {d}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       {error && <p className="mt-3 text-sm text-danger">{error}</p>}
@@ -184,18 +252,7 @@ export default function ProfileOnboarding({ required, inline, onDone }: Props = 
             Skip
           </button>
         )}
-        <div className="ml-auto flex items-center gap-3">
-          {!required && (
-            <label className="flex cursor-pointer items-center gap-2 text-xs text-slate">
-              <input
-                type="checkbox"
-                className="h-3.5 w-3.5 rounded border-silver accent-ink"
-                checked={dontAsk}
-                onChange={(e) => setDontAsk(e.target.checked)}
-              />
-              Don&apos;t ask again
-            </label>
-          )}
+        <div className="ml-auto">
           <button
             type="button"
             className="btn btn-primary"
