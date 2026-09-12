@@ -57,7 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [needsPasswordSetup, setNeedsPasswordSetup] = useState(false);
 
-  const refreshClaims = useCallback(async (): Promise<SessionClaims> => {
+  const refreshClaims = useCallback(async (force = false): Promise<SessionClaims> => {
     const auth = getClientAuth();
     const current = auth.currentUser;
     if (!current) {
@@ -65,7 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setAuthToken(null);
       return { role: "reporter", department: "", name: "User" };
     }
-    const result = await current.getIdTokenResult(true);
+    const result = await current.getIdTokenResult(force);
     setAuthToken(result.token);
     const next: SessionClaims = {
       role: (result.claims.role as Role) || "reporter",
@@ -91,10 +91,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(u);
       if (u) {
         setOfflineUser(u.uid);
+        // Boot with the token the session restore already issued (no extra
+        // network round trip) so `ready` flips and the shell paints fast...
         void refreshClaims().then((c) => {
           const hasPwProvider = u.providerData.some((p) => p.providerId === "password");
           setNeedsPasswordSetup(!hasPwProvider && !c.hasPassword);
           setReady(true);
+          // ...then reconcile claims that may have changed since that token was
+          // minted (e.g. an admin reseated this role) without blocking paint.
+          refreshClaims(true).catch(() => undefined);
         });
       } else {
         // Sign-out / switch: wipe the offline store so a different account
@@ -114,7 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setTokenRefreshHandler(async () => {
       try {
-        await refreshClaims();
+        await refreshClaims(true);
         return getAuthToken();
       } catch {
         return null;
@@ -164,7 +169,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await current.reload();
     setUser(auth.currentUser);
     if (current.emailVerified) {
-      await refreshClaims();
+      await refreshClaims(true);
     }
   }, [refreshClaims]);
 

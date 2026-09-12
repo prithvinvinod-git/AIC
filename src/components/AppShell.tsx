@@ -47,7 +47,14 @@ export default function AppShell({ children }: { children: ReactNode }) {
     }
   }, [ready, user, claims, needsEmailVerification, router, pathname]);
 
-  if (!ready) return <Loading label="Checking session…" />;
+  if (!ready) {
+    return (
+      <div className="flex min-h-dvh w-full flex-col items-center justify-center gap-4 bg-paper">
+        <span className="font-display text-xl font-semibold text-ink">Servox</span>
+        <Loading label="Checking session…" />
+      </div>
+    );
+  }
   if (!user || !claims) return null;
 
   return (

@@ -3,7 +3,7 @@ import { adminAuth, adminDb } from "@/lib/firebaseAdmin";
 import { json, parseBody, handleError } from "@/lib/api";
 import { clientIp, isRateLimited } from "@/lib/rateLimit";
 import { adminUserSchema } from "@/lib/schemas";
-import { DEPARTMENT_SCOPED_ROLES } from "@/lib/constants";
+import { CATEGORY_SCOPED_ROLES, DEPARTMENT_SCOPED_ROLES } from "@/lib/constants";
 import { invalidateServerCache } from "@/lib/serverCache";
 import { capitalizeName } from "@/lib/format";
 import type { Role } from "@/lib/types";
@@ -40,11 +40,18 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const role: Role = body.role;
     const name = capitalizeName(body.name || "");
     const department = role === "principal" ? "" : body.department;
+    // Category-scoped roles (category_head/maintenance/purchase) are assigned
+    // via category instead of department.
+    const categoryId = body.categoryId || "";
 
-    // Department-scoped roles (validator, hod, heads, maintenance) are useless
-    // without a department — their queues would be empty.
+    // Department-scoped roles (validator, hod) are useless without a
+    // department — their queues would be empty.
     if ((DEPARTMENT_SCOPED_ROLES as Role[]).includes(role) && !department) {
       return json({ error: "Department is required for this role." }, 400);
+    }
+    // Category-scoped roles are useless without a category.
+    if ((CATEGORY_SCOPED_ROLES as Role[]).includes(role) && !categoryId) {
+      return json({ error: "Category is required for this role." }, 400);
     }
 
     let userRecord;
@@ -72,6 +79,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       portal: body.portal || null,
       department,
       college: body.college || null,
+      categoryId: (CATEGORY_SCOPED_ROLES as Role[]).includes(role) ? categoryId : null,
       requiresEmailVerification: body.requiresEmailVerification || null,
       name,
     });
@@ -84,12 +92,19 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         portal: body.portal || "",
         college: body.college || "",
         department,
+        ...((CATEGORY_SCOPED_ROLES as Role[]).includes(role) ? { categoryId } : {}),
         phone: body.phone || userRecord.phoneNumber || "",
         isActive: body.isActive,
         createdAt: new Date().toISOString(),
       },
       { merge: true }
     );
+
+    // A category head's queue is scoped by the categories they own — wire the
+    // selection so their board actually fills.
+    if (role === "category_head" && categoryId) {
+      await db.doc(`categories/${categoryId}`).update({ headUid: userRecord.uid });
+    }
 
     invalidateServerCache("api:admin:users");
     return json({ uid: userRecord.uid }, 201);
@@ -110,45 +125,71 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
     const body = await parseBody(req, adminUserSchema.partial());
     if (!body.uid) return json({ error: "uid is required." }, 400);
 
-    const updates: Record<string, unknown> = {};
+    const existing = await adminAuth().getUser(body.uid);
+    const existingClaims = (existing.customClaims ?? {}) as Record<string, unknown>;
+    const effRole: Role = (body.role ?? (existingClaims.role as Role)) as Role;
     const name = body.name ? capitalizeName(body.name) : undefined;
+
+    const updates: Record<string, unknown> = {};
     if (name) updates.displayName = name;
     if (body.password) {
       await adminAuth().updateUser(body.uid, { password: body.password });
     }
     if (name) await adminAuth().updateUser(body.uid, updates as never);
-    if (body.role) {
-      const existing = await adminAuth().getUser(body.uid);
-      const existingClaims = (existing.customClaims ?? {}) as Record<string, unknown>;
-      const requiresEmailVerification =
-        body.requiresEmailVerification !== undefined
-          ? body.requiresEmailVerification
-          : Boolean(existingClaims.requiresEmailVerification);
-      // Principals are college-scoped, never department-scoped — a role change
-      // to principal clears any previously set department.
-      const department =
-        body.role === "principal"
-          ? ""
-          : body.department !== undefined
-            ? body.department
-            : (existingClaims.department as string) ?? "";
-      if ((DEPARTMENT_SCOPED_ROLES as Role[]).includes(body.role) && !department) {
-        return json({ error: "Department is required for this role." }, 400);
-      }
+    const requiresEmailVerification =
+      body.requiresEmailVerification !== undefined
+        ? body.requiresEmailVerification
+        : Boolean(existingClaims.requiresEmailVerification);
+    // Principals are college-scoped, never department-scoped — a role change
+    // to principal clears any previously set department.
+    const department =
+      effRole === "principal"
+        ? ""
+        : body.department !== undefined
+          ? body.department
+          : (existingClaims.department as string) ?? "";
+    if ((DEPARTMENT_SCOPED_ROLES as Role[]).includes(effRole) && !department) {
+      return json({ error: "Department is required for this role." }, 400);
+    }
+    const categoryScoped = (CATEGORY_SCOPED_ROLES as Role[]).includes(effRole);
+    const categoryId =
+      body.categoryId !== undefined
+        ? body.categoryId
+        : (existingClaims.categoryId as string) || "";
+
+    const roleChanged = body.role !== undefined;
+    const categoryChanged = body.categoryId !== undefined;
+    if (roleChanged || categoryChanged) {
       await adminAuth().setCustomUserClaims(body.uid, {
-        role: body.role,
+        role: effRole,
         portal: body.portal !== undefined ? body.portal : (existingClaims.portal as string) || null,
         department,
         college:
           body.college !== undefined
             ? body.college
             : (existingClaims.college as string) ?? null,
+        categoryId: categoryScoped ? categoryId : null,
         requiresEmailVerification: requiresEmailVerification || null,
         name:
           name !== undefined
             ? name
             : ((existingClaims.name as string) || existing.displayName || ""),
       });
+
+      // Keep categories/{id}.headUid in sync for category heads.
+      if (effRole === "category_head") {
+        const prev = await db.collection("categories").where("headUid", "==", body.uid).get();
+        for (const c of prev.docs) {
+          if (c.id !== categoryId) await db.doc(`categories/${c.id}`).update({ headUid: "" });
+        }
+        if (categoryId) await db.doc(`categories/${categoryId}`).update({ headUid: body.uid });
+      } else if (roleChanged) {
+        // Moved away from category_head — stop heading any categories.
+        const prev = await db.collection("categories").where("headUid", "==", body.uid).get();
+        for (const c of prev.docs) {
+          await db.doc(`categories/${c.id}`).update({ headUid: "" });
+        }
+      }
     }
 
     const userData: Record<string, unknown> = {};
@@ -157,7 +198,8 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
     if (body.portal !== undefined) userData.portal = body.portal;
     if (body.college !== undefined) userData.college = body.college;
     if (body.department !== undefined) userData.department = body.department;
-    if (body.role === "principal") userData.department = "";
+    if (effRole === "principal") userData.department = "";
+    if (categoryScoped) userData.categoryId = categoryId;
     if (body.phone !== undefined) userData.phone = body.phone;
     if (body.isActive !== undefined) userData.isActive = body.isActive;
 

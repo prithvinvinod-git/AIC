@@ -371,6 +371,9 @@ export interface AppUser {
   role: Role;
   college?: string;
   department: string;
+  /** Category a category_scoped role (category_head/maintenance/purchase) is
+   *  assigned to, set by an admin. */
+  categoryId?: string;
   phone?: string;
   isActive: boolean;
   createdAt: string;

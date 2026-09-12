@@ -113,15 +113,18 @@ export const COLLEGES = [
 
 export type College = (typeof COLLEGES)[number];
 
-/** Roles whose queue is scoped to a single department (a department is
- *  required, and it is always managed by an admin, never self-service). */
-export const DEPARTMENT_SCOPED_ROLES: Role[] = [
-  "validator",
-  "hod",
-  "maintenance_head",
-  "category_head",
-  "maintenance",
-];
+/** Roles whose queue is scoped to a single department — a department is
+ *  required, and it is always managed by an admin, never self-service.
+ *  (maintenance_head/category_head/maintenance moved to category-based
+ *  assignment; see CATEGORY_SCOPED_ROLES.) */
+export const DEPARTMENT_SCOPED_ROLES: Role[] = ["validator", "hod"];
+
+/** Roles whose assignment in the admin panel is a category, not a department.
+ *  category_head is additionally wired as categories/{id}.headUid (its queue
+ *  is scoped by which categories it heads); maintenance/purchase just store
+ *  the selection on the user doc. maintenance_head gets neither — it is
+ *  assigned categories via the Categories tab. */
+export const CATEGORY_SCOPED_ROLES: Role[] = ["category_head", "maintenance", "purchase"];
 
 export const DEPARTMENTS_BY_COLLEGE: Record<College, string[]> = {
   Engineering: [

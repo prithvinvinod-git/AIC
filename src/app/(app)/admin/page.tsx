@@ -9,7 +9,7 @@ import { api } from "@/lib/clientApi";
 import { Loading } from "@/components/ui/States";
 import { Modal } from "@/components/ui/Modal";
 import { useActionError } from "@/components/ui/Toast";
-import { COLLEGES, DEPARTMENTS_BY_COLLEGE, ROLE_LABEL, type College } from "@/lib/constants";
+import { CATEGORY_SCOPED_ROLES, COLLEGES, DEPARTMENTS_BY_COLLEGE, ROLE_LABEL, type College } from "@/lib/constants";
 import { assertRouteAccess } from "@/lib/roleGuards";
 import type { AppUser, Category, Team, Role } from "@/lib/types";
 
@@ -85,11 +85,17 @@ function UsersTab() {
   const [role, setRole] = useState<Role>("validator");
   const [college, setCollege] = useState<College>(COLLEGES[0]);
   const [department, setDepartment] = useState<string>(DEPARTMENTS_BY_COLLEGE[COLLEGES[0]][0]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [categoryId, setCategoryId] = useState("");
 
   const load = useCallback(async () => {
     try {
-      const res = await api<{ users: AppUser[] }>("/api/admin/users");
+      const [res, cats] = await Promise.all([
+        api<{ users: AppUser[] }>("/api/admin/users"),
+        api<{ categories: Category[] }>("/api/categories"),
+      ]);
       setUsers(res.users);
+      setCategories(cats.categories);
       setSelectedUser((prev) => {
         if (!prev) return prev;
         const fresh = res.users.find((x) => x.uid === prev.uid);
@@ -108,6 +114,14 @@ function UsersTab() {
   const isFaculty = userTab === "Faculties";
   const addRole: Role = isFaculty ? role : "reporter";
   const depts = DEPARTMENTS_BY_COLLEGE[college];
+  const categoryScoped = (CATEGORY_SCOPED_ROLES as Role[]).includes(addRole);
+  const noAssignment = addRole === "maintenance_head" || addRole === "principal";
+  const categoryName = (id?: string) => categories.find((c) => c.id === id)?.name ?? "—";
+
+  // Keep the add-form category picker populated once categories load.
+  useEffect(() => {
+    if (!categoryId && categories[0]?.id) setCategoryId(categories[0].id as string);
+  }, [categoryId, categories]);
 
   const addUser = useCallback(
     async (e: React.FormEvent) => {
@@ -115,7 +129,15 @@ function UsersTab() {
       try {
         await api("/api/auth/provision", {
           method: "POST",
-          body: JSON.stringify({ name, email, password, role: addRole, college, department }),
+          body: JSON.stringify({
+            name,
+            email,
+            password,
+            role: addRole,
+            college,
+            department: noAssignment || categoryScoped ? "" : department,
+            ...(categoryScoped ? { categoryId } : {}),
+          }),
         });
         setName("");
         setEmail("");
@@ -124,7 +146,7 @@ function UsersTab() {
         showError(e2);
       }
     },
-    [name, email, password, addRole, college, department, load, showError]
+    [name, email, password, addRole, college, department, categoryScoped, categoryId, noAssignment, load, showError]
   );
 
   const updateUser = useCallback(
@@ -191,7 +213,11 @@ function UsersTab() {
             onChange={(e) => {
               const next = e.target.value as Role;
               setRole(next);
-              if (next === "principal") setDepartment("");
+              if (next === "maintenance_head" || next === "principal") setDepartment("");
+              if ((CATEGORY_SCOPED_ROLES as Role[]).includes(next)) {
+                setDepartment("");
+                if (categories[0]?.id) setCategoryId((prev) => prev || (categories[0].id as string));
+              }
             }}
           >
             {FACULTY_ROLES.map((r) => (
@@ -223,22 +249,38 @@ function UsersTab() {
             </option>
           ))}
         </select>
-        <select
-          className="input lg:order-7"
-          value={department}
-          disabled={addRole === "principal"}
-          onChange={(e) => setDepartment(e.target.value)}
-        >
-          {addRole === "principal" ? (
-            <option value="">— Principal has no department</option>
-          ) : (
-            depts.map((d) => (
+        {noAssignment ? (
+          <select className="input lg:order-7" disabled value="">
+            <option value="">
+              {addRole === "principal" ? "— Principal has no department" : "— No category / department"}
+            </option>
+          </select>
+        ) : categoryScoped ? (
+          <select
+            className="input lg:order-7"
+            value={categoryId}
+            onChange={(e) => setCategoryId(e.target.value)}
+          >
+            {categories.length === 0 && <option value="">No categories yet</option>}
+            {categories.map((c) => (
+              <option key={c.id} value={c.id as string}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <select
+            className="input lg:order-7"
+            value={department}
+            onChange={(e) => setDepartment(e.target.value)}
+          >
+            {depts.map((d) => (
               <option key={d} value={d}>
                 {d}
               </option>
-            ))
-          )}
-        </select>
+            ))}
+          </select>
+        )}
       </form>
 
       <div className="card flex flex-col p-0 overflow-hidden max-h-[480px] max-md:max-h-[70vh]">
@@ -247,7 +289,7 @@ function UsersTab() {
             <tr className="text-left text-xs uppercase tracking-wide text-slate">
               <th className="w-[30%] max-md:w-[40%] border-b border-silver bg-white px-4 py-3 max-md:px-3 max-md:py-1.5">User</th>
               <th className="w-[17%] max-md:w-[30%] border-b border-silver bg-white px-4 py-3 max-md:px-3 max-md:py-1.5">College</th>
-              <th className="w-[17%] max-md:w-[30%] border-b border-silver bg-white px-4 py-3 max-md:px-3 max-md:py-1.5">Department</th>
+              <th className="w-[17%] max-md:w-[30%] border-b border-silver bg-white px-4 py-3 max-md:px-3 max-md:py-1.5">Dept / Category</th>
               <th className="w-[14%] max-md:hidden border-b border-silver bg-white px-4 py-3 max-md:px-3 max-md:py-1.5">Role</th>
               <th className="w-[22%] max-md:hidden border-b border-silver bg-white px-4 py-3 max-md:px-3 max-md:py-1.5 text-right">Actions</th>
             </tr>
@@ -270,7 +312,11 @@ function UsersTab() {
                     <p className="truncate text-xs text-slate max-md:text-[11px] max-md:leading-tight">{u.email}</p>
                   </td>
                   <td className="w-[17%] max-md:w-[30%] truncate border-b border-silver px-4 py-3 max-md:px-3 max-md:py-1.5 text-slate max-md:text-[11px]">{u.college || "—"}</td>
-                  <td className="w-[17%] max-md:w-[30%] border-b border-silver px-4 py-3 max-md:px-3 max-md:py-1.5 text-slate max-md:text-[11px]">{u.role === "principal" ? "—" : u.department || "—"}</td>
+                  <td className="w-[17%] max-md:w-[30%] border-b border-silver px-4 py-3 max-md:px-3 max-md:py-1.5 text-slate max-md:text-[11px]">{u.role === "principal" || u.role === "maintenance_head"
+                    ? "—"
+                    : (CATEGORY_SCOPED_ROLES as Role[]).includes(u.role)
+                      ? categoryName(u.categoryId)
+                      : u.department || "—"}</td>
                   <td className="w-[14%] max-md:hidden border-b border-silver px-4 py-3 max-md:px-3 max-md:py-1.5">
                     <select
                       className="input w-full py-1 text-xs max-md:py-0.5 max-md:text-[11px]"
@@ -351,30 +397,53 @@ function UsersTab() {
               ))}
             </select>
           </label>
-          <label className="block">
-            <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate">Department</span>
-            <select
-              className="input w-full"
-              value={
-                selectedUser?.role === "principal"
-                  ? ""
-                  : selectedUser?.department || ""
-              }
-              disabled={selectedUser?.role === "principal"}
-              onChange={(e) => selectedUser?.uid && void updateUser(selectedUser.uid, { department: e.target.value })}
-            >
-              <option value="">—</option>
-              {selectedUser?.college &&
-                DEPARTMENTS_BY_COLLEGE[selectedUser.college as College].map((d) => (
-                  <option key={d} value={d}>
-                    {d}
+          {selectedUser?.role === "principal" || selectedUser?.role === "maintenance_head" ? (
+            <label className="block">
+              <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate">
+                {selectedUser.role === "principal" ? "Department" : "Category"}
+              </span>
+              <select className="input w-full" disabled value="">
+                <option value="">
+                  {selectedUser.role === "principal"
+                    ? "— Principal has no department"
+                    : "— Assigned via Categories tab"}
+                </option>
+              </select>
+            </label>
+          ) : (CATEGORY_SCOPED_ROLES as Role[]).includes(selectedUser?.role ?? ("reporter" as Role)) ? (
+            <label className="block">
+              <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate">Category</span>
+              <select
+                className="input w-full"
+                value={selectedUser?.categoryId || ""}
+                onChange={(e) => selectedUser?.uid && void updateUser(selectedUser.uid, { categoryId: e.target.value })}
+              >
+                <option value="">—</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id as string}>
+                    {c.name}
                   </option>
                 ))}
-            </select>
-            {selectedUser?.role === "principal" && (
-              <span className="mt-1 block text-xs text-slate">Principals are college-scoped and have no department.</span>
-            )}
-          </label>
+              </select>
+            </label>
+          ) : (
+            <label className="block">
+              <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate">Department</span>
+              <select
+                className="input w-full"
+                value={selectedUser?.department || ""}
+                onChange={(e) => selectedUser?.uid && void updateUser(selectedUser.uid, { department: e.target.value })}
+              >
+                <option value="">—</option>
+                {selectedUser?.college &&
+                  DEPARTMENTS_BY_COLLEGE[selectedUser.college as College].map((d) => (
+                    <option key={d} value={d}>
+                      {d}
+                    </option>
+                  ))}
+              </select>
+            </label>
+          )}
           <div className="flex items-center gap-2">
             <button
               type="button"
