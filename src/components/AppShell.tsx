@@ -4,7 +4,6 @@ import { useEffect, useMemo, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthProvider";
 import ProfileOnboarding from "@/components/auth/ProfileOnboarding";
-import StaffDataNotice from "@/components/auth/StaffDataNotice";
 import PasswordSetupModal from "@/components/auth/PasswordSetupModal";
 import { useNativePushPrompt } from "@/components/auth/PushNotificationPrompt";
 import AppHeader from "@/components/AppHeader";
@@ -50,8 +49,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
   if (!ready) {
     return (
-      <div className="flex min-h-dvh w-full flex-col items-center justify-center gap-4 bg-paper">
-        <span className="font-display text-xl font-semibold text-ink">Servox</span>
+      <div className="flex min-h-dvh w-full flex-col items-center justify-center bg-paper">
         <Loading label="Checking session…" />
       </div>
     );
@@ -62,7 +60,6 @@ export default function AppShell({ children }: { children: ReactNode }) {
     <div className="min-h-full">
       <AppHeader />
       <main className="mx-auto w-full max-w-page overflow-x-clip px-[20px] py-6 max-lg:pb-[88px] sm:px-6 sm:py-10">
-        <StaffDataNotice />
         {children}
       </main>
       <ProfileOnboarding />

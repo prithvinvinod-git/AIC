@@ -52,14 +52,14 @@ function ValidatePanel({ issue, onDone, onTriaged }: { issue: Issue; onDone: () 
   return (
     <div className="mt-3 flex flex-col gap-3 rounded-xl bg-paper p-4">
       <AISuggestionCard issue={issue} onTriaged={onTriaged} />
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-        <div>
-          <label className="label" htmlFor={`p-${issue.id}`}>
-            Priority (1 = critical)
+      <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+        <div className="flex shrink-0 items-center gap-2">
+          <label className="label mb-0 whitespace-nowrap" htmlFor={`p-${issue.id}`}>
+            Priority
           </label>
           <select
             id={`p-${issue.id}`}
-            className="input w-auto"
+            className="input"
             value={priority}
             onChange={(e) => setPriority(e.target.value)}
           >
@@ -69,12 +69,9 @@ function ValidatePanel({ issue, onDone, onTriaged }: { issue: Issue; onDone: () 
               </option>
             ))}
           </select>
-          <p className="mt-1 max-w-[220px] text-xs text-slate">
-            P1–2 go to HOD/Principal approval; P3–5 auto-assign to a team.
-          </p>
         </div>
         <button
-          className="btn btn-primary btn-sm"
+          className="btn btn-primary"
           disabled={busy !== null}
           onClick={() => void act("validate")}
         >
@@ -87,7 +84,7 @@ function ValidatePanel({ issue, onDone, onTriaged }: { issue: Issue; onDone: () 
           onChange={(e) => setRejectReason(e.target.value)}
         />
         <button
-          className="btn btn-danger btn-sm"
+          className="btn btn-danger"
           disabled={busy !== null || !rejectReason.trim()}
           onClick={() => void act("reject")}
         >

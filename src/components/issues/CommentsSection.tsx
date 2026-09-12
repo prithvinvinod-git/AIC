@@ -151,7 +151,7 @@ export function CommentsSection({ issueId, comments, onReload }: Props) {
         className="mt-3 w-full rounded-xl border border-dashed border-silver bg-paper px-3 py-2.5 text-left text-sm text-slate transition-colors hover:border-slate hover:text-graphite"
         onClick={() => setOpen(true)}
       >
-        <MessageSquareText className="mr-1.5 inline h-4 w-4 align-[-3px]" aria-hidden />
+        <MessageSquareText className="mr-1.5 inline h-5 w-5 align-[-3px]" aria-hidden />
         Add a comment…
       </button>
       {items.length > 0 && (

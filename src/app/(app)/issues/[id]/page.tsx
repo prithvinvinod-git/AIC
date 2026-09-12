@@ -67,7 +67,7 @@ export default function IssueDetailPage() {
         <div className="flex flex-col gap-2 rounded-xl border border-danger/30 bg-danger-soft px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="flex items-center gap-2 font-semibold text-danger">
-              <ShieldAlert className="h-5 w-5" aria-hidden /> Safety hazard detected
+              <ShieldAlert className="h-[22px] w-[22px]" aria-hidden /> Safety hazard detected
             </p>
             <p className="mt-1 text-sm text-danger/90">
               {issue.aiSuggestion.safetyFlags.join(" · ")} — this issue was auto-escalated to

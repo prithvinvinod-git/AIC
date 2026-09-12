@@ -227,7 +227,7 @@ export function DispatchCard({
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
             <p className="text-xs font-medium uppercase tracking-wide text-slate">{issue.issueNo}</p>
-            <h3 className="truncate font-display text-base font-medium text-graphite">{issue.title}</h3>
+            <h3 className="truncate text-base font-medium text-graphite">{issue.title}</h3>
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <PriorityBadge priority={issue.priority} />

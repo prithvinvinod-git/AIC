@@ -194,23 +194,20 @@ function ValidatorActions({ issue, onChanged }: { issue: Issue; onChanged: () =>
   return (
     <div className="card flex flex-col gap-3">
       <p className="font-medium text-graphite">Validate this issue</p>
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-        <div>
-          <label className="label" htmlFor="prio">
-            Priority (1 = critical)
+      <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+        <div className="flex shrink-0 items-center gap-2">
+          <label className="label mb-0 whitespace-nowrap" htmlFor="prio">
+            Priority
           </label>
-          <select id="prio" className="input w-auto" value={priority} onChange={(e) => setPriority(e.target.value)}>
+          <select id="prio" className="input" value={priority} onChange={(e) => setPriority(e.target.value)}>
             {[1, 2, 3, 4, 5].map((p) => (
               <option key={p} value={p}>
                 P{p}
               </option>
             ))}
           </select>
-          <p className="mt-1 max-w-[220px] text-xs text-slate">
-            P1–2 go to HOD/Principal approval; P3–5 auto-assign to a team.
-          </p>
         </div>
-        <button className="btn btn-primary btn-sm" disabled={busy} onClick={() => void act("validate")}>
+        <button className="btn btn-primary" disabled={busy} onClick={() => void act("validate")}>
           {busy ? "Validating…" : "Validate & auto-route"}
         </button>
         <input
@@ -219,7 +216,7 @@ function ValidatorActions({ issue, onChanged }: { issue: Issue; onChanged: () =>
           value={rejectReason}
           onChange={(e) => setRejectReason(e.target.value)}
         />
-        <button className="btn btn-danger btn-sm" disabled={busy || rejectReason.trim().length < 3} onClick={() => void act("reject")}>
+        <button className="btn btn-danger" disabled={busy || rejectReason.trim().length < 3} onClick={() => void act("reject")}>
           Reject
         </button>
       </div>

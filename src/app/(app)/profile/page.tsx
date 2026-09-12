@@ -116,7 +116,7 @@ export default function ProfilePage() {
               className="h-16 w-16 max-md:h-12 max-md:w-12 rounded-full object-cover"
             />
           ) : (
-            <span className="flex h-16 w-16 max-md:h-12 max-md:w-12 items-center justify-center rounded-full bg-ink text-xl font-semibold text-white">
+            <span className="flex h-16 w-16 max-md:h-12 max-md:w-12 items-center justify-center rounded-full bg-ink text-2xl font-semibold text-white">
               {initials(claims.name)}
             </span>
           )}
