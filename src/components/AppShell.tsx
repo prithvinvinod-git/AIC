@@ -4,6 +4,7 @@ import { useEffect, useMemo, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthProvider";
 import ProfileOnboarding from "@/components/auth/ProfileOnboarding";
+import StaffDataNotice from "@/components/auth/StaffDataNotice";
 import PasswordSetupModal from "@/components/auth/PasswordSetupModal";
 import { useNativePushPrompt } from "@/components/auth/PushNotificationPrompt";
 import AppHeader from "@/components/AppHeader";
@@ -60,7 +61,10 @@ export default function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-full">
       <AppHeader />
-      <main className="mx-auto w-full max-w-page overflow-x-clip px-[20px] py-6 max-lg:pb-[88px] sm:px-6 sm:py-10">{children}</main>
+      <main className="mx-auto w-full max-w-page overflow-x-clip px-[20px] py-6 max-lg:pb-[88px] sm:px-6 sm:py-10">
+        <StaffDataNotice />
+        {children}
+      </main>
       <ProfileOnboarding />
       <MobileNav />
       <PasswordSetupModal open={needsPasswordSetup} onComplete={clearNeedsPasswordSetup} />

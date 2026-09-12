@@ -33,6 +33,8 @@ export interface SessionClaims {
   categoryName?: string;
   name: string;
   profilePromptDismissed?: boolean;
+  /** Dismissed the "data is admin-managed" banner for staff accounts. */
+  assignmentNoticeDismissed?: boolean;
   hasPassword?: boolean;
   requiresEmailVerification?: boolean;
 }
@@ -78,6 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       categoryId: (result.claims.categoryId as string) || undefined,
       categoryName: (result.claims.categoryName as string) || undefined,
       profilePromptDismissed: Boolean(result.claims.profilePromptDismissed),
+      assignmentNoticeDismissed: Boolean(result.claims.assignmentNoticeDismissed),
       hasPassword: Boolean(result.claims.hasPassword),
       requiresEmailVerification: Boolean(result.claims.requiresEmailVerification),
       name:

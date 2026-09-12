@@ -5,8 +5,7 @@ import { usePathname } from "next/navigation";
 import { X } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { api, ApiError } from "@/lib/clientApi";
-import { COLLEGES, DEPARTMENTS_BY_COLLEGE, CATEGORY_SCOPED_ROLES, type College } from "@/lib/constants";
-import type { Role } from "@/lib/types";
+import { COLLEGES, DEPARTMENTS_BY_COLLEGE, type College } from "@/lib/constants";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 interface Props {
@@ -40,7 +39,11 @@ function persistDismiss(
 /**
  * Post-Google-login onboarding: asks reporters for college + department
  * (name/email already come from Google). Auto-shows until the profile is
- * complete, unless the user checked "Don't ask again".
+ * complete, unless the user skipped it.
+ *
+ * Staff roles never see this — their college/department/category are assigned
+ * by an administrator, so there is nothing for them to self-select. Incomplete
+ * staff accounts get a slim banner instead (see StaffDataNotice).
  */
 export default function ProfileOnboarding({ required, inline, onDone }: Props = {}) {
   const { claims, refreshClaims } = useAuth();
@@ -56,40 +59,13 @@ export default function ProfileOnboarding({ required, inline, onDone }: Props = 
       ? claims.department
       : DEPARTMENTS_BY_COLLEGE[college][0]
   );
-  const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
-  const [categoryId, setCategoryId] = useState("");
   const [dismissed, setDismissed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const dialogRef = useRef<HTMLDivElement | null>(null);
 
-  const isCategoryRole =
-    !!claims && (CATEGORY_SCOPED_ROLES as Role[]).includes(claims.role as Role);
-
-  useEffect(() => {
-    let cancelled = false;
-    api<{ categories: { id: string; name: string }[] }>("/api/categories")
-      .then((res) => {
-        if (cancelled) return;
-        setCategories(res.categories);
-        setCategoryId(
-          claims?.categoryId && res.categories.some((c) => c.id === claims.categoryId)
-            ? claims.categoryId
-            : res.categories[0]?.id || ""
-        );
-      })
-      .catch(() => undefined);
-    return () => {
-      cancelled = true;
-    };
-  }, [claims?.categoryId]);
-
-  // Category-scoped roles (maintenance family) complete their assignment via a
-  // category picker instead of a department; everything still needs a college.
-  const needsCompletion =
-    !!claims &&
-    claims.role !== "admin" &&
-    (!claims.college || (isCategoryRole && !claims.categoryId));
+  // Only reporters self-onboard.
+  const needsCompletion = !!claims && claims.role === "reporter" && !claims.college;
   const autoShow =
     needsCompletion &&
     !required &&
@@ -122,18 +98,13 @@ export default function ProfileOnboarding({ required, inline, onDone }: Props = 
     setBusy(true);
     setError(null);
     try {
-      const body: Record<string, unknown> = {
-        college,
-        profilePromptDismissed: true,
-      };
-      if (isCategoryRole) {
-        body.categoryId = categoryId;
-      } else {
-        body.department = department;
-      }
       await api("/api/profile", {
         method: "PATCH",
-        body: JSON.stringify(body),
+        body: JSON.stringify({
+          college,
+          department,
+          profilePromptDismissed: true,
+        }),
       });
       await refreshClaims();
       onDone?.();
@@ -142,7 +113,7 @@ export default function ProfileOnboarding({ required, inline, onDone }: Props = 
     } finally {
       setBusy(false);
     }
-  }, [college, department, categoryId, isCategoryRole, refreshClaims, onDone]);
+  }, [college, department, refreshClaims, onDone]);
 
   if (!showDialog) return null;
 
@@ -156,9 +127,7 @@ export default function ProfileOnboarding({ required, inline, onDone }: Props = 
           <p className="mt-1 text-sm text-slate">
             {required
               ? "You need a college and department to report an issue."
-              : isCategoryRole
-                ? `Welcome, ${claims?.name || "there"} — pick your college and maintenance category.`
-                : `Welcome, ${claims?.name || "there"} — tell us where you belong.`}
+              : `Welcome, ${claims?.name || "there"} — tell us where you belong.`}
           </p>
         </div>
         {!required && (
@@ -197,46 +166,24 @@ export default function ProfileOnboarding({ required, inline, onDone }: Props = 
             ))}
           </select>
         </div>
-        {isCategoryRole ? (
-          <div>
-            <label className="label" htmlFor="onboarding-category">
-              Category
-            </label>
-            <select
-              id="onboarding-category"
-              className="input"
-              value={categoryId}
-              disabled={busy}
-              onChange={(e) => setCategoryId(e.target.value)}
-            >
-              {categories.length === 0 && <option value="">Loading categories…</option>}
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        ) : (
-          <div>
-            <label className="label" htmlFor="onboarding-department">
-              Department
-            </label>
-            <select
-              id="onboarding-department"
-              className="input"
-              value={department}
-              disabled={busy}
-              onChange={(e) => setDepartment(e.target.value)}
-            >
-              {DEPARTMENTS_BY_COLLEGE[college].map((d) => (
-                <option key={d} value={d}>
-                  {d}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+        <div>
+          <label className="label" htmlFor="onboarding-department">
+            Department
+          </label>
+          <select
+            id="onboarding-department"
+            className="input"
+            value={department}
+            disabled={busy}
+            onChange={(e) => setDepartment(e.target.value)}
+          >
+            {DEPARTMENTS_BY_COLLEGE[college].map((d) => (
+              <option key={d} value={d}>
+                {d}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {error && <p className="mt-3 text-sm text-danger">{error}</p>}
