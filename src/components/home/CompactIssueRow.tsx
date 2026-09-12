@@ -15,7 +15,7 @@ export default function CompactIssueRow({
   return (
     <Link
       href={`/issues/${issue.id}`}
-      className={`group flex items-center justify-between gap-3 transition-colors hover:bg-paper sm:gap-4 ${
+      className={`group flex min-w-0 items-center justify-between gap-3 transition-colors hover:bg-paper sm:gap-4 ${
         bordered ? "rounded-lg border border-silver px-2 py-2.5" : "px-1 py-2"
       }`}
     >

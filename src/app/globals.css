@@ -968,5 +968,9 @@ body {
    ============================================================ */
 .board-issue-rows {
   display: grid;
+  /* Pin the column to the container: an unconstrained auto column is sized
+     by the widest row's max-content (untruncated title), which forces the
+     board wider than the screen and lets the status badge overflow. */
+  grid-template-columns: minmax(0, 1fr);
   grid-auto-rows: minmax(0, calc((100% - 4px) / 5));
 }
