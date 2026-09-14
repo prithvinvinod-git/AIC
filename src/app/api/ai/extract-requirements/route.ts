@@ -3,6 +3,7 @@ import { adminDb } from "@/lib/firebaseAdmin";
 import { requireAuth } from "@/lib/auth";
 import { json, handleError } from "@/lib/api";
 import { isRateLimited } from "@/lib/rateLimit";
+import { loadConfig } from "@/lib/issueMachine";
 import { extractRequirementsFlow } from "@/lib/ai";
 
 /** POST /api/ai/extract-requirements — draft requirements from an issue. */
@@ -25,10 +26,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     if (!snap.exists) return json({ error: "Issue not found." }, 404);
     const issue = snap.data()!;
 
-    const result = await extractRequirementsFlow({
-      description: issue.description,
-      imageUrl: issue.images?.[0]?.url,
-    });
+    const config = await loadConfig(adminDb());
+    const result = await extractRequirementsFlow(
+      {
+        description: issue.description,
+        imageUrl: issue.images?.[0]?.url,
+      },
+      { enabled: config.ai?.enabled }
+    );
     await adminDb().doc(`issues/${body.issueId}`).update({
       "aiSuggestion.briefing": result.briefing,
     });

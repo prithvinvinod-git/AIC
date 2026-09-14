@@ -229,9 +229,9 @@ export async function triageFlow(
     department: string;
     categories?: string[];
   },
-  opts?: { triageModel?: string }
+  opts?: { triageModel?: string; enabled?: boolean }
 ): Promise<TriageResult> {
-  if (!aiEnabled()) return fallbackTriage(input.description, Boolean(input.imageUrl));
+  if (!aiEnabled(opts?.enabled)) return fallbackTriage(input.description, Boolean(input.imageUrl));
 
   const ai = await getGenkit();
   const { z } = await import("genkit");

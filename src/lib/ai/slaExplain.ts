@@ -70,7 +70,7 @@ async function buildContext(issueId: string): Promise<{ issue: Issue; events: un
  * "why is this issue late?". Uses Gemini when available, otherwise the
  * deterministic rules above. Persisted to `issue.sla.explanation`.
  */
-export async function slaExplainFlow(issueId: string): Promise<SlaExplanationResult | null> {
+export async function slaExplainFlow(issueId: string, opts?: { enabled?: boolean }): Promise<SlaExplanationResult | null> {
   const ctx = await buildContext(issueId);
   if (!ctx) return null;
   const { issue, events } = ctx;
@@ -107,7 +107,7 @@ export async function slaExplainFlow(issueId: string): Promise<SlaExplanationRes
       ),
   };
 
-  if (!aiEnabled()) {
+  if (!aiEnabled(opts?.enabled)) {
     return { explanation: exportedRules, source: "rules" };
   }
 

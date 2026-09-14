@@ -278,7 +278,7 @@ export const TRANSITION_RULES: Record<IssueStatus, TransitionRule[]> = {
   PENDING_ASSIGN: [
     {
       to: "ASSIGNED",
-      roles: ["category_head", "maintenance_head", "admin"],
+      roles: ["category_head", "admin"],
       check: (_i, _a, input) =>
         input.teamId || _i.routing?.teamId || _i.routing?.categoryId
           ? null

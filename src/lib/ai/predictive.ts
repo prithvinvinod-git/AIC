@@ -58,7 +58,8 @@ function fallbackPredictive(rows: { location: string; category: string }[]): AtR
  * Uses Gemini when available; otherwise a deterministic frequency fallback.
  */
 export async function predictiveMaintenanceFlow(
-  input: { college?: string } = {}
+  input: { college?: string } = {},
+  opts?: { enabled?: boolean }
 ): Promise<PredictiveResult> {
   const since = new Date();
   since.setDate(since.getDate() - 45);
@@ -81,7 +82,7 @@ export async function predictiveMaintenanceFlow(
   });
 
   if (rows.length === 0) return { locations: [] };
-  if (!aiEnabled()) return { locations: fallbackPredictive(rows) };
+  if (!aiEnabled(opts?.enabled)) return { locations: fallbackPredictive(rows) };
 
   try {
     const ai = await getGenkit();

@@ -23,7 +23,8 @@ export function DispatchCard({
   const router = useRouter();
   const isMaintHead = role === "maintenance_head";
   const isCatHead = role === "category_head";
-  const isForward = isMaintHead && (issue.status === "ROUTED" || issue.status === "PENDING_ASSIGN");
+  const canForward = isMaintHead && issue.status === "ROUTED";
+  const canAssign = isCatHead && issue.status === "PENDING_ASSIGN";
 
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [categoryId, setCategoryId] = useState(issue.routing?.categoryId || "");
@@ -117,7 +118,7 @@ export function DispatchCard({
     [issue.id, verdict, sendBack, onRefresh, showError]
   );
 
-  const forwardPanel = isForward && (
+  const forwardPanel = canForward && (
     <div className="flex flex-col gap-3">
       <p className="text-xs text-slate">Forward to a category head, who will assign a team and workers.</p>
       <div className="flex flex-col gap-2">
@@ -150,7 +151,7 @@ export function DispatchCard({
     </div>
   );
 
-  const assignPanel = issue.status === "PENDING_ASSIGN" && (
+  const assignPanel = canAssign && (
     <div className="flex flex-col gap-3">
       <p className="text-xs text-slate">Pick a team and the workers who will handle this job.</p>
       <div className="flex flex-wrap gap-2">
@@ -243,14 +244,14 @@ export function DispatchCard({
 
       <IssuePhotos images={issue.images} placeholder />
 
-      {(isForward || issue.status === "PENDING_ASSIGN") && (
+      {(canForward || canAssign) && (
         <div className="mt-auto flex flex-wrap items-center gap-2">
-          {isForward && (
+          {canForward && (
             <button className="btn btn-primary btn-sm" onClick={() => setDialog("forward")}>
               <ArrowRight className="h-3.5 w-3.5" aria-hidden /> Route to category head
             </button>
           )}
-          {issue.status === "PENDING_ASSIGN" && (
+          {canAssign && (
             <button className="btn btn-primary btn-sm" onClick={() => setDialog("assign")}>
               <UserCheck className="h-3.5 w-3.5" aria-hidden /> Assign workers
             </button>

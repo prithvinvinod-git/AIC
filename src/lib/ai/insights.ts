@@ -45,7 +45,8 @@ const TERMINAL_STATUSES = ["CLOSED", "VERIFIED", "REJECTED"];
  * "trending complaints" panel and the weekly report email.
  */
 export async function weeklyInsightsFlow(
-  input: { weekStart?: string; college?: string } = {}
+  input: { weekStart?: string; college?: string } = {},
+  opts?: { enabled?: boolean }
 ): Promise<WeeklyInsight> {
   const end = new Date();
   const start = input.weekStart ? new Date(input.weekStart) : new Date();
@@ -155,7 +156,7 @@ export async function weeklyInsightsFlow(
     trend,
   };
 
-  if (aiEnabled()) {
+  if (aiEnabled(opts?.enabled)) {
     try {
       const ai = await (await import("./genkit")).getGenkit();
       const { z } = await import("genkit");

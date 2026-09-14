@@ -51,3 +51,18 @@ Working list of the 10 tasks agreed in session. Status updated as each task comp
 - [x] **C6. Fix maintenance_head direct-assign bug** — `ROUTED → ASSIGNED` transition is allowed for `maintenance_head`, letting them assign workers directly instead of forwarding to a category head via `PENDING_ASSIGN`. Remove that transition; maintenance_head should only forward, not assign. *(Done.)*
 - [x] **C7. Update Firestore rules** — Rules are stale: missing `maintenance_head`, `category_head` roles and `ROUTED`, `PENDING_ASSIGN`, `INSPECTED`, `VERIFIED` statuses. Defense-in-depth is broken. *(Done.)*
 - [x] **C8. Update smoke test** — `scripts/smoke-lifecycle.mjs` drives `COMPLETED → VERIFIED` (validator verify) which no longer exists. Must use the new flow: `COMPLETED → INSPECTED` (category_head) which auto-cascades to VERIFIED. *(Done.)*
+
+---
+
+## Doc Drift — B-1: CONTEXT.md / app_status.md → 14-state model
+
+Context refresh (session 2026-09-14). The docs still describe the stale 8-state chain
+(`VALIDATED → ASSIGNED`, validator verifies) and the removed `head` role. Ground truth:
+`TRANSITION_RULES` (`src/lib/issueMachine.ts`) + `ROLES` (`src/lib/types.ts`).
+
+- [x] **B-1a. Rewrite CONTEXT.md status lifecycle (§4)** — 14-state chain `NEW → VALIDATED → ESCALATED → APPROVED → ROUTED → PENDING_ASSIGN → ASSIGNED → ONGOING → COMPLETED → INSPECTED → VERIFIED → CLOSED` (+ PENDING rebound, REJECTED terminal); full transition matrix incl. ROUTED→PENDING_ASSIGN (maintenance_head forwards), PENDING_ASSIGN→ASSIGNED (category_head assigns team), COMPLETED→INSPECTED→auto-VERIFIED (W-18), INSPECTED→VERIFIED repair rule, PENDING→PENDING_ASSIGN; SLA clock starts at ASSIGNED (W-7). *(Done — CONTEXT.md §1/§3/§4/§5/§6/§7 rewritten.)*
+- [ ] **B-1b. CONTEXT.md §7 scoping line** — add the two heads' issue-list scoping: `maintenance_head → routing.maintenanceHeadUid`, `category_head → routing.categoryId in (categories where headUid=me)` (`src/app/api/issues/route.ts:226-233`).
+- [ ] **B-1c. CONTEXT.md §9 notification matrix** — recipients now: ROUTED → maintenance_head; PENDING_ASSIGN → category_head + maintenance_head; COMPLETED → category_head (on-site verification); PENDING → category_head + maintenance_head + validator; send-back → "Work revised" to reporter (`src/lib/notifications.ts` `notifyRecipientsForIssue`).
+- [ ] **B-1d. CONTEXT.md §13 flip resolved items** — stale `head` refs are now clean (only `maintenance_head`/`category_head` remain); `config.ai.enabled` is now a real kill-switch (task 42), no longer display-only.
+- [ ] **B-1e. Rewrite app_status.md to the 14-state/9-role model** — same treatment as CONTEXT.md; also fix stale §8 "dark ChatGPT email theme" claim (actual: warm terracotta `#d97757`, `src/lib/email/templates.ts:10-11`) and §15 demo accounts (`mainten@gmail.com` is plain maintenance, not "Maintenance Head-style").
+- [ ] **B-1f. Verify batch** — `npx tsc --noEmit`, `npx eslint src` (2 pre-existing onam.tsx warnings), `next build` clean.

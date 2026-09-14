@@ -3,6 +3,8 @@ import { requireAuth } from "@/lib/auth";
 import { json, handleError } from "@/lib/api";
 import { isRateLimited } from "@/lib/rateLimit";
 import { serverCached } from "@/lib/serverCache";
+import { adminDb } from "@/lib/firebaseAdmin";
+import { loadConfig } from "@/lib/issueMachine";
 import { predictiveMaintenanceFlow } from "@/lib/ai/predictive";
 
 /** GET /api/ai/at-risk — identify locations at risk for future issues */
@@ -19,10 +21,11 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       );
     }
     const college = user.role === "admin" ? undefined : user.college;
+    const config = await loadConfig(adminDb());
     // Regenerate at most every 5 min per college; the scan + model call is
     // expensive and the underlying data moves on the order of hours.
     const result = await serverCached(`api:ai:at-risk:${college || "all"}`, 5 * 60_000, () =>
-      predictiveMaintenanceFlow({ college })
+      predictiveMaintenanceFlow({ college }, { enabled: config.ai?.enabled })
     );
     return json({ result });
   } catch (e) {

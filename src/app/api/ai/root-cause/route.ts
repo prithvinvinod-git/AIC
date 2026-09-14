@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { json, handleError } from "@/lib/api";
 import { isRateLimited } from "@/lib/rateLimit";
+import { adminDb } from "@/lib/firebaseAdmin";
+import { loadConfig } from "@/lib/issueMachine";
 import { rootCauseFlow } from "@/lib/ai/rootCause";
 
 /** POST /api/ai/root-cause — analyze historical issues for root causes */
@@ -17,9 +19,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         { status: 429, headers: { "Retry-After": "60" } }
       );
     }
-    const result = await rootCauseFlow({
-      college: user.role === "admin" ? undefined : user.college,
-    });
+    const config = await loadConfig(adminDb());
+    const result = await rootCauseFlow(
+      {
+        college: user.role === "admin" ? undefined : user.college,
+      },
+      { enabled: config.ai?.enabled }
+    );
     return json({ result });
   } catch (e) {
     return handleError(e);

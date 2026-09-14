@@ -36,7 +36,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         categoryId,
         description: issue.description,
       },
-      { routingModel: config.ai?.routingModel }
+      { routingModel: config.ai?.routingModel, enabled: config.ai?.enabled }
     );
     await writeRoutingSuggestion(body.issueId, result);
     return json({ result });

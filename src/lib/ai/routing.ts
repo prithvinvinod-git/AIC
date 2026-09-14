@@ -86,7 +86,7 @@ export async function suggestAssignmentFlow(
     categoryId: string;
     description?: string;
   },
-  opts?: { routingModel?: string }
+  opts?: { routingModel?: string; enabled?: boolean }
 ): Promise<RoutingResult> {
   const { teamId, catName, ranked } = await rankCandidates(input.issueId, input.categoryId);
 
@@ -116,7 +116,7 @@ export async function suggestAssignmentFlow(
     reason += ` (${ranked[0].load} open job${ranked[0].load > 1 ? "s" : ""})`;
   reason += ` — lowest current workload and best completion record.`;
 
-  if (aiEnabled()) {
+  if (aiEnabled(opts?.enabled)) {
     try {
       const ai = await (await import("./genkit")).getGenkit();
       const { z } = await import("genkit");

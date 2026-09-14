@@ -41,7 +41,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         department: issue.department,
         categories,
       },
-      { triageModel: config.ai?.triageModel }
+      { triageModel: config.ai?.triageModel, enabled: config.ai?.enabled }
     );
     const claimed = await writeTriage(body.issueId, result);
     const cached = !claimed;

@@ -101,10 +101,10 @@ function fallbackRootCause(issues: IssueRow[]): RootCauseResult {
  * Analyzes historical issues to identify possible underlying causes.
  * Uses Gemini when available; otherwise a deterministic cluster fallback.
  */
-export async function rootCauseFlow(input: { college?: string } = {}): Promise<RootCauseResult> {
+export async function rootCauseFlow(input: { college?: string } = {}, opts?: { enabled?: boolean }): Promise<RootCauseResult> {
   const issues = await loadRecentIssues(30, input.college);
 
-  if (!aiEnabled()) return fallbackRootCause(issues);
+  if (!aiEnabled(opts?.enabled)) return fallbackRootCause(issues);
 
   try {
     const ai = await getGenkit();

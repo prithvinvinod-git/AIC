@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { json, handleError } from "@/lib/api";
 import { isRateLimited } from "@/lib/rateLimit";
+import { adminDb } from "@/lib/firebaseAdmin";
+import { loadConfig } from "@/lib/issueMachine";
 import { draftClosureFlow } from "@/lib/ai";
 
 /** POST /api/ai/draft-closure — turn staff bullets into a closure report. */
@@ -18,7 +20,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       );
     }
     const body = (await req.json().catch(() => ({}))) as { bullets?: string[] };
-    const report = await draftClosureFlow({ bullets: body.bullets || [] });
+    const config = await loadConfig(adminDb());
+    const report = await draftClosureFlow({ bullets: body.bullets || [], enabled: config.ai?.enabled });
     return json({ report });
   } catch (e) {
     return handleError(e);

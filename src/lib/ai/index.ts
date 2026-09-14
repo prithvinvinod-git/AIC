@@ -64,7 +64,7 @@ export async function runAiOnCreate(issueId: string): Promise<void> {
           department: issue.department || "",
           categories,
         },
-        { triageModel: config.ai?.triageModel }
+        { triageModel: config.ai?.triageModel, enabled: config.ai?.enabled }
       );
       // Transactional claim — if a manual "Run triage" won the race, skip the
       // rest so we don't re-run priorities, re-flag spam or re-scan duplicates.

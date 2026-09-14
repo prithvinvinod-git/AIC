@@ -47,14 +47,13 @@ export default function AppShell({ children }: { children: ReactNode }) {
     }
   }, [ready, user, claims, needsEmailVerification, router, pathname]);
 
-  if (!ready) {
+  if (!ready || !user || !claims) {
     return (
       <div className="flex min-h-dvh w-full flex-col items-center justify-center bg-paper">
-        <Loading label="Checking session…" />
+        <Loading label={ready && user ? "Redirecting…" : "Checking session…"} />
       </div>
     );
   }
-  if (!user || !claims) return null;
 
   return (
     <div className="min-h-full">

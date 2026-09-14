@@ -1,9 +1,11 @@
 import type { ReactNode } from "react";
 import { AlertCircle, RefreshCw } from "lucide-react";
 
-export function Loading({ label = "Loading…" }: { label?: string }) {
+export function Loading({ label = "Loading…", fill }: { label?: string; fill?: boolean }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-4 py-16 text-slate">
+    <div
+      className={`flex flex-col items-center justify-center gap-4 text-slate ${fill ? "min-h-[50vh] py-0" : "py-16"}`}
+    >
       <div className="app-loader" role="status" aria-label="Loading">
         <span />
         <span />

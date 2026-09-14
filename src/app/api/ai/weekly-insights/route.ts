@@ -3,6 +3,7 @@ import { requireAuth } from "@/lib/auth";
 import { json, handleError } from "@/lib/api";
 import { isRateLimited } from "@/lib/rateLimit";
 import { adminDb } from "@/lib/firebaseAdmin";
+import { loadConfig } from "@/lib/issueMachine";
 import { weeklyInsightsFlow } from "@/lib/ai";
 
 const CACHE_PATH = "config/weekly";
@@ -38,7 +39,8 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       }
     }
 
-    const insight = await weeklyInsightsFlow({ college: college || undefined });
+    const config = await loadConfig(adminDb());
+    const insight = await weeklyInsightsFlow({ college: college || undefined }, { enabled: config.ai?.enabled });
     await adminDb()
       .doc(cachePath)
       .set({ ...insight, generatedAt: new Date().toISOString() });

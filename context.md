@@ -6,7 +6,7 @@ Campus maintenance complaint management. Repor/route/execute/verify/close with A
 
 ## 1. What it is
 
-Closed-loop ticketing for a multi-college campus. A reporter raises an issue → a department-scoped **validator** screens it → **HOD/Principal** confirms critical (P1–P2) severities → the right **maintenance** team executes → the **validator** verifies → the **reporter** rates → it closes. Every step is audited on a timeline; SLAs are enforced per priority; in-app notifications + (optional SMTP) emails keep everyone informed.
+Closed-loop ticketing for a multi-college campus. A reporter raises an issue → a department-scoped **validator** screens it → **HOD/Principal** confirms critical (P1–P2) severities → the **maintenance head** routes it to a category → the **category head** assigns a team → **maintenance** executes → the **category head** inspects the work on-site (auto-verifies) → the **reporter** rates → it closes. Every step is audited on a timeline; SLAs are enforced per priority; in-app notifications + (optional SMTP) emails keep everyone informed.
 
 **Core principle: "AI suggests, the state machine decides."** AI never moves a ticket, never approves, never skips a human. All AI output flows through the same route handlers and always requires human confirmation.
 
@@ -50,11 +50,13 @@ firestore.rules, firestore.indexes.json, vercel.json, next.config.ts
 
 ## 3. Roles & auth
 
-**Roles** (`src/lib/types.ts`): `reporter | validator | hod | principal | maintenance | purchase | admin`.
+**Roles** (`src/lib/types.ts`): `reporter | validator | hod | principal | maintenance_head | category_head | maintenance | purchase | admin`.
 
-- The old **`head` role was removed**; its duties merged into the department-scoped **validator** (validators route/assign and verify; HOD/Principal approve).
-- **`purchase` (Purchase Team):** not department-scoped. Sees every issue that has `pendingPurchaseCount > 0` (requirements flagged for approval). Approves flagged requirements with a unit price (auto-marks them resolved) or rejects them with a reason.
-- **`portal` claim:** an `admin` with `portal: "principal"` gets Principal + HOD + Admin nav (`src/lib/nav.ts` `portalRoles`). `admin@gmail.com` lands on the Principal portal.
+- **`maintenance_head`**: category-scoped (assigned to a `categories/{catId}.headUid`). Receives the job at `ROUTED` → forwards to the right category via `PENDING_ASSIGN`. Spread-loaded by `pickLeastLoadedHead` using `routing.maintenanceHeadUid`.
+- **`category_head`**: category-scoped. Receives the job at `PENDING_ASSIGN` → assigns a team + workers via `ASSIGNED`. After `COMPLETED`, inspects the work on-site (`INSPECTED` → auto `VERIFIED` in the same transaction). Spread-loaded using `routing.categoryHeadUid`.
+- **`validator`**: department-scoped. Screens new issues (VALIDATED), handles reassignment (PENDING_ASSIGN/ASSIGNED/PENDING), and routes legacy/short-circuit paths. No longer inspects/verifies — that duty moved to `category_head`.
+- **`purchase` (Purchase Team):** not department-scoped. Queued on issues with `pendingPurchaseCount > 0`; approves flagged requirements with a unit price (auto-resolves them) or rejects with a reason.
+- **`portal` claim:** an `admin` with `portal: "principal"` gets Principal + HOD + Admin navigation (`src/lib/nav.ts` `portalRoles`). `admin@gmail.com` lands on the Principal portal.
 - **Auth flow:** Firebase Auth (email/password + Google popup), `browserLocalPersistence` (`src/lib/firebase.ts`). `AuthProvider` (`src/components/auth/AuthProvider.tsx`) listens to `onAuthStateChanged`, refreshes the ID token, and extracts claims (`role`, `portal`, `department`, `college`, `name`, `profilePromptDismissed`). It also registers a **token-refresh handler** so `api()` retries a 401 once after refreshing.
 - **Server side:** every request verifies the Bearer ID token via `requireAuth` / `requireAdmin` (`src/lib/auth.ts`), pulling role/name/department from **custom claims** (mirrored onto `users/{uid}` by the provisioning flow).
 - **Client side:** `src/lib/clientApi.ts` `api<T>(path, init)` attaches the cached token; throws `ApiError` with `status` + `details`.
@@ -62,49 +64,62 @@ firestore.rules, firestore.indexes.json, vercel.json, next.config.ts
 
 **Demo accounts** (password `123456`): `prithvinvinod@gmail.com` (admin), `admin@gmail.com` (admin + portal principal), `principal@gmail.com`, `hod@gmail.com`, `validator@gmail.com` (Engineering), `mainten@gmail.com` (maintenance), `purchase@gmail.com` (Purchase Team). Any new sign-up → reporter.
 
-**Navigation** (`src/lib/nav.ts` `NAV_ITEMS`): reporter → Dashboard `/dashboard` + Submit `/new`; validator → Board `/validate`; hod → Escalations `/hod`; principal → Approvals `/principal`; maintenance → Jobs `/jobs`; purchase → Purchases `/purchase`; admin → Admin `/admin`; `ANALYTICS_ROLES = [hod, principal, validator, admin]` → Analytics `/analytics`; [admin, principal] → Issue history `/issue-history`; [admin, principal, hod] → Announcements `/announcements`. `ROLE_HOME` currently maps every role to `/` (the landing page decides).
+**Navigation** (`src/lib/nav.ts` `NAV_ITEMS`): reporter → Dashboard `/dashboard` + Submit `/new`; validator → Board `/board`; hod + principal → Approvals `/approvals`; maintenance → Jobs `/jobs`; heads (`HEAD_ROLES = [maintenance_head, category_head]`) → Dispatch `/dispatch`; purchase → Purchases `/purchase`; admin → Admin `/admin`; `ANALYTICS_ROLES = [hod, principal, validator, admin]` → Analytics `/analytics`; [admin, principal, validator] → Issues `/issue-history`; [admin, principal, hod] → Announcements `/announcements`. `ROLE_HOME` currently maps every role to `/` (the landing page decides).
 
 ---
 
 ## 4. Status lifecycle — THE state machine
 
-The authoritative transition table is **`TRANSITION_RULES`** in `src/lib/issueMachine.ts` (spec §3.1). **Every status mutation flows through `applyTransition()`** — a single Firestore transaction: read → verify RBAC + precondition → write → append `timeline` entries. Cascades (validate → auto-escalate/auto-route) happen inside the same transaction so no intermediate state is observable.
+The authoritative transition table is **`TRANSITION_RULES`** in `src/lib/issueMachine.ts` (spec §3.1). **Every status mutation flows through `applyTransition()`** — a single Firestore transaction: read → verify RBAC + precondition → write → append `timeline` entries. Cascades (validate → auto-escalate/auto-route, category-head inspection → auto-verified) happen inside the same transaction so no intermediate state is observable.
 
-**Main path:**
+**Main path (14 states):**
 ```
-NEW → VALIDATED → ESCALATED → APPROVED → ASSIGNED → ONGOING → COMPLETED → VERIFIED → CLOSED
-        │
-        └→ REJECTED (terminal)
-
-  ASSIGNED ──┐
-  ONGOING  ──┴→ PENDING → ASSIGNED (reassign)
-  COMPLETED ──→ ONGOING (send back)
+NEW → VALIDATED → ESCALATED → APPROVED → ROUTED → PENDING_ASSIGN → ASSIGNED → ONGOING → COMPLETED → INSPECTED → VERIFIED → CLOSED
+        │                                  └─────────────┬───────────────────────┘
+        ├→ REJECTED (terminal)                            │ (P3–5 skip ESCALATED/APPROVED)
+        │                                                 │
+  ASSIGNED ──┐                                            │
+  ONGOING  ──┴→ PENDING → ASSIGNED (reassign)            │
+  COMPLETED ──→ ONGOING (send back)                       │
 ```
 
 | From | To | Roles | Precondition |
 |---|---|---|---|
 | NEW | VALIDATED | validator, admin | priority 1–5 required |
 | NEW | REJECTED | validator, admin | rejectionReason ≥ 3 chars |
+| NEW | ESCALATED | admin | safetyEscalation (AI safety-hazard override) |
 | VALIDATED | ESCALATED | validator, admin | — (P1–2 **auto-escalates** on validate) |
-| VALIDATED | ASSIGNED | validator, admin | — (P3–5 **auto-route**) |
-| ESCALATED | APPROVED | hod, principal, admin | optional severity revision 1–5 |
-| ESCALATED | REJECTED | hod, principal, admin | reason ≥ 3 chars |
-| APPROVED | ASSIGNED | validator, admin | team resolved from category |
+| VALIDATED | ROUTED | validator, admin | — (P3–5 **auto-route** to maintenance head) |
+| VALIDATED | ASSIGNED | validator, admin | — (legacy/short-circuit) |
+| ESCALATED | APPROVED | hod, principal, admin | P1 → principal, P2 → HOD (`escalationBand`); optional severity revision 1–5 |
+| ESCALATED | REJECTED | hod, principal, admin | same band; reason ≥ 3 chars |
+| APPROVED | ROUTED | validator, admin | — |
+| APPROVED | ASSIGNED | validator, admin | — (legacy/short-circuit) |
+| ROUTED | PENDING_ASSIGN | maintenance_head, validator, admin | categoryId required (maintenance head forwards) |
+| ROUTED | ASSIGNED | admin | — |
+| PENDING_ASSIGN | ASSIGNED | category_head, admin | teamId required (category head assigns team) |
 | ASSIGNED | ONGOING | maintenance | must be an assigned staff member (or team) |
 | ASSIGNED / ONGOING | PENDING | maintenance, validator, admin | blocker note ≥ 3 chars |
-| PENDING | ASSIGNED | validator, admin | `teamId` required |
+| ASSIGNED / ONGOING | PENDING_ASSIGN | category_head, maintenance_head, validator, admin | — (unassign / re-forward) |
+| PENDING | ASSIGNED | validator, admin | teamId required |
+| PENDING | PENDING_ASSIGN | category_head, maintenance_head, validator, admin | — |
 | ONGOING | COMPLETED | maintenance, validator, admin | closure report ≥ 5 chars; all `needsApproval` requirements must be resolved (approved by the purchase team) — no waiver |
-| COMPLETED | VERIFIED | validator, admin | verdict ≥ 2 chars |
-| COMPLETED | ONGOING | validator, admin | sendBackReason ≥ 3 chars (records `verification.verdict = "send_back"`) |
-| VERIFIED | CLOSED | reporter | rating 1–5, or `isAuto` (auto-close) |
+| COMPLETED | INSPECTED | category_head, admin | verdict ≥ 2 chars (`checkInspect`, category-scoped) |
+| COMPLETED | ONGOING | category_head, admin | sendBackReason ≥ 3 chars (records `verification.verdict = "send_back"`) |
+| INSPECTED | VERIFIED | category_head, admin | repair rule for stranded legacy docs (W-18) |
+| VERIFIED | CLOSED | reporter, admin | rating 0.5–5 in half-steps, or `isAuto` (auto-close) |
+| REJECTED · CLOSED | — | terminal | — |
 
 **Behavioral details baked into the machine:**
-- On `VALIDATED` with priority ≤ 2: sets `escalation = { required: true, status: "pending" }`, appends two timeline entries (VALIDATED then auto ESCALATED). Priority > 2: auto-routes to ASSIGNED and **initializes SLA**.
-- On `APPROVED`: finalizes priority (may be revised by approver), marks `escalation.status = "confirmed"` with `reviewedBy/At`, and initializes SLA for P1–2.
-- On `ASSIGNED`: resumes a paused SLA (extends deadlines by the paused duration), else initializes SLA.
+- On `VALIDATED` with priority ≤ 2: sets `escalation = { required: true, status: "pending" }`, appends two timeline entries (VALIDATED then auto ESCALATED). Priority > 2: auto-routes to ROUTED **not** to ASSIGNED — the maintenance head now picks the category. `ASSIGNED` remains reachable as a validator/admin shortcut.
+- On `APPROVED`: finalizes priority (may be revised by approver, band-scoped), marks `escalation.status = "confirmed"` with `reviewedBy/At`. The okay path continues to `ROUTED` — the maintenance head routes it to the right category.
+- On `ROUTED`: category head is picked by the maintenance head's forward; `PENDING_ASSIGN` targets the category head. `ASSIGNED` resumes a paused SLA (extends deadlines by the paused duration), else initializes SLA.
 - On `PENDING`: pauses SLA (`pausedAt`, `totalPausedMs`).
-- On `COMPLETED`: records `completion = { report, completedAt }`, stops the pause.
-- On `CLOSED`: records `feedback = { rating, comment?, givenAt, autoClosed }`.
+- On `COMPLETED`: records `completion = { report, completedAt }`, stops the pause, notifies the category head.
+- On `INSPECTED`: category head's on-site check auto-cascades to `VERIFIED` **in the same transaction** (W-18) — the terminal inspection carries `inspection` + `verification` blocks.
+- On `CLOSED`: records `feedback = { rating (0.5–5 half-steps), comment?, givenAt, autoClosed }`.
+
+**Escalation bands** (`src/lib/escalationBand.ts`): P1 → Principal only, P2 → HOD only (`escalationBand`/`canApproveEscalation`); unset/legacy → either HOD or Principal.
 
 **`allowedTransitions(issue, actor, config)`** — the pre-filtered legal moves the UI renders. `MachineError` carries `statusCode` + `details` and maps to `{ error, details }` responses via `handleError`.
 
@@ -124,7 +139,7 @@ NEW → VALIDATED → ESCALATED → APPROVED → ASSIGNED → ONGOING → COMPLE
 | 4 | Low | 24 h | 7 d |
 | 5 | Minor | 48 h | 14 d |
 
-- Clock **starts at acceptance** (`initSla` — on ASSIGNED for P3–5, on APPROVED for P1–2) and is **paused while PENDING**. Deadlines are stored on the doc (`sla.responseDeadline`, `sla.resolutionDeadline`, `sla.pausedAt`, `sla.totalPausedMs`, `sla.breachedFlags`) so queues can `orderBy` them.
+- Clock **starts at acceptance** (`initSla` — on `ASSIGNED` for all priorities; W-7 moved the P1–2 clock off APPROVED) and is **paused while PENDING**. Deadlines are stored on the doc (`sla.responseDeadline`, `sla.resolutionDeadline`, `sla.pausedAt`, `sla.totalPausedMs`, `sla.breachedFlags`) so queues can `orderBy` them.
 - Feedback ratings are **1–5** (not 1–3 as in the original spec).
 - Breach enforcement: Cloud Function flags `breachedFlags.resolution` every 10 min; response-SLA enforcement is a known pending gap (todo #3).
 
@@ -142,12 +157,12 @@ issues/{issueId}
   issueNo, trackingToken, title, description, college?, department, status, priority
   prioritySetBy/At, escalation{required,status,reviewedBy?,reviewedAt?,note?}
   location{name,building,floor?}                      ← snapshot, no JOIN
-  routing{categoryId,categoryName,teamId,staff[]}     ← denormalized display
+  routing{categoryId,categoryName,teamId,staff[],maintenanceHeadUid?,categoryHeadUid?}     ← denormalized display
   requirements[{item,qty,needsApproval,resolved,approvalStatus?,price?,approvalBy?,approvalAt?,rejectReason?,addedBy,at}]
   pendingPurchaseCount                       ← count of `needsApproval && !resolved && approvalStatus !== "rejected"` (drives the purchase queue)
   involveTeams[{teamId,completed}]
   sla{startedAt,responseDeadline,resolutionDeadline,pausedAt,totalPausedMs,breachedFlags{response,resolution}}
-  rejection{reason,by,at} | completion{report,completedAt} | verification{...} | feedback{rating,comment,givenAt,autoClosed}
+  rejection{reason,by,at} | completion{report,completedAt} | inspection{inspectedBy,At,verdict,note?} | verification{verifiedBy,At,verdict,sendBackReason?} | feedback{rating,comment,givenAt,autoClosed}
   reporter{uid,name,department}                       ← snapshot
   aiSuggestion{category,suggestedPriority,reasons[],photoSummary,safetyFlags[],isSpam,spamReasons[],
                duplicateOf,duplicateIssueNo,matchScore,similarIssues[],routing?,aiModel,aiProcessed,processedAt}
@@ -179,15 +194,17 @@ Every route verifies the ID token (`requireAuth`). `src/lib/api.ts` provides `js
 POST   /api/issues                       create NEW + after(): runAiOnCreate + validator notify + stats + reported email
 GET    /api/issues?status=&mine=&scope=board   role-scoped lists; board = cross-user P1–P3, boardHidden excluded
 GET    /api/issues/[id]                  detail (+timeline, comments)
-POST   /api/issues/[id]/validate|reject|escalate|approve|assign|pending|complete|verify|sendback|feedback
+POST   /api/issues/[id]/validate|reject|escalate|approve|assign|pending|complete|sendback|feedback
+POST   /api/issues/[id]/forward          ROUTED → PENDING_ASSIGN (maintenance head forwards to a category)
+POST   /api/issues/[id]/inspect          COMPLETED → INSPECTED →auto VERIFIED (category head on-site check)
 POST   /api/issues/[id]/status           generic transition (the ONE door)
 POST   /api/issues/[id]/requirements · [reqId]     add/resolve requirement
-POST   /api/issues/[id]/requirements/[reqId]/approve · /reject   (purchase/admin: price or reason)
+POST   /api/issues/[id]/requirements/[reqId]/approve · /reject · /senior-approve · /senior-reject   (purchase/admin: price or reason; senior = above approval limit)
 POST   /api/issues/[id]/comments · [commentId]/like
-PATCH  /api/issues/[id]/board-visibility           hide from the public board
+PATCH  /api/issues/[id]/board-visibility · /tracking-visibility   hide from the public board / disable share link
 GET    /api/notifications                in-app feed; read/unread
 GET/PATCH /api/profile
-GET    /api/teams · /api/categories · /api/issue-history (admin/principal only)
+GET    /api/teams · /api/categories · /api/issue-history (admin/principal/validator)
 GET    /api/analytics/summary?range=
 POST   /api/uploads · GET /api/images/[id] · GET /api/track/[token]
 POST   /api/auth/provision
@@ -196,7 +213,7 @@ GET    /api/cron/sla-reminders · /api/cron/auto-close      (Vercel cron, Bearer
 GET/POST/PATCH/DELETE /api/admin/users · teams(+[id]) · categories(+[id]) · config
 --- AI (see §8) ---
 POST /api/ai/triage · /api/ai/duplicates · /api/ai/suggest-assign · /api/ai/extract-requirements
-POST /api/ai/draft-closure · /api/ai/root-cause
+POST /api/ai/draft-closure · /api/ai/root-cause · GET /api/ai/sla-explain
 GET  /api/ai/weekly-insights · /api/ai/at-risk
 ```
 

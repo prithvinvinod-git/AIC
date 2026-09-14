@@ -28,7 +28,14 @@ export async function getGenkit() {
   return aiInstance;
 }
 
-export function aiEnabled(): boolean {
+/**
+ * Real gate: a live AI provider key AND (if an override is given) the
+ * admin-persisted `config.ai.enabled` flag. `override === false` force-disables
+ * AI even when keys are present; `undefined` means "keys only" (used where the
+ * caller doesn't hold a config, or the feature intentionally ignores the toggle).
+ */
+export function aiEnabled(override?: boolean): boolean {
+  if (override === false) return false;
   return (
     (process.env.GOOGLE_GENAI_API_KEY !== undefined &&
       process.env.GOOGLE_GENAI_API_KEY !== "" &&

@@ -3,6 +3,8 @@ import { z } from "zod";
 import { requireAuth } from "@/lib/auth";
 import { json, err, parseBody, handleError } from "@/lib/api";
 import { isRateLimited } from "@/lib/rateLimit";
+import { loadConfig } from "@/lib/issueMachine";
+import { adminDb } from "@/lib/firebaseAdmin";
 import { slaExplainFlow, writeSlaExplanation } from "@/lib/ai";
 
 const bodySchema = z.object({ issueId: z.string().min(1, "issueId is required") });
@@ -22,7 +24,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       );
     }
     const { issueId } = await parseBody(req, bodySchema);
-    const result = await slaExplainFlow(issueId);
+    const config = await loadConfig(adminDb());
+    const result = await slaExplainFlow(issueId, { enabled: config.ai?.enabled });
     if (!result) return err("Issue not found.", 404);
     await writeSlaExplanation(issueId, result);
     return json(result);

@@ -67,7 +67,7 @@ function fallbackBriefing(description: string): RequestBriefing {
 export async function extractRequirementsFlow(input: {
   description: string;
   imageUrl?: string;
-}): Promise<{ requirements: RequirementDraft[]; briefing: RequestBriefing }> {
+}, opts?: { enabled?: boolean }): Promise<{ requirements: RequirementDraft[]; briefing: RequestBriefing }> {
   const text = input.description.toLowerCase();
   const found: RequirementDraft[] = [];
 
@@ -83,7 +83,7 @@ export async function extractRequirementsFlow(input: {
 
   const briefing = fallbackBriefing(input.description);
 
-  if (aiEnabled()) {
+  if (aiEnabled(opts?.enabled)) {
     try {
       const ai = await (await import("./genkit")).getGenkit();
       const { z } = await import("genkit");
@@ -157,11 +157,11 @@ const PART_KEYWORDS: { match: string[]; item: string; qty: number; approval: boo
 /**
  * F4b — Draft a structured closure report from a couple of staff bullets.
  */
-export async function draftClosureFlow(input: { bullets: string[] }): Promise<string> {
+export async function draftClosureFlow(input: { bullets: string[]; enabled?: boolean }): Promise<string> {
   const bullets = input.bullets.filter((b) => b.trim());
   if (!bullets.length) return "";
 
-  if (aiEnabled()) {
+  if (aiEnabled(input.enabled)) {
     try {
       const ai = await (await import("./genkit")).getGenkit();
       const { z } = await import("genkit");
