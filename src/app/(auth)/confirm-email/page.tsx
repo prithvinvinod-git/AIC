@@ -11,6 +11,7 @@ import {
 } from "firebase/auth";
 import { MailCheck, Mail } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { api } from "@/lib/clientApi";
 import { getClientAuth } from "@/lib/firebase";
 import { homeFor } from "@/lib/nav";
 
@@ -80,7 +81,10 @@ function ConfirmEmailInner() {
     applyActionCode(getClientAuth(), oobCode as string)
       .then(async () => {
         await reloadUser();
+        // Must come before the sync so the token it reads carries the NEW email
+        // claim, and before redirect so the mirror is fresh for the admin list.
         const session = await refreshClaims(true);
+        await api("/api/profile/sync-auth", { method: "POST" }).catch(() => null);
         router.replace(homeFor(session));
       })
       .catch(() => {

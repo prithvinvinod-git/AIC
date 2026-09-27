@@ -5,6 +5,8 @@ import type { Role } from "./types";
 export interface AuthUser {
   uid: string;
   email: string;
+  /** From the token's `email_verified` claim, not the users/ mirror. */
+  emailVerified: boolean;
   name: string;
   role: Role;
   department: string;
@@ -71,6 +73,7 @@ export async function requireAuth(req: NextRequest): Promise<AuthUser> {
   return {
     uid: decoded.uid,
     email: decoded.email || "",
+    emailVerified: decoded.email_verified === true,
     name,
     role,
     department: (decoded.department as string) || "",
