@@ -217,7 +217,7 @@ POST /api/ai/draft-closure · /api/ai/root-cause · GET /api/ai/sla-explain
 GET  /api/ai/weekly-insights · /api/ai/at-risk
 ```
 
-**Issue list scoping** (`GET /api/issues`): reporter → `reporter.uid`; validator → `department`; maintenance → `routing.teamId in (member teams)`; purchase → `pendingPurchaseCount > 0`; HOD/principal/admin → all. `scope=board` ignores role and returns the newest P1–P3 across all departments (minus `boardHidden`), capped at 10.
+**Issue list scoping** (`GET /api/issues`): reporter → `reporter.uid`; validator → `department`; maintenance_head → `routing.maintenanceHeadUid` (the issues routed/forwarded to them); category_head → `routing.categoryId in (categories where headUid = me)`; maintenance → `routing.teamId in (member teams)`; purchase → `pendingPurchaseCount > 0`; hod → college + department; principal → college; admin → all. `scope=board` ignores role and returns the newest P1–P3 across all departments (minus `boardHidden`), capped at 10.
 
 **Public tracking:** `GET /api/track/[token]` + `src/app/track/[token]/page.tsx` — non-logged-in recipients can follow an issue via its `trackingToken` (status rail, SLA countdown, timeline). Email CTAs prefer this link; fall back to `/issues/[id]` for legacy docs.
 
@@ -227,9 +227,9 @@ GET  /api/ai/weekly-insights · /api/ai/at-risk
 
 **Philosophy:** LLM-first, deterministic fallback; AI never owns `status`; one-shot guarded by `aiSuggestion.aiProcessed`. All flows live in `src/lib/ai/`, return JSON validated by a Zod output schema, and write only into `issue.aiSuggestion`.
 
-**Gate (`src/lib/ai/genkit.ts`):** `aiEnabled()` = a real `GOOGLE_GENAI_API_KEY` (not empty / not `"demo-key"`) OR `groqEnabled()` (`GROQ_API_KEY`). `getGenkit()` lazily creates the runtime with `googleAI()` always + `groq()` when keyed. `aiModelName()` = `AI_MODEL` || `"gemini-3.1-flash-lite"`. `triageModelChain()` walks Gemini 3 → Groq → configured → legacy Gemini so one 429 doesn't drop to the classifier.
+**Gate (`src/lib/ai/genkit.ts`):** `aiEnabled(override?)` = a real `GOOGLE_GENAI_API_KEY` (not empty / not `"demo-key"`) OR `groqEnabled()` (`GROQ_API_KEY`), unless `override === false` (the admin `config.ai.enabled` kill-switch) — `false` force-disables even with keys; `undefined` (keys-only check) is used by caller-side flows like `writeRoutingSuggestion` that only want to pick an AI model label. `getGenkit()` lazily creates the runtime with `googleAI()` always + `groq()` when keyed. `aiModelName()` = `AI_MODEL` || `"gemini-3.1-flash-lite"`. `triageModelChain()` walks Gemini 3 → Groq → configured → legacy Gemini so one 429 doesn't drop to the classifier.
 
-> ⚠️ The admin `config.ai.enabled` toggle is display-only — the real gate is the env-var check in `aiEnabled()`.
+> ⚠️ The admin `config.ai.enabled` kill-switch is threaded through every AI flow/route as `enabled` (only triage, suggest-assign, extract-requirements, draft-closure, weekly-insights, root-cause, at-risk, sla-explain + `runAiOnCreate`). When `false`, even a real key is ignored.
 
 | # | Flow | File | Route | What it does |
 |---|---|---|---|---|
@@ -252,7 +252,7 @@ GET  /api/ai/weekly-insights · /api/ai/at-risk
 
 ## 9. Notifications, email & scheduled jobs
 
-**In-app notifications** (`src/lib/notifications.ts`): `notify(uid, {type,title,body,link})` writes to `notifications/{uid}/items`. `notifyRole(roles, …)` queries active `users` by role. `notifyRecipientsForIssue` drives a per-status matrix (created → dept validator; escalated → HOD/principal; assigned → reporter + validator/maintenance; completed → validator; verified → reporter; closed with rating → validator). Types: `issue | escalation | assignment | verification | pending | spam | announcement` (+ `sla`, `reminder`, `digest` from functions) with `NOTIFICATION_META` icons. Bell + feed via `useNotifications` / `GET /api/notifications`.
+**In-app notifications** (`src/lib/notifications.ts`): `notify(uid, {type,title,body,link})` writes to `notifications/{uid}/items`. `notifyRole(roles, …)` queries active `users` by role. `notifyRecipientsForIssue` drives a per-status matrix (created → dept validator; escalated → HOD/principal (band-scoped); routed → maintenance_head (or dept heads); pending_assign → category_head + maintenance_head; assigned → reporter + validator + assigned staff; pending → category_head + maintenance_head + validator + reporter; completed → category_head on-site verification; verified → reporter; closed with rating → dept validator; send-back → "Work revised" to reporter). Types: `issue | escalation | assignment | verification | pending | spam | announcement` (+ `sla`, `reminder`, `digest` from functions) with `NOTIFICATION_META` icons. Bell + feed via `useNotifications` / `GET /api/notifications`.
 
 **Email** (`src/lib/email/`): Nodemailer over Gmail SMTP, gated by `EMAIL_ENABLED`, **best-effort** (never breaks the flow), sender must equal `EMAIL_FROM`. `sendIssueReportedEmail` (P1–2 → principal + dept HOD + dept validator; P3–5 → dept validator only; effective priority = AI-set > reporter choice > AI suggestion > P3), `sendIssueApprovedEmail` (dept HOD + principal; rejections never email), `sendJobAssignmentEmail` (team + staff with SLA card + Google Calendar link), `sendSlaReminderEmails` (window 2 h before deadline or breached, 12 h cooldown via `sla.emailReminderAt`). Recipients honor `notifyEmail === false` opt-out. **Test override:** while `EMAIL_TEST_RECIPIENT` is set all mail goes to that one inbox (currently `prithvinvinod520@gmail.com`). Templates use a warm "Claude"-style theme matching `globals.css`.
 
@@ -311,15 +311,15 @@ CRON_SECRET
 
 ## 13. Known deviations & pending work
 
-**Implemented deviations from the v3.0 spec:** `head` role removed (merged into validator); ratings 1–5; Gmail SMTP instead of Resend; `EMAIL_TEST_RECIPIENT` override; SLA email via Vercel daily cron (Hobby cap); dark-warm email theme; Issue History feature; public tracking links; auto-close job; client-side image compression; receipt PDF.
+**Implemented deviations from the v3.0 spec:** `head` role removed → replaced by `maintenance_head` + `category_head`; ratings 1–5; Gmail SMTP instead of Resend; `EMAIL_TEST_RECIPIENT` override; SLA email via Vercel daily cron (Hobby cap); dark-warm email theme; Issue History feature; public tracking links; auto-close job; client-side image compression; receipt PDF.
 
-**Pending / optional** (`docs/todo.md`): response-SLA enforcement (todo #3, deferred); real weekly governance email (todo #5); "Where's my complaint?" status bot (todo #7); CSV export (todo #8); FCM push (todo #9). Also: stale `head` references in `firestore.rules` and `functions/src/index.ts` (harmless); reporter re-submit from rejected issues; QR-per-room/asset; status chatbot; `config.ai.enabled` toggle is display-only.
+**Pending / optional** (`docs/todo.md`): response-SLA enforcement (todo #3, deferred); real weekly governance email (todo #5); "Where's my complaint?" status bot (todo #7); CSV export (todo #8); FCM push (todo #9). Also: reporter re-submit from rejected issues; QR-per-room/asset; status chatbot; `config.ai.enabled` admin toggle is display-only in the admin UI (the flag itself is enforced — see §8). Note: `firestore.rules` and `functions/src/index.ts` carry stale legacy-role references (harmless; admin backfill keeps `campus-maintenance-2820d` seeded).
 
 ---
 
 ## 14. How to work here
 
-1. **Read `docs/app_status.md`** — it's the current implementation reference (v4.0).
+1. **Read `docs/app_status.md`** — it's the current implementation reference (v5.0).
 2. For AI changes, read `docs/ai-flow.md`; for UX changes, `docs/ui-ux.md`.
 3. Never bypass the machine for status changes; never add a write path that skips a route handler.
 4. After any change: `npx tsc --noEmit`, `npx eslint src`, and `npm run build` when feasible.
