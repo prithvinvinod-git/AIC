@@ -66,3 +66,22 @@ Context refresh (session 2026-09-14). The docs still describe the stale 8-state 
 - [x] **B-1d. CONTEXT.md §13 flip resolved items** — stale `head` refs are now clean (only `maintenance_head`/`category_head` remain); `config.ai.enabled` is now a real kill-switch (task 42), no longer display-only. *(Done.)*
 - [x] **B-1e. Rewrite app_status.md to the 14-state/9-role model** — same treatment as CONTEXT.md; also fix stale §8 "dark ChatGPT email theme" claim (actual: warm terracotta `#d97757`, `src/lib/email/templates.ts:10-11`) and §15 demo accounts (`mainten@gmail.com` is plain maintenance, not "Maintenance Head-style"). *(Done — app_status.md now v5.0.)*
 - [x] **B-1f. Verify batch** — `npx tsc --noEmit`, `npx eslint src` (2 pre-existing onam.tsx warnings), `next build` clean. *(Done — tsc clean, eslint 2 pre-existing warnings, build 54 static pages + full API, all green.)*
+---
+
+## Identity batch (session 2026-09-27) - commit 8e26422
+
+- [x] **I-1. Fix onboarding bypass** - `ProfileOnboarding.confirm()` never called `setDismissed` and used an unforced `refreshClaims()`, so the new college claim was never read back and the dialog re-appeared every visit. Now forces a server round-trip then dismisses. `refreshClaims` typed `(force?: boolean)`. *(Done.)*
+- [x] **I-2. Make reporter onboarding mandatory** - college AND department required; no Skip / X / Escape; both selects start empty (no silent `COLLEGES[0]`); department gated on college; Confirm disabled until complete; `/new` gate + inline renderer use the same rule. Staff exempt. *(Done.)*
+- [x] **I-3. Enumerate-validate college/department** - added `isValidCollege` / `isValidDepartment`; applied in `/api/profile`, `/api/auth/self-provision`, `adminUserSchema`. Claims now rewritten on college/department change (was role/category only, leaving token scoping stale). *(Done.)*
+- [x] **I-4. Issue college from ID token** - `POST /api/issues` no longer trusts `body.college`; a reporter cannot file into another college's board. `notifyRole` uses the same resolved value. *(Done.)*
+- [x] **I-5. Admin college is mandatory** - removed the "-" clear option; every managed account has exactly one college; re-homing a department-scoped user sends college+department atomically. *(Done.)*
+- [x] **I-6. Email verification claim refresh** - force refresh after signup, Google sign-in and `/verify-email` so `requiresEmailVerification` lands immediately instead of surfacing as unexplained 403s. Google signups no longer get a silent "Computer Science" department. *(Done.)*
+- [x] **I-7. Password change** - new Settings -> Security card (re-authenticate -> `updatePassword` -> PATCH `hasPassword`); Google-only accounts reuse `PasswordSetupModal`. *(Done.)*
+- [x] **I-8. Typed network errors** - `clientApi.request()` converts a transport failure to `NetworkError` instead of leaking `TypeError: Failed to fetch`; mutations still queue as `QueuedOfflineError`; guarded the unguarded `registerServiceWorker` / `requestFcmToken` chains in `ServiceWorkerRegistrar`. *(Done.)*
+- [x] **I-9. Verify batch** - `npx tsc --noEmit` clean, `npx eslint src` (2 pre-existing onam.tsx warnings), `next build` compiled successfully. *(Done.)*
+
+### Open
+
+- [ ] **I-10. Upgrade firebase to ^12.19.0** - pins the SDK that shipped the Next 16.3 + React 19.2 peer-dependency fix. Two `npm install` attempts timed out. Not source-related; retry with a longer timeout / clean npm cache. No source change made.
+- [ ] **I-11. Server-side college required on admin POST** - `adminUserSchema.college` is `min(1).optional()` so PATCH can omit it, which means `POST /api/auth/provision` does not reject a missing college server-side (the UI requires it, the API does not). Split into separate POST/PATCH schemas, or add an explicit check in the POST branch.
+- [ ] **I-12. Manual/runtime pass on a live account** - onboarding, verification and password flows are covered by typecheck/lint/build only. Re-run `scripts/smoke-lifecycle.mjs` and hand-test: new reporter signup -> mandatory onboarding -> submit issue; admin edits a user's college; Google-only user sets a password; offline read shows the network message.
