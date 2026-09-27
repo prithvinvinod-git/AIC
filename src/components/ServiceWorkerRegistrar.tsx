@@ -18,20 +18,25 @@ export default function ServiceWorkerRegistrar() {
   useEffect(() => {
     let cancelled = false;
     let unsub = () => {};
-    void registerServiceWorker().then(() => {
-      if (cancelled) return;
-      unsub = onForegroundMessage((payload) => {
-        const title = payload.notification?.title || "Servox";
-        const body  = payload.notification?.body  || "";
-        const link  = payload.data?.link || "/dashboard";
+    void registerServiceWorker()
+      .then(() => {
+        if (cancelled) return;
+        unsub = onForegroundMessage((payload) => {
+          const title = payload.notification?.title || "Servox";
+          const body  = payload.notification?.body  || "";
+          const link  = payload.data?.link || "/dashboard";
 
-        window.dispatchEvent(
-          new CustomEvent("fcm-message", {
-            detail: { title, body, link, type: payload.data?.type || "issue" },
-          })
-        );
+          window.dispatchEvent(
+            new CustomEvent("fcm-message", {
+              detail: { title, body, link, type: payload.data?.type || "issue" },
+            })
+          );
+        });
+      })
+      .catch(() => {
+        // Push is a nice-to-have; a failed registration must never surface as
+        // an unhandled rejection.
       });
-    });
     return () => {
       cancelled = true;
       unsub();
@@ -43,14 +48,18 @@ export default function ServiceWorkerRegistrar() {
   useEffect(() => {
     if (!user) return;
     if (!isPushSupported() || Notification.permission !== "granted") return;
-    void requestFcmToken().then(({ token }) => {
-      if (token) {
-        void api("/api/profile", {
-          method: "PATCH",
-          body: JSON.stringify({ fcmToken: token, pushEnabled: true }),
-        }).catch(() => {});
-      }
-    });
+    void requestFcmToken()
+      .then(({ token }) => {
+        if (token) {
+          void api("/api/profile", {
+            method: "PATCH",
+            body: JSON.stringify({ fcmToken: token, pushEnabled: true }),
+          }).catch(() => {});
+        }
+      })
+      .catch(() => {
+        // Best-effort token refresh — permission prompts / SW races are fine.
+      });
   }, [user]);
 
   return null;

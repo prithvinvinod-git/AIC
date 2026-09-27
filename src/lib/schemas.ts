@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { STATUSES } from "./types";
+import { isValidCollege } from "./constants";
 
 export const locationSchema = z.object({
   name: z.string().min(1, "Location name is required"),
@@ -95,7 +96,12 @@ export const adminUserSchema = z.object({
   password: z.string().min(6).optional(),
   role: z.enum(["reporter", "validator", "hod", "principal", "maintenance_head", "category_head", "maintenance", "purchase", "admin"]),
   portal: z.enum(["reporter", "validator", "hod", "principal", "maintenance_head", "category_head", "maintenance", "purchase", "admin"]).optional(),
-  college: z.string().optional(),
+  college: z
+    .string()
+    .trim()
+    .min(1, "College is required")
+    .refine((c) => isValidCollege(c), "That college isn't one of the configured campus colleges.")
+    .optional(),
   department: z.string().optional(),
   categoryId: z.string().optional(),
   phone: z.string().optional(),

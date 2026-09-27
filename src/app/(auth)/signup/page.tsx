@@ -30,8 +30,8 @@ export default function SignupPage() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [college, setCollege] = useState<College>(COLLEGES[0]);
-  const [department, setDepartment] = useState(DEPARTMENTS_BY_COLLEGE[COLLEGES[0]][0]);
+  const [college, setCollege] = useState<College | "">("");
+  const [department, setDepartment] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -43,6 +43,10 @@ export default function SignupPage() {
       e.preventDefault();
       setError(null);
       setShowGoogleGlow(false);
+      if (!college || !department) {
+        setError("Please select your college and department.");
+        return;
+      }
       setBusy(true);
       try {
         const auth = getClientAuth();
@@ -62,7 +66,10 @@ export default function SignupPage() {
             department,
           }),
         });
-        await refreshClaims();
+        // Force a token refresh so the freshly-minted requiresEmailVerification
+        // claim is visible immediately — AppShell then sends the user to the
+        // verify-email screen instead of letting them wander over 403s.
+        await refreshClaims(true);
         setLastAuthMethod("email");
         router.replace("/");
       } catch (err) {
@@ -93,7 +100,7 @@ export default function SignupPage() {
         }
       }
 
-      await refreshClaims();
+      await refreshClaims(true);
       router.replace("/");
     } catch (err) {
       const emailAddr = email.trim().toLowerCase();
@@ -163,14 +170,16 @@ export default function SignupPage() {
             </label>
             <select
               id="college"
+              required
               className="input"
               value={college}
               onChange={(e) => {
                 const c = e.target.value as College;
                 setCollege(c);
-                setDepartment(DEPARTMENTS_BY_COLLEGE[c][0]);
+                setDepartment("");
               }}
             >
+              <option value="">Select your college…</option>
               {COLLEGES.map((c) => (
                 <option key={c} value={c}>
                   {c} College
@@ -184,15 +193,19 @@ export default function SignupPage() {
             </label>
             <select
               id="department"
+              required
               className="input"
               value={department}
+              disabled={!college}
               onChange={(e) => setDepartment(e.target.value)}
             >
-              {DEPARTMENTS_BY_COLLEGE[college].map((d) => (
-                <option key={d} value={d}>
-                  {d}
-                </option>
-              ))}
+              <option value="">Select your department…</option>
+              {college &&
+                DEPARTMENTS_BY_COLLEGE[college].map((d) => (
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
+                ))}
             </select>
           </div>
           <div>

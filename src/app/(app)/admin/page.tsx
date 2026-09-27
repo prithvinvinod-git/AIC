@@ -83,8 +83,8 @@ function UsersTab() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("demo1234");
   const [role, setRole] = useState<Role>("validator");
-  const [college, setCollege] = useState<College>(COLLEGES[0]);
-  const [department, setDepartment] = useState<string>(DEPARTMENTS_BY_COLLEGE[COLLEGES[0]][0]);
+  const [college, setCollege] = useState<College | "">("");
+  const [department, setDepartment] = useState<string>("");
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoryId, setCategoryId] = useState("");
 
@@ -113,7 +113,7 @@ function UsersTab() {
 
   const isFaculty = userTab === "Faculties";
   const addRole: Role = isFaculty ? role : "reporter";
-  const depts = DEPARTMENTS_BY_COLLEGE[college];
+  const depts = college ? DEPARTMENTS_BY_COLLEGE[college as College] : [];
   const categoryScoped = (CATEGORY_SCOPED_ROLES as Role[]).includes(addRole);
   const noAssignment = (NO_ASSIGNMENT_ROLES as Role[]).includes(addRole);
   const categoryName = (id?: string) => categories.find((c) => c.id === id)?.name ?? "—";
@@ -126,6 +126,10 @@ function UsersTab() {
   const addUser = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
+      if (!college) {
+        showError(new Error("Please select a college for the new user."));
+        return;
+      }
       try {
         await api("/api/auth/provision", {
           method: "POST",
@@ -141,6 +145,7 @@ function UsersTab() {
         });
         setName("");
         setEmail("");
+        setDepartment("");
         await load();
       } catch (e2) {
         showError(e2);
@@ -236,13 +241,15 @@ function UsersTab() {
         </button>
         <select
           className="input lg:order-6"
+          required
           value={college}
           onChange={(e) => {
             const next = e.target.value as College;
             setCollege(next);
-            setDepartment(DEPARTMENTS_BY_COLLEGE[next][0]);
+            setDepartment("");
           }}
         >
+          <option value="">Select college…</option>
           {COLLEGES.map((c) => (
             <option key={c} value={c}>
               {c}
@@ -269,9 +276,12 @@ function UsersTab() {
         ) : (
           <select
             className="input lg:order-7"
+            required
+            disabled={!college}
             value={department}
             onChange={(e) => setDepartment(e.target.value)}
           >
+            <option value="">Select department…</option>
             {depts.map((d) => (
               <option key={d} value={d}>
                 {d}
@@ -385,9 +395,29 @@ function UsersTab() {
             <select
               className="input w-full"
               value={selectedUser?.college || ""}
-              onChange={(e) => selectedUser?.uid && void updateUser(selectedUser.uid, { college: e.target.value })}
+              onChange={(e) => {
+                if (!selectedUser?.uid) return;
+                const next = e.target.value;
+                // Re-homing must send college+department together, otherwise the
+                // pair goes inconsistent (and dept-scoped roles like validator
+                // would be rejected with an empty department).
+                const usesDept =
+                  selectedUser.role !== "principal" &&
+                  selectedUser.role !== "admin" &&
+                  !(CATEGORY_SCOPED_ROLES as Role[]).includes(selectedUser.role);
+                let dept = "";
+                if (usesDept) {
+                  const available = DEPARTMENTS_BY_COLLEGE[next as College];
+                  dept = available.includes(selectedUser.department || "")
+                    ? (selectedUser.department as string)
+                    : available[0];
+                }
+                void updateUser(selectedUser.uid, { college: next, department: dept });
+              }}
             >
-              <option value="">—</option>
+              <option value="" disabled>
+                Select college…
+              </option>
               {COLLEGES.map((c) => (
                 <option key={c} value={c}>
                   {c}

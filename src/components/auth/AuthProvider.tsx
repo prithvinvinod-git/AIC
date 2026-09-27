@@ -48,7 +48,8 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<SessionClaims>;
   loginWithGoogle: () => Promise<SessionClaims>;
   logout: () => Promise<void>;
-  refreshClaims: () => Promise<SessionClaims>;
+  /** Fetch claims; `force` mints a fresh ID token instead of reading the cached one. */
+  refreshClaims: (force?: boolean) => Promise<SessionClaims>;
   clearNeedsPasswordSetup: () => void;
   reloadUser: () => Promise<void>;
   sendVerificationEmail: () => Promise<void>;

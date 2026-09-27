@@ -4,13 +4,19 @@ import { adminAuth, adminDb } from "@/lib/firebaseAdmin";
 import { json, parseBody, handleError } from "@/lib/api";
 import { clientIp, isRateLimited } from "@/lib/rateLimit";
 import { capitalizeName } from "@/lib/format";
+import { isValidCollege, isValidDepartment } from "@/lib/constants";
 
 const db = adminDb();
 
 const selfProvisionSchema = z.object({
   email: z.string().trim().email().optional(),
   name: z.string().trim().min(1, "Name is required").max(80).optional(),
-  college: z.string().trim().max(60).optional(),
+  college: z
+    .string()
+    .trim()
+    .max(60)
+    .refine((c) => c === "" || isValidCollege(c), "That college isn't one of the configured campus colleges.")
+    .optional(),
   department: z.string().trim().max(80).optional(),
 });
 
@@ -68,6 +74,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     ).slice(0, 80);
     const college = body.college || "";
     const department = body.department || "";
+    // Signup passes both together; if only one arrives, the other must be
+    // cleared so the mandatory onboarding modal can collect it properly.
+    if (college && department && !isValidDepartment(college, department)) {
+      return json({ error: "That department doesn't exist in the selected college." }, 400);
+    }
 
     await adminAuth().setCustomUserClaims(decoded.uid, {
       role: "reporter",

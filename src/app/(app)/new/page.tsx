@@ -139,13 +139,13 @@ export default function NewIssuePage() {
     [title, description, college, department, categoryId, priority, building, floor, locationName, images, router, claims, showError]
   );
 
-  if (claims?.role === "reporter" && !claims.college) {
+  if (claims?.role === "reporter" && (!claims.college || !claims.department)) {
     return (
 <div className="w-full max-w-[820px] sm:h-[calc(100vh-150px)] sm:overflow-y-auto sm:[scrollbar-width:none] sm:[&::-webkit-scrollbar]:hidden">
         <h1 className="font-display text-2xl max-md:text-xl font-semibold text-ink">Report an issue</h1>
         <p className="mt-1 text-sm text-slate">Add your college and department to your profile first.</p>
         <div className="mt-6">
-          <ProfileOnboarding required inline />
+          <ProfileOnboarding inline />
         </div>
       </div>
     );

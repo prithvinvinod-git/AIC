@@ -187,6 +187,17 @@ export const DEPARTMENTS_BY_COLLEGE: Record<College, string[]> = {
   ],
 };
 
+/** True when the college is one of the configured campus colleges. */
+export function isValidCollege(value: string | undefined | null): value is College {
+  return typeof value === "string" && (COLLEGES as readonly string[]).includes(value);
+}
+
+/** True when the department exists within the given college. */
+export function isValidDepartment(college: string, department: string): boolean {
+  if (!isValidCollege(college)) return false;
+  return DEPARTMENTS_BY_COLLEGE[college as College].includes(department);
+}
+
 export const BUILDINGS = [
   "Block A",
   "Block B",

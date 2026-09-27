@@ -4,6 +4,7 @@ import { adminAuth, adminDb } from "@/lib/firebaseAdmin";
 import { requireAuth } from "@/lib/auth";
 import { json, parseBody, handleError } from "@/lib/api";
 import { capitalizeName } from "@/lib/format";
+import { isValidCollege, isValidDepartment } from "@/lib/constants";
 
 const db = adminDb();
 
@@ -12,7 +13,12 @@ const profileSchema = z.object({
   email: z.string().trim().email().optional(),
   phone: z.string().trim().max(30).optional(),
   notifyEmail: z.boolean().optional(),
-  college: z.string().trim().max(60).optional(),
+  college: z
+    .string()
+    .trim()
+    .max(60)
+    .refine((c) => isValidCollege(c), "That college isn't one of the configured campus colleges.")
+    .optional(),
   department: z.string().trim().max(80).optional(),
   profilePromptDismissed: z.boolean().optional(),
   assignmentNoticeDismissed: z.boolean().optional(),
@@ -67,6 +73,15 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
       return json(
         { error: "College and department are managed by an administrator and can't be changed here." },
         403
+      );
+    }
+
+    // Reporter dept must live under their (existing or new) college.
+    const effCollege = body.college !== undefined ? body.college : user.college || "";
+    if (body.department !== undefined && !isValidDepartment(effCollege, body.department)) {
+      return json(
+        { error: "That department doesn't exist in the selected college." },
+        400
       );
     }
 

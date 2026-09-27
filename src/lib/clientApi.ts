@@ -49,9 +49,29 @@ export class QueuedOfflineError extends Error {
   }
 }
 
+/**
+ * Thrown when the fetch itself never produced a response (offline, DNS, CORS,
+ * server unreachable, or an aborted background request). Reads surface this so
+ * callers get one typed, human-readable error instead of a bare
+ * `TypeError: Failed to fetch`; mutations convert it into
+ * `QueuedOfflineError` so the write can be queued.
+ */
+export class NetworkError extends Error {
+  path: string;
+  constructor(path: string) {
+    super("You're offline — check your connection and try again.");
+    this.name = "NetworkError";
+    this.path = path;
+  }
+}
+
 /** True when a fetch failure is a network transport error (not an HTTP status). */
-function isNetworkError(e: unknown): boolean {
-  return e instanceof TypeError || (e instanceof Error && /failed to fetch|network/i.test(e.message));
+export function isNetworkError(e: unknown): boolean {
+  return (
+    e instanceof NetworkError ||
+    e instanceof TypeError ||
+    (e instanceof Error && /failed to fetch|network/i.test(e.message))
+  );
 }
 
 /** Build headers for a request, attaching the current auth token. */
@@ -69,9 +89,11 @@ async function request<T>(path: string, init: RequestInit, retried: boolean): Pr
   let res: Response;
   try {
     res = await fetch(path, { ...init, headers });
-  } catch (e) {
-    // Transport failure — rethrow so callers can distinguish offline vs HTTP.
-    throw e instanceof TypeError ? e : new (Error as unknown as new (m: string) => Error)(String(e));
+  } catch {
+    // Transport failure — no response was ever received. Normalize it so a
+    // bare `TypeError: Failed to fetch` never escapes to callers or the
+    // console; `isNetworkError` still recognises it for the write-queue path.
+    throw new NetworkError(path);
   }
 
   const isJson = res.headers.get("content-type")?.includes("application/json");

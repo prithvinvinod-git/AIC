@@ -4,7 +4,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Issue } from "@/lib/types";
-import { api, ApiError } from "@/lib/clientApi";
+import { api, ApiError, NetworkError } from "@/lib/clientApi";
 import { onCacheChange } from "@/lib/offlineStore";
 
 export function useIssues(params: { status?: string; mine?: boolean; pendingSenior?: boolean } = {}) {
@@ -25,7 +25,9 @@ export function useIssues(params: { status?: string; mine?: boolean; pendingSeni
       setIssues(res.issues);
       setError(null);
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Failed to load issues.");
+      setError(
+        e instanceof ApiError || e instanceof NetworkError ? e.message : "Failed to load issues."
+      );
       setIssues([]);
     }
   }, [path]);

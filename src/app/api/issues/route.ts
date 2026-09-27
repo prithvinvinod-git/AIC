@@ -51,7 +51,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       trackingToken,
       title,
       description,
-      college: body.college || "",
+      // College comes from the ID token, not the request body — a reporter
+      // must not be able to file an issue into another college's board.
+      college: user.college || body.college || "",
       department: body.department,
       location: body.location,
       images: body.images,
@@ -115,7 +117,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
               body: `${issueNo}: ${title}`,
               link: `/issues/${ref.id}`,
             },
-            body.college || undefined
+            issueData.college || undefined
           ),
           incrementStatusCount("NEW"),
           incrementCategoryCount(cat.name),

@@ -21,7 +21,7 @@ function VerifyEmailInner() {
   const processedCode = useRef(false);
 
   const goHome = useCallback(async () => {
-    const session = await refreshClaims();
+    const session = await refreshClaims(true);
     router.replace(homeFor(session));
   }, [refreshClaims, router]);
 

@@ -33,8 +33,10 @@ export async function ensureReporterProvisioned(opts?: {
     body: JSON.stringify({
       name: capitalizeName(user.displayName || user.email || user.phoneNumber || "User"),
       email,
+      // Leave college/department empty unless the caller passed them — the
+      // mandatory onboarding modal will collect them from the user.
       college: opts?.college || "",
-      department: opts?.department || "Computer Science",
+      department: opts?.department || "",
     }),
   });
 }

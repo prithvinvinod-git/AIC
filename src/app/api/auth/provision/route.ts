@@ -4,7 +4,7 @@ import { json, parseBody, handleError } from "@/lib/api";
 import { requireAdmin } from "@/lib/auth";
 import { clientIp, isRateLimited } from "@/lib/rateLimit";
 import { adminUserSchema } from "@/lib/schemas";
-import { CATEGORY_SCOPED_ROLES, DEPARTMENT_SCOPED_ROLES } from "@/lib/constants";
+import { CATEGORY_SCOPED_ROLES, DEPARTMENT_SCOPED_ROLES, isValidDepartment } from "@/lib/constants";
 import { invalidateServerCache } from "@/lib/serverCache";
 import { capitalizeName } from "@/lib/format";
 import type { Role } from "@/lib/types";
@@ -59,6 +59,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     // department — their queues would be empty.
     if ((DEPARTMENT_SCOPED_ROLES as Role[]).includes(role) && !department) {
       return json({ error: "Department is required for this role." }, 400);
+    }
+    // Department must belong to the assigned college (single-campus
+    // identity — a Dental dept can't be assigned to Engineering).
+    if (body.college && department && !isValidDepartment(body.college, department)) {
+      return json({ error: "That department doesn't exist in the selected college." }, 400);
     }
     // Category-scoped roles are useless without a category.
     if (categoryScoped && !categoryId) {
@@ -171,10 +176,24 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
         ? body.categoryId
         : (existingClaims.categoryId as string) || "";
     const categoryName = categoryId ? await categoryNameOf(categoryId) : "";
+    const effCollege =
+      body.college !== undefined ? body.college : (existingClaims.college as string) || "";
+    // When the admin explicitly sets a department, it must belong to the
+    // effective college. A role-only edit is never blocked by a legacy
+    // mismatch, and the admin UI sends college+department together when it
+    // re-homes a department-scoped user, so this can't dead-end.
+    if (body.department !== undefined && effCollege && !isValidDepartment(effCollege, body.department)) {
+      return json({ error: "That department doesn't exist in the selected college." }, 400);
+    }
 
+    // Claims must be rewritten when college/department change too — not just
+    // on role/category edits — otherwise the token's scoping goes stale.
     const roleChanged = body.role !== undefined;
     const categoryChanged = body.categoryId !== undefined;
-    if (roleChanged || categoryChanged) {
+    const collegeChanged =
+      body.college !== undefined && body.college !== ((existingClaims.college as string) || "");
+    const departmentChanged = body.department !== undefined && body.department !== department;
+    if (roleChanged || categoryChanged || collegeChanged || departmentChanged) {
       await adminAuth().setCustomUserClaims(body.uid, {
         role: effRole,
         portal: body.portal !== undefined ? body.portal : (existingClaims.portal as string) || null,
