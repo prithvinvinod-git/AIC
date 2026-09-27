@@ -3,19 +3,33 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { applyActionCode } from "firebase/auth";
+import {
+  ActionCodeOperation,
+  applyActionCode,
+  checkActionCode,
+  type ActionCodeInfo,
+} from "firebase/auth";
 import { MailCheck, Mail } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { getClientAuth } from "@/lib/firebase";
 import { homeFor } from "@/lib/nav";
 
+/** Modes that mean "confirm an email address change". */
+const CHANGE_MODES = new Set(["verifyAndChangeEmail", "verifyEmail"]);
+
 /**
  * Completes an email address change.
  *
  * `verifyBeforeUpdateEmail` (Settings → Email address) mails a link to the NEW
- * inbox, which lands here as `?mode=verifyEmail&oobCode=…` because the caller
- * passes this route with `handleCodeInApp: true`. Applying the code is what
- * actually swaps the address on the account.
+ * inbox, which lands here as `?mode=verifyAndChangeEmail&oobCode=…` because the
+ * caller passes this route with `handleCodeInApp: true`.
+ *
+ * The operation is read with `checkActionCode` rather than trusted from the
+ * `mode` string. That matters: a change is VERIFY_AND_CHANGE_EMAIL while a
+ * plain address verification is VERIFY_EMAIL, and matching on the mode alone
+ * silently does nothing when the two differ. Reading the operation also gives
+ * us previousEmail/email, so the user sees which address is moving to which
+ * before it happens.
  *
  * After applying, a forced claim refresh is required: the cached ID token still
  * carries the OLD `email` claim, and requireAuth reads that claim when deciding
@@ -26,24 +40,30 @@ function ConfirmEmailInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { ready, reloadUser, refreshClaims } = useAuth();
+  const [info, setInfo] = useState<ActionCodeInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(true);
-  const applied = useRef(false);
+  const checked = useRef(false);
 
-  // Derived, not stored: arriving here without a usable code means the page
-  // was opened directly rather than from the new inbox.
-  const hasCode =
-    searchParams.get("mode") === "verifyEmail" && Boolean(searchParams.get("oobCode"));
+  const oobCode = searchParams.get("oobCode");
+  const mode = searchParams.get("mode");
+  const hasCode = Boolean(oobCode) && CHANGE_MODES.has(mode ?? "");
 
   useEffect(() => {
-    if (!ready || !hasCode || applied.current) return;
-    const oobCode = searchParams.get("oobCode") as string;
-    applied.current = true;
-    applyActionCode(getClientAuth(), oobCode)
-      .then(async () => {
-        await reloadUser();
-        const session = await refreshClaims(true);
-        router.replace(homeFor(session));
+    if (!ready || !hasCode || checked.current) return;
+    checked.current = true;
+    checkActionCode(getClientAuth(), oobCode as string)
+      .then((result) => {
+        // Guard the operation, not just the URL: a password-reset or
+        // email-revocation code pasted onto this route must never be applied
+        // here. The `mode` string is only a hint, this is the authority.
+        if (
+          result.operation !== ActionCodeOperation.VERIFY_AND_CHANGE_EMAIL &&
+          result.operation !== ActionCodeOperation.VERIFY_EMAIL
+        ) {
+          throw new Error("wrong-operation");
+        }
+        setInfo(result);
       })
       .catch(() => {
         setError(
@@ -51,7 +71,26 @@ function ConfirmEmailInner() {
         );
         setBusy(false);
       });
-  }, [ready, hasCode, searchParams, reloadUser, refreshClaims, router]);
+  }, [ready, hasCode, oobCode]);
+
+  // Apply only once the code has been proven valid, so the change is never
+  // committed on a link the user did not open.
+  useEffect(() => {
+    if (!info) return;
+    applyActionCode(getClientAuth(), oobCode as string)
+      .then(async () => {
+        await reloadUser();
+        const session = await refreshClaims(true);
+        router.replace(homeFor(session));
+      })
+      .catch(() => {
+        setError("That link could not be applied. Request a new email address change from Settings.");
+        setBusy(false);
+      });
+  }, [info, oobCode, reloadUser, refreshClaims, router]);
+
+  const prev = info?.data.previousEmail;
+  const next = info?.data.email;
 
   return (
     <div className="card w-full max-md:!p-3">
@@ -77,18 +116,7 @@ function ConfirmEmailInner() {
               Back to settings
             </Link>
           </>
-        ) : hasCode ? (
-          <>
-            <p className="text-sm leading-relaxed text-graphite max-md:text-[13px]">
-              {busy
-                ? "Applying your new address…"
-                : "If you opened this link from the new inbox, your address is being updated now."}
-            </p>
-            <Link href="/settings" className="btn btn-ghost btn-lg mt-4 w-full text-slate">
-              <Mail className="h-4 w-4" aria-hidden /> Back to settings
-            </Link>
-          </>
-        ) : (
+        ) : !hasCode ? (
           <>
             <p className="text-sm leading-relaxed text-graphite max-md:text-[13px]">
               Open this page from the confirmation link in your NEW inbox. It only works after you
@@ -98,6 +126,28 @@ function ConfirmEmailInner() {
               Go to settings
             </Link>
           </>
+        ) : info ? (
+          <p className="text-sm leading-relaxed text-graphite max-md:text-[13px]">
+            {prev ? (
+              <>
+                Your sign-in address is changing from{" "}
+                <span className="font-medium text-ink">{prev}</span> to{" "}
+                <span className="font-medium text-ink">{next}</span>. Applying now…
+              </>
+            ) : (
+              "Confirming your email address…"
+            )}
+          </p>
+        ) : (
+          <p className="text-sm leading-relaxed text-graphite max-md:text-[13px]">
+            {busy ? "Checking your confirmation link…" : "Working…"}
+          </p>
+        )}
+
+        {hasCode && !error && (
+          <Link href="/settings" className="btn btn-ghost btn-lg mt-4 w-full text-slate">
+            <Mail className="h-4 w-4" aria-hidden /> Back to settings
+          </Link>
         )}
       </div>
     </div>
