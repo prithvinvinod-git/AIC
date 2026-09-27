@@ -10,7 +10,11 @@ const db = adminDb();
 
 const profileSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(80).optional(),
-  email: z.string().trim().email().optional(),
+  // `email` is deliberately NOT settable here. The Firebase Auth account owns
+  // the address, and changing it requires a verification round-trip to the new
+  // inbox (Settings → Email address → verifyBeforeUpdateEmail). Writing it to
+  // the users/ doc alone would desync the mirror from the ID token's `email`
+  // claim, and notification routing reads that claim.
   phone: z.string().trim().max(30).optional(),
   notifyEmail: z.boolean().optional(),
   college: z
@@ -89,7 +93,6 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
       updatedAt: new Date().toISOString(),
     };
     if (name !== undefined) userData.name = name;
-    if (body.email !== undefined) userData.email = body.email;
     if (body.phone !== undefined) userData.phone = body.phone;
     if (body.notifyEmail !== undefined) userData.notifyEmail = body.notifyEmail;
     if (body.college !== undefined) userData.college = body.college;

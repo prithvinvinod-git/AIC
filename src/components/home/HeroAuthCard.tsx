@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { fetchSignInMethodsForEmail, sendPasswordResetEmail } from "firebase/auth";
 import { useAuth, type SessionClaims } from "@/components/auth/AuthProvider";
@@ -10,6 +10,9 @@ import { LastUsedBadge } from "@/components/auth/LastUsedBadge";
 import { setLastAuthMethod } from "@/lib/lastAuthMethod";
 import { getClientAuth } from "@/lib/firebase";
 import PasswordSetupModal from "@/components/auth/PasswordSetupModal";
+
+/** Grace period before another reset email can be requested from the UI. */
+const RESET_COOLDOWN_MS = 45_000;
 
 function friendlyAuthError(err: unknown): string {
   const msg = err instanceof Error ? err.message : "";
@@ -43,6 +46,20 @@ export default function HeroAuthCard({ onSuccess }: HeroAuthCardProps = {}) {
   const [resetBusy, setResetBusy] = useState(false);
   const [resetSent, setResetSent] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);
+  const [cooldownUntil, setCooldownUntil] = useState(0);
+  const [now, setNow] = useState(() => Date.now());
+
+  // Drives the resend countdown. `now` only changes on a timer tick, and the
+  // remaining seconds are derived during render rather than stored, so no
+  // setState happens directly in the effect body.
+  useEffect(() => {
+    if (cooldownUntil === 0) return;
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, [cooldownUntil]);
+
+  const cooldownLeft =
+    cooldownUntil === 0 ? 0 : Math.max(0, Math.ceil((cooldownUntil - now) / 1000));
 
   const backToLogin = useCallback(() => {
     setMode("login");
@@ -125,8 +142,21 @@ export default function HeroAuthCard({ onSuccess }: HeroAuthCardProps = {}) {
       setResetError(null);
       setResetBusy(true);
       try {
-        await sendPasswordResetEmail(getClientAuth(), resetEmail.trim());
+        // Explicit actionCodeSettings are required: without them Firebase uses
+        // the console's default action link, which is the generic hosted
+        // handler rather than the app. handleCodeInApp + a same-origin URL is
+        // what routes the link to /reset-password.
+        await sendPasswordResetEmail(getClientAuth(), resetEmail.trim(), {
+          url: `${window.location.origin}/reset-password`,
+          handleCodeInApp: true,
+        });
         setResetSent(true);
+        // Firebase's password-reset quota is shared per project and is low
+        // without a billing instrument, so a short client-side cooldown stops
+        // accidental double-clicks from burning the allowance.
+        const nowTs = Date.now();
+        setNow(nowTs);
+        setCooldownUntil(nowTs + RESET_COOLDOWN_MS);
       } catch (err) {
         const msg = err instanceof Error ? err.message : "";
         if (msg.includes("user-not-found")) {
@@ -250,6 +280,16 @@ export default function HeroAuthCard({ onSuccess }: HeroAuthCardProps = {}) {
                   className="btn btn-ghost btn-lg mt-1 w-full max-md:!text-xs max-md:!px-3 max-md:!py-1.5"
                 >
                   Back to sign in
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setResetSent(false)}
+                  disabled={cooldownLeft > 0}
+                  className="text-xs font-medium text-accent hover:text-accent-strong hover:underline disabled:cursor-not-allowed disabled:text-stone disabled:no-underline"
+                >
+                  {cooldownLeft > 0
+                    ? `Resend available in ${cooldownLeft}s`
+                    : "Didn't get it? Send again"}
                 </button>
               </div>
             ) : (

@@ -6,6 +6,7 @@ import { ArrowLeft, Bell, Moon, Sun } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useTheme } from "@/components/ThemeProvider";
 import PasswordChangeCard from "@/components/auth/PasswordChangeCard";
+import EmailChangeCard from "@/components/auth/EmailChangeCard";
 import { api } from "@/lib/clientApi";
 import { ROLE_LABEL, CATEGORY_SCOPED_ROLES } from "@/lib/constants";
 import type { Role } from "@/lib/types";
@@ -235,6 +236,8 @@ export default function SettingsPage() {
       </div>
 
       <PasswordChangeCard />
+
+      <EmailChangeCard />
 
       <div className="card">
         <h2 className="font-display text-base font-semibold text-ink">Appearance</h2>
