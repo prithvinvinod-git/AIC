@@ -17,6 +17,11 @@ self.__FIREBASE_READY = false;
  * and cleared on account switch. SW only stores public assets.       *
  * ------------------------------------------------------------------ */
 const SHELL_CACHE = "servox-shell-v1";
+/* In local dev, Turbopack reuses chunk URLs across recompiles while their
+ * contents change. A cache-first strategy then serves a stale chunk and the
+ * app dies with "module factory is not available". Never cache /_next/static
+ * on localhost — let the browser handle it so HMR keeps working. */
+const IS_LOCAL_DEV = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(self.location.hostname);
 const PRECACHE_URLS = [
   "/",
   "/login",
@@ -84,6 +89,8 @@ self.addEventListener("fetch", (event) => {
     url.pathname === "/servoxlogo.png" ||
     url.pathname === "/manifest.json"
   ) {
+    // Bypass in local dev — see IS_LOCAL_DEV above.
+    if (IS_LOCAL_DEV && url.pathname.startsWith("/_next/static")) return;
     event.respondWith(staleWhileRevalidate(SHELL_CACHE, request));
     return;
   }

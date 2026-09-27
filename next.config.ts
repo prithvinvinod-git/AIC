@@ -7,7 +7,10 @@ const CSP = [
   "img-src 'self' data: blob: https://lh3.googleusercontent.com",
   "media-src 'self' https://d8j0ntlcm91z4.cloudfront.net",
   "font-src 'self' data:",
-  "connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com https://firestore.googleapis.com https://www.google.com https://www.gstatic.com https://accounts.google.com",
+  // `fcm.googleapis.com` is required by firebase/messaging `getToken()`, which
+  // POSTs there to create the push subscription. Without it every getToken()
+  // call is blocked and surfaces as `TypeError: Failed to fetch` in the console.
+  "connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com https://firestore.googleapis.com https://www.google.com https://www.gstatic.com https://accounts.google.com https://fcm.googleapis.com",
   "frame-src https://www.google.com https://accounts.google.com",
   "worker-src 'self' blob:",
   "object-src 'none'",

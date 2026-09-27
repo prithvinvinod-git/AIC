@@ -88,12 +88,13 @@ export async function requestFcmToken(): Promise<{ token: string | null; error: 
   if (!reg) return { token: null, error: "Service worker failed to register." };
 
   try {
-    console.log("[FCM] getToken vapidKey:", vapidKey ? "present" : "MISSING", "swReg:", reg.scope);
     const token = await getToken(messaging, { vapidKey, serviceWorkerRegistration: reg });
-    console.log("[FCM] token obtained:", token ? token.slice(0, 20) + "..." : "null");
     return { token, error: null };
   } catch (e: unknown) {
-    console.error("[FCM] getToken failed:", e);
+    // Deliberately no console output here: this runs on every page load for
+    // anyone who has already granted permission, so a transient network/CSP
+    // failure would spam the console with a raw `TypeError: Failed to fetch`.
+    // The caller gets a user-facing `error` and shows it in the UI.
     const msg = e instanceof Error ? e.message : String(e);
     if (msg.includes("messaging/unsupported-browser")) return { token: null, error: "Your browser doesn't support push notifications." };
     if (msg.includes("messaging/permission-blocked")) return { token: null, error: "Notifications are blocked. Enable them in browser settings." };
