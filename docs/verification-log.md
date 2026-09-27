@@ -149,3 +149,61 @@ Commit `8e26422`.
 - `src/hooks/useIssues.ts` — surfaces the network message
 - `src/components/ServiceWorkerRegistrar.tsx` — guarded async chains
 
+---
+
+# Session 4 — I-10 / I-11 close-out + runtime verification
+
+Commits `a8206f7`, `0759f19`.
+
+## Scope
+
+- **I-11 — college required server-side on admin POST.** `adminUserSchema.college`
+  is `.optional()` so PATCH can omit it on a role-only edit, which also meant
+  POST accepted a missing college: the admin UI required one, the API did not.
+  Added `adminUserCreateSchema` (POST variant) and switched the POST branch to
+  it, then dropped the dead `body.college || ""` / `|| null` fallbacks.
+- **I-11 follow-on bug found by the runtime check.** A *missing* college produced
+  Zod's generic `Invalid input: expected string, received undefined`. The admin
+  toast prints `details[].message` verbatim (`formatError` in
+  `src/components/ui/Toast.tsx`), so the admin would have seen that instead of a
+  useful message. Fixed with `z.string({ error: "College is required" })`.
+- **I-10 — firebase 12.17.1 → 12.19.0.** The two earlier installs that appeared to
+  time out were transient; this one completed in 1m.
+
+## Checks run
+
+| Check | Command | Result |
+|---|---|---|
+| Schema runtime behaviour | esbuild bundle of the real `src/lib/schemas.ts` + `constants.ts`, run in Node (no Firestore) | ✅ 15/15 pass |
+| Firebase SDK loads | `require("firebase/app\|auth\|firestore")` | ✅ all resolve, `firebase@12.19.0` |
+| Page routes | `GET / /login /signup /new /settings /verify-email` on the running dev server | ✅ all 200 |
+| API auth doors | `POST /api/auth/provision`, `POST /api/auth/self-provision`, `POST /api/issues`, `GET /api/profile` with no token | ✅ all 401 — nothing written |
+| TypeScript | `npx tsc --noEmit` | ✅ Pass (0 errors) |
+| ESLint (source) | `npx eslint src` | ✅ 0 errors — only the 2 pre-existing `onam.tsx` warnings |
+| Production build | `npm run build` (Next 16.3, Turbopack) | ✅ Compiled successfully |
+
+The schema runtime check covered `isValidCollege` / `isValidDepartment`, POST
+rejecting a missing / whitespace-only / unknown / wrong-case college, and PATCH
+accepting an omitted college while never accepting a blank one.
+
+## Not verified
+
+- **In-browser pass** of the onboarding, password-change and offline-message UIs.
+  These are client components; the build only prerenders the shell, and there is
+  no browser automation in this repo. Needs a human.
+- **`scripts/smoke-lifecycle.mjs`** was not run. It is deliberately gated behind
+  `SMOKE_ALLOW_PROD=1` because `.env.local` points at the live
+  `campus-maintenance-2820d` project and the run creates + auto-deletes real rows.
+  Awaiting explicit sign-off.
+- The `allow-scripts` postinstall warnings (esbuild, re2, protobufjs,
+  `@firebase/util`) are pre-existing npm policy on this machine, not a
+  consequence of the firebase bump; `re2` in particular never ran `node-gyp`.
+
+## Files touched
+
+- `src/lib/schemas.ts` — `adminUserCreateSchema`, friendlier missing-college error
+- `src/app/api/auth/provision/route.ts` — POST uses the create schema
+- `package.json`, `package-lock.json` — firebase `^12.19.0`
+- `changes.md` — plain-language summary of the session
+
+
