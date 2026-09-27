@@ -13,7 +13,7 @@
     "@genkit-ai/googleai": "^1.28.0",
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",
-    "firebase": "^12.17.1",
+    "firebase": "^12.19.0",
     "firebase-admin": "^14.2.0",
     "framer-motion": "^13.1.0",
     "genkit": "^1.40.1",

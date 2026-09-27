@@ -3,7 +3,7 @@ import { adminAuth, adminDb } from "@/lib/firebaseAdmin";
 import { json, parseBody, handleError } from "@/lib/api";
 import { requireAdmin } from "@/lib/auth";
 import { clientIp, isRateLimited } from "@/lib/rateLimit";
-import { adminUserSchema } from "@/lib/schemas";
+import { adminUserCreateSchema, adminUserSchema } from "@/lib/schemas";
 import { CATEGORY_SCOPED_ROLES, DEPARTMENT_SCOPED_ROLES, isValidDepartment } from "@/lib/constants";
 import { invalidateServerCache } from "@/lib/serverCache";
 import { capitalizeName } from "@/lib/format";
@@ -27,7 +27,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
     const actor = await requireAdmin(req);
     void actor;
-    const body = await parseBody(req, adminUserSchema);
+    // POST requires a college (adminUserCreateSchema) — every managed account
+    // belongs to exactly one college. PATCH stays on the base schema so a
+    // role-only edit may omit it.
+    const body = await parseBody(req, adminUserCreateSchema);
 
     // Server-side rate limiting — this is the only Next-route auth door
     // (login/signup talk to Firebase directly via the client SDK, which
@@ -62,7 +65,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     }
     // Department must belong to the assigned college (single-campus
     // identity — a Dental dept can't be assigned to Engineering).
-    if (body.college && department && !isValidDepartment(body.college, department)) {
+    if (department && !isValidDepartment(body.college, department)) {
       return json({ error: "That department doesn't exist in the selected college." }, 400);
     }
     // Category-scoped roles are useless without a category.
@@ -94,7 +97,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       role,
       portal: body.portal || null,
       department,
-      college: body.college || null,
+      college: body.college,
       categoryId: categoryScoped ? categoryId : null,
       categoryName: categoryScoped ? categoryName : null,
       requiresEmailVerification: body.requiresEmailVerification || null,
@@ -107,7 +110,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         email: body.email,
         role,
         portal: body.portal || "",
-        college: body.college || "",
+        college: body.college,
         department,
         ...(categoryScoped ? { categoryId, categoryName } : {}),
         phone: body.phone || userRecord.phoneNumber || "",

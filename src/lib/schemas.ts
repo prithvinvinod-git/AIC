@@ -109,6 +109,20 @@ export const adminUserSchema = z.object({
   isActive: z.boolean().default(true),
 });
 
+/** POST variant of `adminUserSchema`: every managed account gets exactly one
+ *  college, so it is required here. The base schema keeps college optional
+ *  because PATCH legitimately omits it when an admin only edits role/name/etc.
+ *  (see the "clear college" removal — the value can no longer be blanked). */
+export const adminUserCreateSchema = adminUserSchema.extend({
+  college: z
+    // `error` also covers the missing-field case — without it Zod reports
+    // "expected string, received undefined" instead of the admin-facing message.
+    .string({ error: "College is required" })
+    .trim()
+    .min(1, "College is required")
+    .refine((c) => isValidCollege(c), "That college isn't one of the configured campus colleges."),
+});
+
 export const teamSchema = z.object({
   name: z.string().min(1),
   categoryId: z.string().min(1),
