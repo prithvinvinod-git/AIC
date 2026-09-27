@@ -2,7 +2,12 @@ import type { NextConfig } from "next";
 
 const CSP = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  // `apis.google.com` serves the Google Identity Services script that
+  // `signInWithPopup` injects. Without it CSP blocks it and Google sign-in
+  // fails outright with "Loading the script ... violates ... script-src".
+  // The popup/One Tap iframe it talks to is already allowed via frame-src +
+  // connect-src (accounts.google.com).
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://lh3.googleusercontent.com",
   "media-src 'self' https://d8j0ntlcm91z4.cloudfront.net",

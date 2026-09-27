@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import Script from "next/script";
 import { Fraunces, Inter } from "next/font/google";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -52,12 +51,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${inter.variable} ${fraunces.variable} h-full antialiased`}
     >
       <head>
-        {/* Inline theme guard must run before paint/hydration. next/script's
-            beforeInteractive strategy hoists it into <head> as a real script
-            tag — plain JSX <script> is never executed by React on the client. */}
-        <Script
+        {/* Inline theme guard must run before paint/hydration. This is a plain
+            inline <script> in the root layout's <head>, so it is part of the
+            server-rendered HTML and executes during parse, before first paint.
+            Using next/script's "beforeInteractive" here instead makes React
+            create the element on the client and log "Encountered a script tag
+            while rendering React component" (React 19 / Next 16). */}
+        <script
           id="theme-bootstrap"
-          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{ __html: themeBootstrapScript }}
         />
         <meta name="google-adsense-account" content="ca-pub-6865869538408644" />
