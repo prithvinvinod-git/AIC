@@ -87,3 +87,37 @@ export async function requireAdmin(req: NextRequest): Promise<AuthUser> {
   }
   return user;
 }
+
+/**
+ * Gate for the people + org-structure surface: users, teams and categories.
+ * The Principal can run this alongside a full admin, which is what powers the
+ * Principal's own panel. System config (SLA defaults, AI settings, purchase
+ * limits) deliberately stays on `requireAdmin` and is NOT covered here.
+ */
+export async function requireUserManager(req: NextRequest): Promise<AuthUser> {
+  const user = await requireAuth(req);
+  if (user.role !== "admin" && user.role !== "principal") {
+    const err = new Error("Admin access required.") as Error & { statusCode: number };
+    err.statusCode = 403;
+    throw err;
+  }
+  return user;
+}
+
+/**
+ * Only a full admin may create, promote, demote or otherwise touch an account
+ * that holds the `admin` role. Without this a Principal could mint an admin —
+ * and then escalate past their own panel. Checked inside the provision route
+ * against the *effective* role, so it also blocks edits to an existing admin
+ * rather than only explicit promotions.
+ */
+export function assertMayManageRole(actor: AuthUser, effectiveRole: Role): void {
+  if (actor.role === "admin") return;
+  if (effectiveRole === "admin") {
+    const err = new Error(
+      "Only an admin can manage accounts with the admin role."
+    ) as Error & { statusCode: number };
+    err.statusCode = 403;
+    throw err;
+  }
+}

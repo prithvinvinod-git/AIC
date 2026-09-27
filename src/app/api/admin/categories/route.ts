@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebaseAdmin";
-import { requireAdmin } from "@/lib/auth";
+import { requireUserManager } from "@/lib/auth";
 import { json, parseBody, handleError } from "@/lib/api";
 import { categorySchema } from "@/lib/schemas";
 import { serverCached, invalidateServerCache } from "@/lib/serverCache";
@@ -10,7 +10,7 @@ const db = adminDb();
 /** GET /api/admin/categories — list categories. */
 export async function GET(req: NextRequest): Promise<NextResponse> {
   try {
-    await requireAdmin(req);
+    await requireUserManager(req);
     const categories = await serverCached("api:admin:categories", 60_000, async () => {
       const snap = await db.collection("categories").orderBy("name", "asc").get();
       return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
@@ -24,7 +24,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 /** POST /api/admin/categories — create a category. */
 export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
-    await requireAdmin(req);
+    await requireUserManager(req);
     const body = await parseBody(req, categorySchema);
     const ref = db.collection("categories").doc();
     const data = { ...body, createdAt: new Date().toISOString() };

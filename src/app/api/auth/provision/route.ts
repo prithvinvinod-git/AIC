@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminAuth, adminDb } from "@/lib/firebaseAdmin";
 import { json, parseBody, handleError } from "@/lib/api";
-import { requireAdmin } from "@/lib/auth";
+import { requireUserManager, assertMayManageRole } from "@/lib/auth";
 import { clientIp, isRateLimited } from "@/lib/rateLimit";
 import { adminUserCreateSchema, adminUserSchema } from "@/lib/schemas";
 import { CATEGORY_SCOPED_ROLES, DEPARTMENT_SCOPED_ROLES, isValidDepartment } from "@/lib/constants";
@@ -20,17 +20,19 @@ async function categoryNameOf(categoryId: string): Promise<string> {
 
 /**
  * POST /api/auth/provision — create a user with a role + custom claim.
- * ADMIN ONLY. Used by the admin panel; signup for reporters and social
- * sign-ins use the caller-own POST /api/auth/self-provision instead.
+ * ADMIN or PRINCIPAL. Used by the admin panel; signup for reporters and
+ * social sign-ins use the caller-own POST /api/auth/self-provision instead.
+ * A principal may not create admin accounts (see assertMayManageRole).
  */
 export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
-    const actor = await requireAdmin(req);
-    void actor;
+    const actor = await requireUserManager(req);
     // POST requires a college (adminUserCreateSchema) — every managed account
     // belongs to exactly one college. PATCH stays on the base schema so a
     // role-only edit may omit it.
     const body = await parseBody(req, adminUserCreateSchema);
+    // Blocked before any Firebase write so a principal cannot mint an admin.
+    assertMayManageRole(actor, body.role);
 
     // Server-side rate limiting — this is the only Next-route auth door
     // (login/signup talk to Firebase directly via the client SDK, which
@@ -134,10 +136,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 }
 
 /** PATCH /api/auth/provision — update role + claims for an existing user.
- *  ADMIN ONLY — this can mint any role and reset any user's password. */
+ *  ADMIN or PRINCIPAL — this can mint roles and reset any user's password.
+ *  A principal may not touch an account whose effective role is `admin`. */
 export async function PATCH(req: NextRequest): Promise<NextResponse> {
   try {
-    await requireAdmin(req);
+    const actor = await requireUserManager(req);
     if (isRateLimited(`provision:patch:ip:${clientIp(req)}`, { limit: 60, windowMs: 60_000 })) {
       return NextResponse.json(
         { error: "Too many requests from this device. Please try again later." },
@@ -147,9 +150,15 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
     const body = await parseBody(req, adminUserSchema.partial());
     if (!body.uid) return json({ error: "uid is required." }, 400);
 
+    // Reject an attempted promotion to admin before any user lookup or write.
+    if (body.role) assertMayManageRole(actor, body.role);
+
     const existing = await adminAuth().getUser(body.uid);
     const existingClaims = (existing.customClaims ?? {}) as Record<string, unknown>;
     const effRole: Role = (body.role ?? (existingClaims.role as Role)) as Role;
+    // Re-checked against the EFFECTIVE role so a principal is also blocked from
+    // editing or demoting an account that already holds admin.
+    assertMayManageRole(actor, effRole);
     const name = body.name ? capitalizeName(body.name) : undefined;
 
     const updates: Record<string, unknown> = {};

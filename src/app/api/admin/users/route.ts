@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminAuth, adminDb } from "@/lib/firebaseAdmin";
-import { requireAdmin } from "@/lib/auth";
+import { requireUserManager } from "@/lib/auth";
 import { json, handleError } from "@/lib/api";
 import { serverCached, invalidateServerCache } from "@/lib/serverCache";
 
@@ -28,12 +28,12 @@ function createdTimeMs(v: unknown): number {
   return Number.isNaN(t) ? 0 : t;
 }
 
-/** GET /api/admin/users — list all users (admin only).
+/** GET /api/admin/users — list all users (admin or principal).
  *  Cached briefly per role-filter; invalidated by create/update via
  *  /api/auth/provision and by DELETE below. */
 export async function GET(req: NextRequest): Promise<NextResponse> {
   try {
-    await requireAdmin(req);
+    await requireUserManager(req);
     const role = req.nextUrl.searchParams.get("role");
     const key = `api:admin:users:${role || "all"}`;
     const users = await serverCached(key, 15_000, async () => {
@@ -59,11 +59,11 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   }
 }
 
-/** DELETE /api/admin/users?uid=… — permanently remove a user (admin only).
+/** DELETE /api/admin/users?uid=… — permanently remove a user (admin or principal).
  *  Removes the Auth account, the users/ doc and their notification feed. */
 export async function DELETE(req: NextRequest): Promise<NextResponse> {
   try {
-    const admin = await requireAdmin(req);
+    const admin = await requireUserManager(req);
     const uid = req.nextUrl.searchParams.get("uid");
     if (!uid) return json({ error: "uid is required." }, 400);
     if (uid === admin.uid) return json({ error: "You cannot delete your own account." }, 400);

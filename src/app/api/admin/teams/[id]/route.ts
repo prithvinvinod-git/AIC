@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebaseAdmin";
-import { requireAdmin } from "@/lib/auth";
+import { requireUserManager } from "@/lib/auth";
 import { json, parseBody, handleError } from "@/lib/api";
 import { teamSchema } from "@/lib/schemas";
 import { invalidateServerCache } from "@/lib/serverCache";
@@ -18,7 +18,7 @@ export async function PATCH(
   ctx: RouteContext<"/api/admin/teams/[id]">
 ): Promise<NextResponse> {
   try {
-    await requireAdmin(req);
+    await requireUserManager(req);
     const { id } = await ctx.params;
     const body = await parseBody(req, teamSchema.partial());
     await db.doc(`teams/${id}`).update(body);
@@ -35,7 +35,7 @@ export async function DELETE(
   ctx: RouteContext<"/api/admin/teams/[id]">
 ): Promise<NextResponse> {
   try {
-    await requireAdmin(req);
+    await requireUserManager(req);
     const { id } = await ctx.params;
     await db.doc(`teams/${id}`).update({ isActive: false });
     invalidateTeamCaches();

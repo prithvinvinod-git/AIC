@@ -47,17 +47,28 @@ export default function AdminPage() {
   const [tab, setTab] = useState<Tab>("Users");
 
   if (!claims) return null;
-  assertRouteAccess(claims, ["admin"]);
+  assertRouteAccess(claims, ["admin", "principal"]);
+
+  // A principal manages people and org structure but not system config, so
+  // their tab strip stops short of Config (SLA defaults, AI, purchase limits).
+  // Keyed on role only, which is exactly what requireUserManager/requireAdmin
+  // check server-side, so the UI and the API can never disagree.
+  const isPrincipal = claims.role === "principal";
+  const tabs = isPrincipal ? TABS.filter((t) => t !== "Config") : TABS;
 
   return (
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="font-display text-2xl max-md:text-xl font-semibold text-ink">Admin</h1>
-        <p className="mt-1 text-sm text-slate">Manage users, teams, categories and SLA defaults.</p>
+        <p className="mt-1 text-sm text-slate">
+          {isPrincipal
+            ? "Manage users, teams and categories."
+            : "Manage users, teams, categories and SLA defaults."}
+        </p>
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {TABS.map((t) => (
+        {tabs.map((t) => (
           <button key={t} className={`btn btn-sm ${tab === t ? "btn-primary" : "btn-ghost"}`} onClick={() => setTab(t)}>
             {t}
           </button>
@@ -73,6 +84,7 @@ export default function AdminPage() {
 }
 
 function UsersTab() {
+  const { claims } = useAuth();
   const [userTab, setUserTab] = useState<UserTab>("Regular users");
   const [users, setUsers] = useState<AppUser[] | null>(null);
   const [pendingDelete, setPendingDelete] = useState<AppUser | null>(null);
@@ -87,6 +99,12 @@ function UsersTab() {
   const [department, setDepartment] = useState<string>("");
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoryId, setCategoryId] = useState("");
+
+  // A principal may not grant the admin role — assertMayManageRole rejects it
+  // server-side — so hide the option instead of leaving one that 403s.
+  const isPrincipal = claims?.role === "principal";
+  const assignableRoles = isPrincipal ? ALL_ROLES.filter((r) => r !== "admin") : ALL_ROLES;
+  const facultyRoles = isPrincipal ? FACULTY_ROLES.filter((r) => r !== "admin") : FACULTY_ROLES;
 
   const load = useCallback(async () => {
     try {
@@ -225,7 +243,7 @@ function UsersTab() {
               }
             }}
           >
-            {FACULTY_ROLES.map((r) => (
+            {facultyRoles.map((r) => (
               <option key={r} value={r}>
                 {ROLE_LABEL[r]}
               </option>
@@ -331,7 +349,7 @@ function UsersTab() {
                       value={u.role}
                       onChange={(e) => void updateUser(u.uid || "", { role: e.target.value as Role })}
                     >
-                      {ALL_ROLES.map((r) => (
+                      {assignableRoles.map((r) => (
                         <option key={r} value={r}>
                           {ROLE_LABEL[r]}
                         </option>
@@ -383,7 +401,7 @@ function UsersTab() {
               value={selectedUser?.role}
               onChange={(e) => selectedUser?.uid && void updateUser(selectedUser.uid, { role: e.target.value as Role })}
             >
-              {ALL_ROLES.map((r) => (
+              {assignableRoles.map((r) => (
                 <option key={r} value={r}>
                   {ROLE_LABEL[r]}
                 </option>

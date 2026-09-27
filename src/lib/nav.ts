@@ -46,7 +46,7 @@ export const NAV_ITEMS: NavItem[] = [
   { role: "maintenance", label: "Jobs", href: "/jobs", icon: Wrench },
   { roles: HEAD_ROLES, label: "Dispatch", href: "/dispatch", icon: Wrench },
   { role: "purchase", label: "Purchases", href: "/purchase", icon: ShoppingCart },
-  { role: "admin", label: "Admin", href: "/admin", icon: UserCog },
+  { roles: ["admin", "principal"], label: "Admin", href: "/admin", icon: UserCog },
   { roles: ANALYTICS_ROLES, label: "Analytics", href: "/analytics", icon: BarChart3 },
   { roles: ["admin", "principal", "validator"], label: "Issues", href: "/issue-history", icon: History },
   { roles: ["admin", "principal", "hod"], label: "Announcements", href: "/announcements", icon: Megaphone },
