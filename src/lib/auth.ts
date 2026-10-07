@@ -31,8 +31,29 @@ export async function requireAuth(req: NextRequest): Promise<AuthUser> {
   try {
     // checkRevoked=true so token revocation (account disable/delete) takes
     // effect immediately instead of lingering for the ~1 h token lifetime.
+    // Note this also makes the Admin SDK call getUser(), i.e. it needs working
+    // service-account credentials — not just the public keys.
     decoded = await adminAuth().verifyIdToken(token, true);
-  } catch {
+  } catch (e) {
+    const message = String((e as Error)?.message || e);
+    // A bad user token and a broken service account are opposite problems, but
+    // both land here. Swallowing them into the same "Unauthorized" hid a dead
+    // FIREBASE_PRIVATE_KEY as a fleet-wide sign-in failure that hit every route
+    // and every role, with nothing in the logs to distinguish it. Surface it.
+    const credProblem =
+      /credential|invalid_grant|unauthenticated|invalid jwt signature|certificate|access token|service.?account/i.test(
+        message
+      );
+    if (credProblem) {
+      console.error(
+        `[auth] Admin SDK credential failure while verifying a token — check FIREBASE_PRIVATE_KEY / FIREBASE_CLIENT_EMAIL / FIREBASE_PROJECT_ID match a live key: ${message}`
+      );
+      const err = new Error(
+        "Server authentication is misconfigured. Please contact an administrator."
+      ) as Error & { statusCode: number };
+      err.statusCode = 503;
+      throw err;
+    }
     const err = new Error("Unauthorized") as Error & { statusCode: number };
     err.statusCode = 401;
     throw err;
