@@ -9,20 +9,38 @@ import {
 } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
 
-function publicEnv(name: string): string {
-  const value = process.env[name]?.trim();
-  if (!value) {
+function requiredPublicEnv(name: string, value: string | undefined): string {
+  const normalized = value?.trim();
+  if (!normalized) {
     throw new Error(`Missing Firebase configuration: ${name}`);
   }
-  return value;
+  return normalized;
 }
 
+// Keep these environment references literal. Next.js replaces literal
+// NEXT_PUBLIC_* references in the browser bundle; dynamic process.env[name]
+// lookups are not inlined and result in an empty Firebase config client-side.
 const firebaseConfig = {
-  apiKey: publicEnv("NEXT_PUBLIC_FIREBASE_API_KEY"),
-  authDomain: publicEnv("NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN"),
-  projectId: publicEnv("NEXT_PUBLIC_FIREBASE_PROJECT_ID"),
-  messagingSenderId: publicEnv("NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID"),
-  appId: publicEnv("NEXT_PUBLIC_FIREBASE_APP_ID"),
+  apiKey: requiredPublicEnv(
+    "NEXT_PUBLIC_FIREBASE_API_KEY",
+    process.env.NEXT_PUBLIC_FIREBASE_API_KEY
+  ),
+  authDomain: requiredPublicEnv(
+    "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN",
+    process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+  ),
+  projectId: requiredPublicEnv(
+    "NEXT_PUBLIC_FIREBASE_PROJECT_ID",
+    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
+  ),
+  messagingSenderId: requiredPublicEnv(
+    "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID",
+    process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+  ),
+  appId: requiredPublicEnv(
+    "NEXT_PUBLIC_FIREBASE_APP_ID",
+    process.env.NEXT_PUBLIC_FIREBASE_APP_ID
+  ),
 };
 
 let app: FirebaseApp | undefined;
