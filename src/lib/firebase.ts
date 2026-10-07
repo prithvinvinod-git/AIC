@@ -9,12 +9,20 @@ import {
 } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
 
+function publicEnv(name: string): string {
+  const value = process.env[name]?.trim();
+  if (!value) {
+    throw new Error(`Missing Firebase configuration: ${name}`);
+  }
+  return value;
+}
+
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  apiKey: publicEnv("NEXT_PUBLIC_FIREBASE_API_KEY"),
+  authDomain: publicEnv("NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN"),
+  projectId: publicEnv("NEXT_PUBLIC_FIREBASE_PROJECT_ID"),
+  messagingSenderId: publicEnv("NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID"),
+  appId: publicEnv("NEXT_PUBLIC_FIREBASE_APP_ID"),
 };
 
 let app: FirebaseApp | undefined;
