@@ -9,45 +9,32 @@ import {
 } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
 
-function requiredPublicEnv(name: string, value: string | undefined): string {
-  const normalized = value?.trim();
-  if (!normalized) {
-    throw new Error(`Missing Firebase configuration: ${name}`);
-  }
-  return normalized;
-}
-
 // Keep these environment references literal. Next.js replaces literal
 // NEXT_PUBLIC_* references in the browser bundle; dynamic process.env[name]
 // lookups are not inlined and result in an empty Firebase config client-side.
 const firebaseConfig = {
-  apiKey: requiredPublicEnv(
-    "NEXT_PUBLIC_FIREBASE_API_KEY",
-    process.env.NEXT_PUBLIC_FIREBASE_API_KEY
-  ),
-  authDomain: requiredPublicEnv(
-    "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN",
-    process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-  ),
-  projectId: requiredPublicEnv(
-    "NEXT_PUBLIC_FIREBASE_PROJECT_ID",
-    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
-  ),
-  messagingSenderId: requiredPublicEnv(
-    "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID",
-    process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
-  ),
-  appId: requiredPublicEnv(
-    "NEXT_PUBLIC_FIREBASE_APP_ID",
-    process.env.NEXT_PUBLIC_FIREBASE_APP_ID
-  ),
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY?.trim() ?? "",
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN?.trim() ?? "",
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID?.trim() ?? "",
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID?.trim() ?? "",
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID?.trim() ?? "",
 };
+
+function assertFirebaseConfig(): void {
+  const missing = Object.entries(firebaseConfig)
+    .filter(([, value]) => !value)
+    .map(([key]) => key);
+  if (missing.length > 0) {
+    throw new Error(`Missing Firebase configuration: ${missing.join(", ")}`);
+  }
+}
 
 let app: FirebaseApp | undefined;
 let auth: Auth | undefined;
 let db: Firestore | undefined;
 
 export function getApp(): FirebaseApp {
+  assertFirebaseConfig();
   if (!app) {
     app = getApps()[0] ?? initializeApp(firebaseConfig);
   }

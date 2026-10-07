@@ -85,6 +85,18 @@ function prepareHeaders(init: RequestInit): Headers {
 }
 
 async function request<T>(path: string, init: RequestInit, retried: boolean): Promise<T> {
+  // Auth state and data hooks can become ready in the same render. Wait for
+  // the Firebase ID token before the first request; otherwise the server sees
+  // an unauthenticated request, returns 401, and the read cache can preserve
+  // the empty/unauthorized state across every role's dashboard.
+  if (!authToken && refreshTokenHandler) {
+    try {
+      await refreshTokenHandler();
+    } catch {
+      // Let the request below surface the normal authorization error.
+    }
+  }
+
   const headers = prepareHeaders(init);
   let res: Response;
   try {
