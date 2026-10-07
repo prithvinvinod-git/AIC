@@ -16,6 +16,7 @@ import {
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut,
+  type Auth,
   type User,
 } from "firebase/auth";
 import { getClientAuth } from "@/lib/firebase";
@@ -95,7 +96,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const auth = getClientAuth();
+    let auth: Auth;
+    try {
+      auth = getClientAuth();
+    } catch (error) {
+      // Keep public routes usable when Firebase configuration is unavailable;
+      // login actions still surface the configuration error when invoked.
+      console.error("[v0] Firebase auth initialization failed", error);
+      queueMicrotask(() => setReady(true));
+      return;
+    }
+
     const unsub = onAuthStateChanged(auth, (u) => {
       setUser(u);
       if (u) {
