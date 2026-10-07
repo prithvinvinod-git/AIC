@@ -51,6 +51,7 @@ export default function AnalyticsPage() {
 
   const load = useCallback(async () => {
     setData(null);
+    setError(null);
     try {
       const res = await api<SummaryResponse>(`/api/analytics/summary?range=${range}`);
       setData(res);

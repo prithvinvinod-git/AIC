@@ -23,7 +23,11 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       return json({ error: "Not allowed." }, 403);
     }
 
-    const range = Number(req.nextUrl.searchParams.get("range") || 7);
+    const requestedRange = Number(req.nextUrl.searchParams.get("range") || 7);
+    if (!Number.isInteger(requestedRange) || ![7, 30].includes(requestedRange)) {
+      return json({ error: "Range must be 7 or 30 days." }, 400);
+    }
+    const range = requestedRange;
     const since = new Date(Date.now() - range * 24 * 3600 * 1000).toISOString();
 
     // Non-admin (validator/hod/principal) analytics are scoped to their own
